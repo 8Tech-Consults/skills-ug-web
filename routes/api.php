@@ -20,8 +20,18 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::middleware([EnsureTokenIsValid::class])->group(function () {});
+
+Route::POST("profile", [ApiAuthController::class, "profile_update"]);
+Route::POST("job-create", [ApiAuthController::class, "job_create"]);
+Route::POST("job-apply", [ApiAuthController::class, "job_apply"]);
+
 Route::get('users/me', [ApiAuthController::class, 'me']);
 Route::get('users', [ApiAuthController::class, 'users']);
+Route::get('manifest', [ApiAuthController::class, 'manifest']);
+Route::get('my-jobs', [ApiAuthController::class, 'my_jobs']);
+Route::get('jobs', [ApiAuthController::class, 'jobs']);
+Route::get('cvs', [ApiAuthController::class, 'cvs']);
+Route::get('jobs/{id}', [ApiAuthController::class, 'job_single']);
 Route::get('laundry-orders', [ApiAuthController::class, 'laundry_orders']);
 Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
 Route::get('trips', [ApiAuthController::class, 'trips']);
@@ -50,7 +60,7 @@ Route::POST("get-order-payment-link", [ApiAuthController::class, 'get_order_paym
 Route::POST("meetings", [ApiAuthController::class, 'meetings_create']);
 Route::POST("tasks-update-status", [ApiAuthController::class, 'tasks_update_status']);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
-Route::POST("users/register", [ApiAuthController::class, "register"]); 
+Route::POST("users/register", [ApiAuthController::class, "register"]);
 
 Route::get('api/{model}', [ApiResurceController::class, 'index']);
 Route::post('api/{model}', [ApiResurceController::class, 'update']);

@@ -62,12 +62,12 @@ class User extends Authenticatable implements JWTSubject
                     $m->phone_number_1 = $phone;
                     //check if username exists
                     $u = User::where('phone_number_1', $phone)->first();
-                    if ($u != null) {
+                    if ($u != null && $u->id != $m->id) {
                         throw new \Exception("Phone number already exists");
                     }
                     //check if username exists
                     $u = User::where('phone_number_2', $phone)->first();
-                    if ($u != null) {
+                    if ($u != null && $u->id != $m->id) {
                         throw new \Exception("Phone number already exists as username.");
                     }
                 }
@@ -416,7 +416,7 @@ class User extends Authenticatable implements JWTSubject
             $adminRole->role_id = 2;
             $adminRole->user_id = $this->id;
             $adminRole->save();
-        }else{
+        } else {
             return $roles;
         }
 

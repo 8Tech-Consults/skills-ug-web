@@ -7,6 +7,7 @@ use Encore\Admin\Facades\Admin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use SplFileObject;
 use Zebra_Image;
 
@@ -15,6 +16,20 @@ class Utils extends Model
     use HasFactory;
 
 
+    static function fetch_post($obj, $except, $data)
+    {
+        $table = $obj->getTable();
+        $columns = Schema::getColumnListing($table);
+        foreach ($columns as $key => $column) {
+            if (in_array($column, $except)) {
+                continue;
+            }
+            if (isset($data[$column])) {
+                $obj->$column = $data[$column];
+            }
+        }
+        return $obj;
+    }
 
 
     //static function generate_uuid

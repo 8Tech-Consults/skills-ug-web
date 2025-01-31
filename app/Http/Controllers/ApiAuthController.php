@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\AdminRoleUser;
 use App\Models\Consultation;
+use App\Models\District;
 use App\Models\DoseItem;
 use App\Models\DoseItemRecord;
 use App\Models\FlutterWaveLog;
 use App\Models\Image;
+use App\Models\Job;
+use App\Models\JobApplication;
+use App\Models\JobCategory;
 use App\Models\LaundryOrder;
 use App\Models\LaundryOrderItem;
 use App\Models\LaundryOrderItemType;
@@ -46,15 +50,129 @@ class ApiAuthController extends Controller
             'password' => 'admin',
         ]);
         die($token); */
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'manifest']]);
     }
 
 
-    /**
-     * Get a JWT via given credentials.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
+
+    public function job_apply(Request $r)
+    {
+        $user = auth('api')->user();
+        if ($user == null) {
+            return $this->error('Account not found.');
+        }
+        $jobAppication = JobApplication::where([
+            'applicant_id' => $user->id,
+            'job_id' => $r->job_id,
+        ])->first();
+        if ($jobAppication != null) {
+            return $this->error('You have already applied for this job.');
+        }
+        $jobAppication = new JobApplication();
+
+
+        $except = ['id', 'applicant_id', 'status', 'slug'];
+        try {
+            $jobAppication = Utils::fetch_post($jobAppication, $except, $r->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $jobAppication->applicant_id = $user->id;
+        try {
+            $jobAppication->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $jobAppication = JobApplication::find($jobAppication->id);
+        if ($jobAppication == null) {
+            return $this->error('jobAppication not found.');
+        }
+        return $this->success($jobAppication, 'Job Application submitted successfully.');
+    }
+
+
+
+    public function job_create(Request $r)
+    {
+        $user = auth('api')->user();
+        if ($user == null) {
+            return $this->error('Account not found.');
+        }
+        $id = (int)($r->id);
+        $job = Job::find($id);
+        $isCreating = false;
+        if ($job == null) {
+            $job = new Job();
+            $isCreating = true;
+            //post_by_id
+            $job->posted_by_id = $user->id;
+        }
+
+
+        $except = ['id', 'posted_by_id', 'status', 'slug'];
+        try {
+            $job = Utils::fetch_post($job, $except, $r->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+
+        try {
+            $job->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $job = Job::find($job->id);
+        if ($job == null) {
+            return $this->error('Iob not found.');
+        }
+        $message = ($isCreating) ? 'Job created successfully.' : 'Job updated successfully.';
+        return $this->success($job, $message);
+    }
+
+
+    public function profile_update(Request $r)
+    {
+        $u = auth('api')->user();
+        if ($u == null) {
+            return $this->error('Account not found.');
+        }
+        $u = User::find($u->id);
+        if ($u == null) {
+            return $this->error('User Account not found.');
+        }
+        $except = ['password', 'password_confirmation', 'avatar',];
+        try {
+            $u = Utils::fetch_post($u, $except, $r->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+
+        $images = [];
+        if (!empty($_FILES)) {
+            $images = Utils::upload_images_2($_FILES, false);
+        }
+        if (!empty($images)) {
+            $u->avatar = 'images/' . $images[0];
+        }
+
+        try {
+            $u->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $u = User::find($u->id);
+        if ($u == null) {
+            return $this->error('Account not found.');
+        }
+        return $this->success($u,  "Profile updated successfully.");
+    }
+
     public function me()
     {
         $query = auth('api')->user();
@@ -62,6 +180,133 @@ class ApiAuthController extends Controller
     }
 
 
+    public function job_single(Request $request)
+    {
+        $job = Job::find($request->id);
+
+        if (!$job) {
+            return $this->error('Job not found. => #' . $request->id);
+        }
+        return $this->success($job, 'Job retrieved successfully.');
+    }
+    public function jobs(Request $request)
+    {
+
+        // Start building query
+        $query = Job::where('status', 'Active');
+
+        // Optional: search filter by title
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('title', 'LIKE', "%{$search}%");
+        }
+
+        // Optional: filter by status
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $query->where('status', $status);
+        }
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 16);
+        $jobs = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($jobs, 'Success');
+    }
+    public function cvs(Request $request)
+    {
+
+        // Start building query
+        $query = User::where([]);
+
+        // Optional: search filter by title
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('name', 'LIKE', "%{$search}%");
+        }
+
+        // Optional: filter by status
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $query->where('status', $status);
+        }
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 21);
+        $jobs = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($jobs, 'Success');
+    }
+
+    public function my_jobs(Request $request)
+    {
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        // Start building query
+        $query = Job::where('posted_by_id', $user->id);
+
+        // Optional: search filter by title
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('title', 'LIKE', "%{$search}%");
+        }
+
+        // Optional: filter by status
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $query->where('status', $status);
+        }
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 10);
+        $jobs = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($jobs, 'Success');
+    }
+
+
+    public function manifest()
+    {
+        $TOP_CITIES = District::select('id', 'name', 'jobs_count', 'photo')
+            ->orderBy('jobs_count', 'DESC')
+            ->limit(10)
+            ->get();
+        $CATEGORIES = JobCategory::all();
+        //Latest 50 jobs
+        $TOP_JOBS = Job::where('status', 'Active')
+            ->orderBy('id', 'DESC')
+            ->limit(50)
+            ->get();
+        $manifest = [
+            'LIVE_JOBS' => number_format(Job::where('status', 'Active')->count()),
+            'VACANCIES' => number_format(Job::where('status', 'Active')->sum('vacancies_count')),
+            'COMPANIES' => number_format(User::count()),
+            'NEW_JOBS' => number_format(Job::where('status', 'Active')->where('created_at', '>=', Carbon::now()->subDays(7))->count()),
+            'TOP_CITIES' => $TOP_CITIES,
+            'CATEGORIES' => $CATEGORIES,
+            'TOP_JOBS' => $TOP_JOBS,
+        ];
+
+        return $this->success($manifest, 'Success');
+    }
     public function users()
     {
         $u = auth('api')->user();

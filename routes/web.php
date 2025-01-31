@@ -47,9 +47,9 @@ Route::get('mail-test', function () {
     $order->service_amount =  '10';
     $order->weight =  '10';
 
-  
+
     $order->save();
-    die("done"); 
+    die("done");
 
     $url = url('mail-test');
     $from = env('APP_NAME') . " Team.";
@@ -287,6 +287,8 @@ Route::get('/gen-form', function () {
 })->name("gen-form");
 
 
+Route::get('gen-companies', [MainController::class, 'gen_companies']);
+Route::get('gen-jobs', [MainController::class, 'gen_jobs']);
 Route::get('generate-class', [MainController::class, 'generate_class']);
 Route::get('/gen', function () {
     $m = Gen::find($_GET['id']);
