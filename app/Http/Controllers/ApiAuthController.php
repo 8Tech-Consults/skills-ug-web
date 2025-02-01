@@ -50,7 +50,14 @@ class ApiAuthController extends Controller
             'password' => 'admin',
         ]);
         die($token); */
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'manifest']]);
+        $this->middleware('auth:api', ['except' => [
+            'login',
+            'register',
+            'manifest',
+            'jobs',
+            'users',
+            'cvs',
+        ]]);
     }
 
 
