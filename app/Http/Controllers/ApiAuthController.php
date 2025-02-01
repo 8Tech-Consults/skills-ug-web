@@ -56,6 +56,7 @@ class ApiAuthController extends Controller
             'manifest',
             'jobs',
             'users',
+            'jobs/{id}',
             'cvs',
         ]]);
     }
