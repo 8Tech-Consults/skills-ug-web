@@ -1,5 +1,4 @@
 .env
 *.pdf
 /__MACOSX
-database/.DS_Store
-/public/around
+database/.DS_Store 
