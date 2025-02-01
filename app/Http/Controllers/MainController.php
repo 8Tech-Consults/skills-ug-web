@@ -9,6 +9,7 @@ use App\Models\Job;
 use App\Models\JobCategory;
 use App\Models\NewsPost;
 use App\Models\User;
+use App\Traits\ApiResponser;
 use Carbon\Carbon;
 use Encore\Admin\Auth\Database\Administrator;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -20,7 +21,7 @@ use Illuminate\Routing\Controller as BaseController;
 
 class MainController extends BaseController
 {
-  use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+  use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ApiResponser;
 
   public function job_single(Request $request)
   {
