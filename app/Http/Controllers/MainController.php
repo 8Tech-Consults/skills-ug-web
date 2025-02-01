@@ -22,6 +22,15 @@ class MainController extends BaseController
 {
   use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+  public function job_single(Request $request)
+  {
+    $job = Job::find($request->id);
+
+    if (!$job) {
+      return $this->error('Job not found. => #' . $request->id);
+    }
+    return $this->success($job, 'Job retrieved successfully.');
+  }
 
   public function index()
   {

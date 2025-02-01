@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApiAuthController;
 use App\Http\Controllers\ApiResurceController;
+use App\Http\Controllers\MainController;
 use App\Http\Middleware\EnsureTokenIsValid;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ Route::get('manifest', [ApiAuthController::class, 'manifest']);
 Route::get('my-jobs', [ApiAuthController::class, 'my_jobs']);
 Route::get('jobs', [ApiAuthController::class, 'jobs']);
 Route::get('cvs', [ApiAuthController::class, 'cvs']);
-Route::get('jobs/{id}', [ApiAuthController::class, 'job_single']);
+Route::get('jobs/{id}', [MainController::class, 'job_single']);
 Route::get('laundry-orders', [ApiAuthController::class, 'laundry_orders']);
 Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
 Route::get('trips', [ApiAuthController::class, 'trips']);
