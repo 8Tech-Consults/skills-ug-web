@@ -23,6 +23,63 @@ class MainController extends BaseController
 {
   use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ApiResponser;
 
+  /**
+   * @OA\Get(
+   *     path="/jobs/{id}",
+   *     summary="Get details of a single job",
+   *     description="Retrieves detailed information about a specific job using its ID.",
+   *     operationId="getJobById",
+   *     tags={"Job"},
+   *     @OA\Parameter(
+   *         name="id",
+   *         in="path",
+   *         description="ID of the job to retrieve",
+   *         required=true,
+   *         @OA\Schema(type="integer", example=10)
+   *     ),
+   *     @OA\Response(
+   *         response=200,
+   *         description="Job retrieved successfully",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Job retrieved successfully."),
+   *             @OA\Property(
+   *                 property="data",
+   *                 type="object",
+   *                 @OA\Property(property="id", type="integer", example=10),
+   *                 @OA\Property(property="title", type="string", example="Software Engineer"),
+   *                 @OA\Property(property="status", type="string", example="active"),
+   *                 @OA\Property(property="category_id", type="integer", example=5),
+   *                 @OA\Property(property="district_id", type="integer", example=10),
+   *                 @OA\Property(property="employment_status", type="string", example="Full Time"),
+   *                 @OA\Property(property="workplace", type="string", example="Onsite"),
+   *                 @OA\Property(property="minimum_salary", type="number", format="float", example=50000),
+   *                 @OA\Property(property="maximum_salary", type="number", format="float", example=70000),
+   *                 @OA\Property(property="posted_by_id", type="integer", example=2),
+   *                 @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+   *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+   *             )
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=404,
+   *         description="Job not found",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Job not found. => #10")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=500,
+   *         description="Internal Server Error",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="An error occurred while retrieving job details.")
+   *         )
+   *     )
+   * )
+   */
+
   public function job_single(Request $request)
   {
     $job = Job::find($request->id);

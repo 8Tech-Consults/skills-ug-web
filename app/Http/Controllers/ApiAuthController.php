@@ -62,7 +62,74 @@ class ApiAuthController extends Controller
     }
 
 
-
+    /**
+     * @OA\Post(
+     *     path="/job-apply",
+     *     summary="Apply for a job",
+     *     description="Submits a job application for the authenticated user. The user must not have already applied for the job.",
+     *     operationId="jobApply",
+     *     tags={"Job"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Job application details",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"job_id"},
+     *             @OA\Property(
+     *                 property="job_id",
+     *                 type="integer",
+     *                 example=10,
+     *                 description="The ID of the job the user is applying for."
+     *             ),
+     *             @OA\Property(
+     *                 property="cover_letter",
+     *                 type="string",
+     *                 example="I am very interested in this position and believe I am a great fit.",
+     *                 description="Optional cover letter provided by the applicant."
+     *             ),
+     *             @OA\Property(
+     *                 property="resume_url",
+     *                 type="string",
+     *                 example="https://example.com/resume.pdf",
+     *                 description="Optional URL pointing to the applicant's resume."
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job Application submitted successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job Application submitted successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=100),
+     *                 @OA\Property(property="job_id", type="integer", example=10),
+     *                 @OA\Property(property="applicant_id", type="integer", example=1),
+     *                 @OA\Property(property="status", type="string", example="pending")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input or account not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict - Duplicate application",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="You have already applied for this job.")
+     *         )
+     *     )
+     * )
+     */
     public function job_apply(Request $r)
     {
         $user = auth('api')->user();
@@ -102,6 +169,232 @@ class ApiAuthController extends Controller
 
 
 
+    /**
+     * @OA\Post(
+     *     path="/job-create",
+     *     summary="Create or update a job posting",
+     *     description="Creates a new job posting or updates an existing one if an 'id' is provided. The authenticated user is automatically set as the poster.",
+     *     operationId="jobCreate",
+     *     tags={"Job"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Job posting details",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="id",
+     *                 type="integer",
+     *                 example=1,
+     *                 description="Job ID for updating an existing job. Omit or set to 0 for new job creation."
+     *             ),
+     *             @OA\Property(
+     *                 property="created_at",
+     *                 type="string",
+     *                 format="date-time",
+     *                 example="2023-01-01T00:00:00Z",
+     *                 description="Job creation date (usually ignored on creation)"
+     *             ),
+     *             @OA\Property(
+     *                 property="updated_at",
+     *                 type="string",
+     *                 format="date-time",
+     *                 example="2023-01-02T00:00:00Z",
+     *                 description="Job update date (usually ignored on creation)"
+     *             ),
+     *             @OA\Property(
+     *                 property="title",
+     *                 type="string",
+     *                 example="Software Engineer",
+     *                 description="Job title"
+     *             ),
+     *             @OA\Property(
+     *                 property="status",
+     *                 type="string",
+     *                 example="active",
+     *                 description="Job status"
+     *             ),
+     *             @OA\Property(
+     *                 property="deadline",
+     *                 type="string",
+     *                 format="date",
+     *                 example="2023-12-31",
+     *                 description="Application deadline"
+     *             ),
+     *             @OA\Property(
+     *                 property="category_id",
+     *                 type="integer",
+     *                 example=5,
+     *                 description="Job category ID"
+     *             ),
+     *             @OA\Property(
+     *                 property="district_id",
+     *                 type="integer",
+     *                 example=10,
+     *                 description="District ID"
+     *             ),
+     *             @OA\Property(
+     *                 property="sub_county_id",
+     *                 type="integer",
+     *                 example=2,
+     *                 description="Sub-county ID"
+     *             ),
+     *             @OA\Property(
+     *                 property="address",
+     *                 type="string",
+     *                 example="123 Main St, City",
+     *                 description="Job address"
+     *             ),
+     *             @OA\Property(
+     *                 property="vacancies_count",
+     *                 type="integer",
+     *                 example=3,
+     *                 description="Number of vacancies"
+     *             ),
+     *             @OA\Property(
+     *                 property="employment_status",
+     *                 type="string",
+     *                 example="Full Time",
+     *                 description="Employment status (e.g., Full Time, Part Time, Contract, Internship)"
+     *             ),
+     *             @OA\Property(
+     *                 property="workplace",
+     *                 type="string",
+     *                 example="Onsite",
+     *                 description="Workplace type (Onsite or Remote)"
+     *             ),
+     *             @OA\Property(
+     *                 property="responsibilities",
+     *                 type="string",
+     *                 example="Develop and maintain software applications",
+     *                 description="Key responsibilities"
+     *             ),
+     *             @OA\Property(
+     *                 property="experience_field",
+     *                 type="string",
+     *                 example="Software Development",
+     *                 description="Relevant experience field"
+     *             ),
+     *             @OA\Property(
+     *                 property="experience_period",
+     *                 type="string",
+     *                 example="2-3 years",
+     *                 description="Experience duration"
+     *             ),
+     *             @OA\Property(
+     *                 property="show_salary",
+     *                 type="boolean",
+     *                 example=true,
+     *                 description="Whether to display salary information"
+     *             ),
+     *             @OA\Property(
+     *                 property="minimum_salary",
+     *                 type="number",
+     *                 format="float",
+     *                 example=50000,
+     *                 description="Minimum salary range"
+     *             ),
+     *             @OA\Property(
+     *                 property="maximum_salary",
+     *                 type="number",
+     *                 format="float",
+     *                 example=70000,
+     *                 description="Maximum salary range"
+     *             ),
+     *             @OA\Property(
+     *                 property="benefits",
+     *                 type="string",
+     *                 example="Health insurance, Paid time off",
+     *                 description="Job benefits"
+     *             ),
+     *             @OA\Property(
+     *                 property="job_icon",
+     *                 type="string",
+     *                 example="/images/job_icon.png",
+     *                 description="Icon or image path for the job"
+     *             ),
+     *             @OA\Property(
+     *                 property="gender",
+     *                 type="string",
+     *                 example="Any",
+     *                 description="Gender requirement"
+     *             ),
+     *             @OA\Property(
+     *                 property="min_age",
+     *                 type="integer",
+     *                 example=21,
+     *                 description="Minimum age requirement"
+     *             ),
+     *             @OA\Property(
+     *                 property="max_age",
+     *                 type="integer",
+     *                 example=60,
+     *                 description="Maximum age requirement"
+     *             ),
+     *             @OA\Property(
+     *                 property="required_video_cv",
+     *                 type="boolean",
+     *                 example=false,
+     *                 description="Whether a video CV is required"
+     *             ),
+     *             @OA\Property(
+     *                 property="minimum_academic_qualification",
+     *                 type="string",
+     *                 example="Bachelor's Degree",
+     *                 description="Academic requirement"
+     *             ),
+     *             @OA\Property(
+     *                 property="application_method",
+     *                 type="string",
+     *                 example="Email",
+     *                 description="Method of application"
+     *             ),
+     *             @OA\Property(
+     *                 property="application_method_details",
+     *                 type="string",
+     *                 example="Send your resume to hr@example.com",
+     *                 description="Additional details on how to apply"
+     *             ),
+     *             @OA\Property(
+     *                 property="slug",
+     *                 type="string",
+     *                 example="software-engineer",
+     *                 description="SEO-friendly URL slug"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job created or updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job created successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="title", type="string", example="Software Engineer")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job not found.")
+     *         )
+     *     )
+     * )
+     */
     public function job_create(Request $r)
     {
         $user = auth('api')->user();
@@ -142,6 +435,200 @@ class ApiAuthController extends Controller
     }
 
 
+    /**
+     * @OA\Post(
+     *     path="/users/profile/update",
+     *     summary="Update user profile",
+     *     description="Updates the authenticated user's profile details. Accepts a wide range of user fields. Uploaded images (if any) are used to update the avatar.",
+     *     operationId="updateUserProfile",
+     *     tags={"User"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="User profile data",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", example=1, description="Descending ID"),
+     *             @OA\Property(property="username", type="string", example="johndoe"),
+     *             @OA\Property(property="name", type="string", example="John Doe"),
+     *             @OA\Property(property="remember_token", type="string", example="token123"),
+     *             @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T00:00:00Z"),
+     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T00:00:00Z"),
+     *             @OA\Property(property="enterprise_id", type="integer", example=101),
+     *             @OA\Property(property="first_name", type="string", example="John"),
+     *             @OA\Property(property="last_name", type="string", example="Doe"),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="1990-01-01"),
+     *             @OA\Property(property="place_of_birth", type="string", example="New York"),
+     *             @OA\Property(property="sex", type="string", example="male"),
+     *             @OA\Property(property="home_address", type="string", example="123 Main St"),
+     *             @OA\Property(property="current_address", type="string", example="456 Secondary St"),
+     *             @OA\Property(property="phone_number_1", type="string", example="+1234567890"),
+     *             @OA\Property(property="phone_number_2", type="string", example="+0987654321"),
+     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *             @OA\Property(property="nationality", type="string", example="American"),
+     *             @OA\Property(property="religion", type="string", example="Christian"),
+     *             @OA\Property(property="spouse_name", type="string", example="Jane Doe"),
+     *             @OA\Property(property="spouse_phone", type="string", example="+1122334455"),
+     *             @OA\Property(property="father_name", type="string", example="Robert Doe"),
+     *             @OA\Property(property="father_phone", type="string", example="+1231231234"),
+     *             @OA\Property(property="mother_name", type="string", example="Mary Doe"),
+     *             @OA\Property(property="mother_phone", type="string", example="+3213214321"),
+     *             @OA\Property(property="languages", type="string", example="English, Spanish"),
+     *             @OA\Property(property="emergency_person_name", type="string", example="Alice Doe"),
+     *             @OA\Property(property="emergency_person_phone", type="string", example="+14445556666"),
+     *             @OA\Property(property="national_id_number", type="string", example="ID123456789"),
+     *             @OA\Property(property="passport_number", type="string", example="P123456789"),
+     *             @OA\Property(property="tin", type="string", example="TIN987654321"),
+     *             @OA\Property(property="nssf_number", type="string", example="NSSF123456"),
+     *             @OA\Property(property="bank_name", type="string", example="Bank of America"),
+     *             @OA\Property(property="bank_account_number", type="string", example="123456789012"),
+     *             @OA\Property(property="primary_school_name", type="string", example="Greenwood Primary School"),
+     *             @OA\Property(property="primary_school_year_graduated", type="integer", example=2000),
+     *             @OA\Property(property="seconday_school_name", type="string", example="Central High School"),
+     *             @OA\Property(property="seconday_school_year_graduated", type="integer", example=2004),
+     *             @OA\Property(property="high_school_name", type="string", example="City High School"),
+     *             @OA\Property(property="high_school_year_graduated", type="integer", example=2008),
+     *             @OA\Property(property="degree_university_name", type="string", example="State University"),
+     *             @OA\Property(property="degree_university_year_graduated", type="integer", example=2012),
+     *             @OA\Property(property="masters_university_name", type="string", example="State University"),
+     *             @OA\Property(property="masters_university_year_graduated", type="integer", example=2014),
+     *             @OA\Property(property="phd_university_name", type="string", example="State University"),
+     *             @OA\Property(property="phd_university_year_graduated", type="integer", example=2018),
+     *             @OA\Property(property="user_type", type="string", example="admin"),
+     *             @OA\Property(property="demo_id", type="integer", example=10),
+     *             @OA\Property(property="user_id", type="integer", example=1),
+     *             @OA\Property(property="user_batch_importer_id", type="integer", example=5),
+     *             @OA\Property(property="school_pay_account_id", type="integer", example=200),
+     *             @OA\Property(property="school_pay_payment_code", type="string", example="PAY123456"),
+     *             @OA\Property(property="given_name", type="string", example="Johnny"),
+     *             @OA\Property(property="deleted_at", type="string", format="date-time", example="2023-01-03T00:00:00Z", nullable=true),
+     *             @OA\Property(property="marital_status", type="string", example="single"),
+     *             @OA\Property(property="verification", type="string", example="verified"),
+     *             @OA\Property(property="current_class_id", type="integer", example=3),
+     *             @OA\Property(property="current_theology_class_id", type="integer", example=2),
+     *             @OA\Property(property="status", type="string", example="active"),
+     *             @OA\Property(property="parent_id", type="integer", example=0),
+     *             @OA\Property(property="main_role_id", type="integer", example=1),
+     *             @OA\Property(property="stream_id", type="integer", example=1),
+     *             @OA\Property(property="account_id", type="integer", example=1001),
+     *             @OA\Property(property="has_personal_info", type="boolean", example=true),
+     *             @OA\Property(property="has_educational_info", type="boolean", example=true),
+     *             @OA\Property(property="has_account_info", type="boolean", example=true),
+     *             @OA\Property(property="diploma_school_name", type="string", example="Diploma Institute"),
+     *             @OA\Property(property="diploma_year_graduated", type="integer", example=2010),
+     *             @OA\Property(property="certificate_school_name", type="string", example="Certificate School"),
+     *             @OA\Property(property="certificate_year_graduated", type="integer", example=2011),
+     *             @OA\Property(property="company_id", type="integer", example=500),
+     *             @OA\Property(property="managed_by", type="integer", example=10),
+     *             @OA\Property(property="title", type="string", example="Mr."),
+     *             @OA\Property(property="dob", type="string", format="date", example="1990-01-01"),
+     *             @OA\Property(property="intro", type="string", example="Hello, I am John."),
+     *             @OA\Property(property="rate", type="number", format="float", example=4.5),
+     *             @OA\Property(property="can_evaluate", type="boolean", example=true),
+     *             @OA\Property(property="work_load_pending", type="number", example=2),
+     *             @OA\Property(property="work_load_completed", type="number", example=5),
+     *             @OA\Property(property="belongs_to_company", type="boolean", example=true),
+     *             @OA\Property(property="card_status", type="string", example="active"),
+     *             @OA\Property(property="card_number", type="string", example="CARD123456"),
+     *             @OA\Property(property="card_balance", type="number", format="float", example=100.50),
+     *             @OA\Property(property="card_accepts_credit", type="boolean", example=true),
+     *             @OA\Property(property="card_max_credit", type="number", format="float", example=5000.00),
+     *             @OA\Property(property="card_accepts_cash", type="boolean", example=false),
+     *             @OA\Property(property="is_dependent", type="boolean", example=false),
+     *             @OA\Property(property="dependent_status", type="string", example="none"),
+     *             @OA\Property(property="dependent_id", type="integer", example=0),
+     *             @OA\Property(property="card_expiry", type="string", format="date", example="2025-12-31"),
+     *             @OA\Property(property="belongs_to_company_status", type="string", example="verified"),
+     *             @OA\Property(property="objective", type="string", example="To excel in my career"),
+     *             @OA\Property(property="special_qualification", type="string", example="Certified Expert"),
+     *             @OA\Property(property="career_summary", type="string", example="Over 10 years of experience in IT"),
+     *             @OA\Property(property="present_salary", type="number", format="float", example=5000.00),
+     *             @OA\Property(property="expected_salary", type="number", format="float", example=6000.00),
+     *             @OA\Property(property="expected_job_level", type="string", example="Senior"),
+     *             @OA\Property(property="expected_job_nature", type="string", example="Full-time"),
+     *             @OA\Property(property="preferred_job_location", type="string", example="Remote"),
+     *             @OA\Property(property="preferred_job_category", type="string", example="Technology"),
+     *             @OA\Property(property="preferred_job_category_other", type="string", example="Software Development"),
+     *             @OA\Property(property="preferred_job_districts", type="string", example="District 1"),
+     *             @OA\Property(property="preferred_job_abroad", type="boolean", example=false),
+     *             @OA\Property(property="preferred_job_countries", type="string", example="USA, Canada"),
+     *             @OA\Property(property="has_disability", type="boolean", example=false),
+     *             @OA\Property(property="is_registered_on_disability", type="boolean", example=false),
+     *             @OA\Property(property="disability_type", type="string", example="N/A"),
+     *             @OA\Property(property="dificulty_to_see", type="boolean", example=false),
+     *             @OA\Property(property="dificulty_to_hear", type="boolean", example=false),
+     *             @OA\Property(property="dificulty_to_walk", type="boolean", example=false),
+     *             @OA\Property(property="dificulty_to_speak", type="boolean", example=false),
+     *             @OA\Property(property="dificulty_display_on_cv", type="boolean", example=false),
+     *             @OA\Property(property="country_code", type="string", example="+1"),
+     *             @OA\Property(property="blood_group", type="string", example="O+"),
+     *             @OA\Property(property="height", type="number", format="float", example=175.5),
+     *             @OA\Property(property="weight", type="number", format="float", example=70.0),
+     *             @OA\Property(property="company_name", type="string", example="Example Corp"),
+     *             @OA\Property(property="company_year_of_establishment", type="integer", example=2000),
+     *             @OA\Property(property="company_employees_range", type="string", example="50-200"),
+     *             @OA\Property(property="company_country", type="string", example="USA"),
+     *             @OA\Property(property="company_address", type="string", example="123 Corporate Blvd"),
+     *             @OA\Property(property="company_district_id", type="integer", example=10),
+     *             @OA\Property(property="company_sub_county_id", type="integer", example=20),
+     *             @OA\Property(property="company_main_category_id", type="integer", example=5),
+     *             @OA\Property(property="company_sub_category_id", type="integer", example=3),
+     *             @OA\Property(property="company_phone_number", type="string", example="+123456789"),
+     *             @OA\Property(property="company_description", type="string", example="Leading provider of example solutions."),
+     *             @OA\Property(property="company_trade_license_no", type="string", example="TLN123456"),
+     *             @OA\Property(property="company_website_url", type="string", example="https://example.com"),
+     *             @OA\Property(property="company__email", type="string", format="email", example="info@example.com"),
+     *             @OA\Property(property="company__phone", type="string", example="+123456789"),
+     *             @OA\Property(property="company_has_accessibility", type="boolean", example=true),
+     *             @OA\Property(property="company_has_disability_inclusion_policy", type="boolean", example=true),
+     *             @OA\Property(property="company_logo", type="string", example="https://example.com/logo.png"),
+     *             @OA\Property(property="company_tax_id", type="string", example="TAX123456"),
+     *             @OA\Property(property="company_facebook_url", type="string", example="https://facebook.com/example"),
+     *             @OA\Property(property="company_linkedin_url", type="string", example="https://linkedin.com/company/example"),
+     *             @OA\Property(property="company_operating_hours", type="string", example="9AM-5PM"),
+     *             @OA\Property(property="company_certifications", type="string", example="ISO9001"),
+     *             @OA\Property(property="company_ownership_type", type="string", example="Private"),
+     *             @OA\Property(property="company_status", type="string", example="active"),
+     *             @OA\Property(property="is_company", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="username", type="string", example="johndoe"),
+     *                 @OA\Property(property="first_name", type="string", example="John"),
+     *                 @OA\Property(property="last_name", type="string", example="Doe"),
+     *                 @OA\Property(property="email", type="string", example="john@example.com"),
+     *                 @OA\Property(property="avatar", type="string", example="images/avatar.png")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while updating the profile.")
+     *         )
+     *     )
+     * )
+     */
+
     public function profile_update(Request $r)
     {
         $u = auth('api')->user();
@@ -181,6 +668,47 @@ class ApiAuthController extends Controller
         return $this->success($u,  "Profile updated successfully.");
     }
 
+
+    /**
+     * @OA\Get(
+     *     path="/users/me",
+     *     summary="Get current user profile",
+     *     description="Returns the authenticated user's profile details.",
+     *     operationId="getCurrentUserProfile",
+     *     tags={"User"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile details returned successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Profile details"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 description="User profile details",
+     *                 additionalProperties=true,
+     *                 example={
+     *                     "id": 1,
+     *                     "username": "johndoe",
+     *                     "first_name": "John",
+     *                     "last_name": "Doe",
+     *                     "email": "john@example.com"
+     *                 }
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Invalid or missing authentication token",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     )
+     * )
+     */
+
     public function me()
     {
         $query = auth('api')->user();
@@ -197,6 +725,8 @@ class ApiAuthController extends Controller
         }
         return $this->success($job, 'Job retrieved successfully.');
     }
+
+
     public function jobs(Request $request)
     {
 
@@ -226,6 +756,86 @@ class ApiAuthController extends Controller
         // 'data' contains "data, current_page, last_page, etc." from Laravel
         return $this->success($jobs, 'Success');
     }
+
+
+    /**
+     * @OA\Get(
+     *     path="/cvs",
+     *     summary="Get list of user CVs",
+     *     description="Retrieves a paginated list of users' CVs, with optional filtering by name (search) and status.",
+     *     operationId="getCVs",
+     *     tags={"CV"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search user CVs by name",
+     *         required=false,
+     *         @OA\Schema(type="string", example="John Doe")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by user status (e.g., active, inactive)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="active")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 21)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=21)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User CVs retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", format="email", example="johndoe@example.com"),
+     *                     @OA\Property(property="phone_number_1", type="string", example="+1234567890"),
+     *                     @OA\Property(property="status", type="string", example="active"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 description="Pagination details",
+     *                 @OA\Property(property="total", type="integer", example=100),
+     *                 @OA\Property(property="per_page", type="integer", example=21),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=5)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving CVs.")
+     *         )
+     *     )
+     * )
+     */
     public function cvs(Request $request)
     {
 
@@ -255,6 +865,77 @@ class ApiAuthController extends Controller
         // 'data' contains "data, current_page, last_page, etc." from Laravel
         return $this->success($jobs, 'Success');
     }
+
+
+    /**
+     * @OA\Get(
+     *     path="/my-jobs",
+     *     summary="Get jobs posted by the authenticated user",
+     *     description="Retrieves a list of jobs that the currently authenticated user has posted.",
+     *     operationId="getMyJobs",
+     *     tags={"Job"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Jobs retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Jobs retrieved successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="title", type="string", example="Software Engineer"),
+     *                     @OA\Property(property="status", type="string", example="active"),
+     *                     @OA\Property(property="category_id", type="integer", example=5),
+     *                     @OA\Property(property="district_id", type="integer", example=10),
+     *                     @OA\Property(property="employment_status", type="string", example="Full Time"),
+     *                     @OA\Property(property="workplace", type="string", example="Onsite"),
+     *                     @OA\Property(property="minimum_salary", type="number", format="float", example=50000),
+     *                     @OA\Property(property="maximum_salary", type="number", format="float", example=70000),
+     *                     @OA\Property(property="posted_by_id", type="integer", example=2),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 description="Pagination details",
+     *                 @OA\Property(property="total", type="integer", example=20),
+     *                 @OA\Property(property="per_page", type="integer", example=10),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=2)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving jobs.")
+     *         )
+     *     )
+     * )
+     */
 
     public function my_jobs(Request $request)
     {
@@ -290,7 +971,81 @@ class ApiAuthController extends Controller
         return $this->success($jobs, 'Success');
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/manifest",
+     *     summary="Retrieve application manifest",
+     *     description="Fetches the manifest data of the application, including version, name, description, build, and environment.",
+     *     operationId="getManifest",
+     *     tags={"Manifest"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Manifest retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Manifest details"
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 description="The manifest details",
+     *                 @OA\Property(
+     *                     property="version",
+     *                     type="string",
+     *                     example="1.0.0"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="name",
+     *                     type="string",
+     *                     example="My Application"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string",
+     *                     example="This is a sample application manifest."
+     *                 ),
+     *                 @OA\Property(
+     *                     property="build",
+     *                     type="string",
+     *                     example="2025-02-05-build"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="environment",
+     *                     type="string",
+     *                     example="production"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Manifest not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Manifest not found"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="An error occurred while retrieving manifest"
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function manifest()
     {
         $TOP_CITIES = District::select('id', 'name', 'jobs_count', 'photo')
@@ -315,6 +1070,74 @@ class ApiAuthController extends Controller
 
         return $this->success($manifest, 'Success');
     }
+
+
+    /**
+     * @OA\Get(
+     *     path="/users",
+     *     summary="Get list of users",
+     *     description="Retrieves a list of registered users with their basic details.",
+     *     operationId="getUsers",
+     *     tags={"User"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Users retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Users retrieved successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="username", type="string", example="johndoe"),
+     *                     @OA\Property(property="first_name", type="string", example="John"),
+     *                     @OA\Property(property="last_name", type="string", example="Doe"),
+     *                     @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *                     @OA\Property(property="phone_number_1", type="string", example="+1234567890"),
+     *                     @OA\Property(property="status", type="string", example="active"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 description="Pagination details",
+     *                 @OA\Property(property="total", type="integer", example=100),
+     *                 @OA\Property(property="per_page", type="integer", example=10),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=10)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving users.")
+     *         )
+     *     )
+     * )
+     */
     public function users()
     {
         $u = auth('api')->user();
@@ -401,175 +1224,68 @@ class ApiAuthController extends Controller
 
 
 
-    public function trips()
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('Account not found');
-        }
-
-        $orders = [];
-        //admin
-        //customer
-        //driver
-        //washer
-
-        //if driver
-        if ($u->isRole('driver')) {
-            $orders = Trip::where([
-                'driver_id' => $u->id
-            ])
-                ->get();
-        }
-
-        //if admin
-        if ($u->isRole('admin')) {
-            $orders = Trip::where([])
-                ->get();
-        }
-
-        return $this->success($orders, $message = "Success", 200);
-    }
 
 
-
-    public function projects()
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('Account not found');
-        }
-        return $this->success(Project::where([
-            'company_id' => $u->company_id
-        ])
-            ->get(), $message = "Success =>{$u->company_id}<=", 200);
-    }
-
-    public function services()
-    {
-        return $this->success(Service::all(), $message = "Success", 200);
-    }
-    public function dose_item_records()
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('Account not found');
-        }
-        $my_consultations = Consultation::where([
-            'patient_id' => $u->id
-        ])->get();
-        $consultation_ids = [];
-        foreach ($my_consultations as $key => $value) {
-            $consultation_ids[] = $value->id;
-        }
-        $recs = DoseItemRecord::whereIn('consultation_id', $consultation_ids)
-            ->get();
-        return $this->success($recs, $message = "Success", 200);
-    }
-
-
-    public function dose_item_records_state(Request $r)
-    {
-        $rec = DoseItemRecord::find($r->id);
-        if ($rec == null) {
-            return $this->error('Record not found.');
-        }
-        $due_date = Carbon::parse($rec->due_date);
-        //check if is future date and dont accept
-        if ($due_date->isFuture()) {
-            return $this->error('Cannot change state of future record.');
-        }
-        $rec->status = $r->status;
-        $rec->save();
-        $rec = DoseItemRecord::find($r->id);
-        return $this->success($rec, $message = "Success", 200);
-    }
-
-    public function consultations()
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('Account not found');
-        }
-        $conds = [];
-        if (!$u->isRole('admin')) {
-            $conds['patient_id'] = $u->id;
-        }
-        return $this->success(
-            Consultation::where($conds)
-                ->get(),
-            $message = "Success",
-            200
-        );
-    }
-
-    public function laundry_order_item_types()
-    {
-        return $this->success(LaundryOrderItemType::where([])
-            ->get(), $message = "Success", 200);
-    }
-
-    public function tasks()
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('Account not found');
-        }
-        return $this->success(Task::where([
-            'assigned_to' => $u->id,
-        ])
-            ->orWhere([
-                'manager_id' => $u->id,
-            ])
-            ->get(), $message = "Success", 200);
-    }
-
-    public function tasks_update_status(Request $r)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('Account not found');
-        }
-
-        if ($r->task_id == null) {
-            return $this->error('Task ID is required.');
-        }
-
-
-        $task = Task::find($r->task_id);
-        if ($task == null) {
-            return $this->error('Task not found. ' . $r->task_id);
-        }
-        if (strlen($r->delegate_submission_status) > 2) {
-            $task->delegate_submission_status = $r->delegate_submission_status;
-        }
-        if (strlen($r->manager_submission_status) > 2) {
-            $task->manager_submission_status = $r->manager_submission_status;
-        }
-        if (strlen($r->delegate_submission_remarks) > 2) {
-            $task->delegate_submission_remarks = $r->delegate_submission_remarks;
-        }
-        if (strlen($r->manager_submission_remarks) > 2) {
-            $task->manager_submission_remarks = $r->manager_submission_remarks;
-        }
-
-        try {
-            $task->save();
-        } catch (\Throwable $th) {
-            return $this->error('Failed to update task.');
-        }
-        $task = Task::find($r->task_id);
-        if ($task == null) {
-            return $this->error('Task not found.');
-        }
-
-        return $this->success($task, $message = "Success", 200);
-    }
-
-
-
-
-
+    /**
+     * @OA\Post(
+     *     path="/users/login",
+     *     summary="User login",
+     *     description="Authenticate a user by verifying the username and password.",
+     *     operationId="userLogin",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Pass username and password for login",
+     *         @OA\JsonContent(
+     *             required={"username", "password"},
+     *             @OA\Property(
+     *                 property="username",
+     *                 type="string",
+     *                 example="johndoe",
+     *                 description="The username, email, or phone number of the user"
+     *             ),
+     *             @OA\Property(
+     *                 property="password",
+     *                 type="string",
+     *                 example="password123",
+     *                 description="The user password"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful login",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Logged in successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="username", type="string", example="johndoe"),
+     *                 @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."),
+     *                 @OA\Property(property="remember_token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Username is required.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Wrong credentials",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Wrong credentials.")
+     *         )
+     *     )
+     * )
+     */
     public function login(Request $r)
     {
         if ($r->username == null) {
@@ -627,6 +1343,91 @@ class ApiAuthController extends Controller
     }
 
 
+    /**
+     * @OA\Post(
+     *     path="/users/register",
+     *     summary="Register a new user",
+     *     description="Registers a new user by validating the phone number, password, name, and optional email. On success, returns the user details along with a JWT token.",
+     *     operationId="userRegister",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="User registration details",
+     *         @OA\JsonContent(
+     *             required={"phone_number_1", "password", "name"},
+     *             @OA\Property(
+     *                 property="phone_number_1",
+     *                 type="string",
+     *                 example="+256789123456",
+     *                 description="User's primary phone number"
+     *             ),
+     *             @OA\Property(
+     *                 property="password",
+     *                 type="string",
+     *                 format="password",
+     *                 example="StrongPass123",
+     *                 description="User password (must be at least 6 characters)"
+     *             ),
+     *             @OA\Property(
+     *                 property="name",
+     *                 type="string",
+     *                 example="John Doe",
+     *                 description="Full name of the user (must include at least first and last name)"
+     *             ),
+     *             @OA\Property(
+     *                 property="email",
+     *                 type="string",
+     *                 format="email",
+     *                 example="john.doe@example.com",
+     *                 description="Optional email address"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Account created successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account created successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="first_name", type="string", example="John"),
+     *                 @OA\Property(property="last_name", type="string", example="Doe"),
+     *                 @OA\Property(property="phone_number_1", type="string", example="+256789123456"),
+     *                 @OA\Property(property="username", type="string", example="+256789123456"),
+     *                 @OA\Property(property="email", type="string", example="john.doe@example.com"),
+     *                 @OA\Property(property="token", type="string", example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Phone number is required.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict - User already exists",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="User with same phone number already exists.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Failed to create account. Please try again.")
+     *         )
+     *     )
+     * )
+     */
     public function register(Request $r)
     {
         if ($r->phone_number_1 == null) {
@@ -745,725 +1546,77 @@ class ApiAuthController extends Controller
     }
 
 
-
-    public function consultation_create(Request $val)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => "User not found.",
-            ]);
-        }
-
-
-        $consultation = new Consultation();
-        $consultation->patient_id = $u->id;
-        $consultation->receptionist_id = $u->id;
-        $consultation->company_id = $u->company_id;
-        $consultation->main_status = 'Pending';
-        $consultation->request_status = 'Pending';
-        $consultation->patient_name = $u->name;
-        $consultation->patient_contact = $u->phone_number_1;
-        $consultation->preferred_date_and_time = $val->preferred_date_and_time;
-        $services_requested = $val->services_requested;
-        $services_requested = str_replace('[', ',', $services_requested);
-        $services_requested = str_replace(']', ',', $services_requested);
-
-        $consultation->services_requested = $services_requested;
-        $consultation->reason_for_consultation = $val->reason_for_consultation;
-        $consultation->request_remarks = $val->request_remarks;
-        $consultation->specify_specialist = $val->specify_specialist;
-        $consultation->specialist_id = $val->specialist_id;
-        $consultation->main_remarks = $val->main_remarks;
-        $consultation->payemnt_status = 'Not Paid';
-        $consultation->request_date = Carbon::now();
-        $consultation->save();
-        $consultation = Consultation::find($consultation->id);
-
-        return Utils::response([
-            'status' => 1,
-            'data' => $consultation,
-            'code' => 1,
-            'message' => 'Consultation created successfully.',
-        ]);
-    }
-
-
-    public function trip_create(Request $val)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => "User not found.",
-            ]);
-        }
-
-        if ($val->is_creating == 'YES') {
-            $trip = new Trip();
-            $trip->driver_id = $u->id;
-
-            $existingTrip = Trip::where([
-                'driver_id' => $u->id,
-                'status' => 'ONGOING',
-                'type' => $val->type,
-            ])->first();
-            if ($existingTrip != null) {
-                return Utils::response([
-                    'status' => 0,
-                    'code' => 0,
-                    'message' => "You already have an active trip for ({$val->type}).",
-                ]);
-            }
-            $trip->type = $val->type;
-            $trip->status = 'ONGOING';
-            $trip->start_location = $val->start_location;
-            $trip->end_location = $val->end_location;
-            $trip->vehicle = $val->vehicle;
-            $trip->payment_status = 'NOT PAID';
-            $trip->start_time = Carbon::now();
-            $trip->notes = date('Y-m-d,H:ia') . ' - ' . $val->type;
-            $trip->code = rand(10000, 99999);
-
-            try {
-                $trip->save();
-                $trip = Trip::find($trip->id);
-                if ($trip == null) {
-                    return Utils::response([
-                        'status' => 0,
-                        'code' => 0,
-                        'message' => "Failed to find create trip.",
-                    ]);
-                }
-            } catch (\Throwable $th) {
-                return $this->error('Failed to create trip because ' . $th->getMessage());
-            }
-            return Utils::response([
-                'status' => 1,
-                'data' => $trip,
-                'code' => 1,
-                'message' => 'Trip created successfully.',
-            ]);
-        } else if ($val->is_creating == 'NO') {
-            $trip = Trip::find($val->id);
-
-            if ($trip == null) {
-                return Utils::response([
-                    'status' => 0,
-                    'code' => 0,
-                    'message' => "Trip not found.",
-                ]);
-            }
-            $trip->status = $val->status;
-            $trip->type = $val->type;
-            $trip->start_location = ($val->start_location == null) ? $trip->start_location : $val->start_location;
-            $trip->end_location = ($val->end_location == null) ? $trip->end_location : $val->end_location;
-            $trip->end_time = ($val->end_time == null) ? Carbon::now() : $val->end_time;
-            $trip->distance = $val->distance;
-            $trip->amount = $val->amount;
-            $trip->payment_status = ($val->payment_status == null) ? $trip->payment_status : $val->payment_status;
-            $trip->payment_method = ($val->payment_method == null) ? $trip->payment_method : $val->payment_method;
-            $trip->payment_date = ($val->payment_date == null) ? $trip->payment_date : $val->payment_date;
-            $trip->notes = ($val->notes == null) ? $trip->notes : $val->notes;
-
-            try {
-                $trip->save();
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update trip because ' . $th->getMessage());
-            }
-            $trip = Trip::find($trip->id);
-            return Utils::response([
-                'status' => 1,
-                'data' => $trip,
-                'code' => 1,
-                'message' => 'Trip updated successfully.',
-            ]);
-        } else {
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => "Invalid request.",
-            ]);
-        }
-        /* 
-
-        	id	created_at	updated_at	type	status	start_location	end_location	start_time	end_time	driver_id	vehicle	items	distance	duration	amount	payment_status	payment_method	payment_date	code	code_verification	notes	
-
-
-        */
-    }
-
-    public function order_create_create(Request $val)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => "User not found.",
-            ]);
-        }
-
-
-        //validate for local_id
-        if ($val->local_id == null) {
-            return $this->error('Local ID is required.');
-        }
-
-        //local_id len > 5
-        if (strlen($val->local_id) < 5) {
-            return $this->error('Local ID is invalid.');
-        }
-
-
-        $order = LaundryOrder::where([
-            'local_id' => $val->local_id
-        ])->first();
-
-        $isCreating = false;
-        if ($order == null) {
-            $order = new LaundryOrder();
-            $isCreating = true;
-        } else {
-            $isCreating = false;
-        }
-
-        if ($isCreating) {
-            $order->user_id = $u->id;
-            $order->customer_name = $val->customer_name;
-            $order->customer_phone = $val->customer_phone;
-            $order->customer_address = $val->customer_address;
-            $order->pickup_address = $val->pickup_address;
-            $order->pickup_gps = $val->pickup_gps;
-            $order->delivery_address = $val->delivery_address;
-            $order->special_instructions = $val->special_instructions;
-            $order->total_amount = $val->total_amount;
-            $order->payment_status = $val->payment_status;
-            $order->payment_method = $val->payment_method;
-            $order->payment_date = $val->payment_date;
-            $order->stripe_payment_link = $val->stripe_payment_link;
-            $order->payment_reference = $val->payment_reference;
-            $order->payment_notes = $val->payment_notes;
-            $order->customer_photos = $val->customer_photos;
-            $order->scheduled_pickup_time = $val->scheduled_pickup_time;
-            $order->assigned_driver_id = $val->assigned_driver_id;
-            $order->driver_id = $val->driver_id;
-            $order->actual_pickup_time = $val->actual_pickup_time;
-            $order->pickup_notes = $val->pickup_notes;
-            $order->laundry_delivery_time = $val->laundry_delivery_time;
-            $order->washer_assignment_time = $val->washer_assignment_time;
-            $order->assigned_washer_id = $val->assigned_washer_id;
-            $order->washer_id = $val->washer_id;
-            $order->washing_start_time = $val->washing_start_time;
-            $order->washing_end_time = $val->washing_end_time;
-            $order->drying_start_time = $val->drying_start_time;
-            $order->drying_end_time = $val->drying_end_time;
-            $order->scheduled_delivery_time = $val->scheduled_delivery_time;
-            $order->delivery_driver_id = $val->delivery_driver_id;
-            $order->actual_delivery_time = $val->actual_delivery_time;
-            $order->delivery_notes = $val->delivery_notes;
-            $order->final_payment_date = $val->final_payment_date;
-            $order->receipt_approved_date = $val->receipt_approved_date;
-            $order->rating = $val->rating;
-            $order->driver_amount = $val->driver_amount;
-            $order->driving_distance = $val->driving_distance;
-            $order->feedback = $val->feedback;
-            $order->local_id = $val->local_id;
-            $order->status = 'PENDING';
-
-
-            try {
-                $order->save();
-            } catch (\Throwable $th) {
-                return $this->error($th->getMessage());
-            }
-            $order = LaundryOrder::find($order->id);
-
-
-            $message = "Order created successfully.";
-            if ($isCreating) {
-                $message = "Order created successfully.";
-            } else {
-                $message = "Order updated successfully.";
-            }
-
-            return Utils::response([
-                'status' => 1,
-                'data' => $order,
-                'code' => 1,
-                'message' => $message,
-            ]);
-        }
-
-
-        $accepted_tasks = [
-            'BILLING',
-            'PICKUP',
-            strtoupper('Picked Up'),
-            strtoupper('Washing in Progress'),
-            'ASSIGN WASHER',
-            'READY FOR DELIVERY',
-            'OUT FOR DELIVERY',
-            'DELIVERED',
-            'COMPLETED',
-        ];
-
-        if (!$isCreating) {
-            if (!in_array(trim($val->task), $accepted_tasks)) {
-                return $this->error('Invalid order status. -> #' . $val->task);
-            }
-        }
-        //COMPLETED
-        if (!$isCreating && $val->task == 'COMPLETED') {
-            //CHECK if order is paid
-            $is_paid = 'Not Paid';
-            try {
-                $order->is_order_paid();
-            } catch (\Throwable $th) {
-                return $this->error($th->getMessage());
-            }
-            if ($order->payment_status != 'Paid') {
-                return $this->error('Order is not paid.');
-            }
-            $order->status = strtoupper('COMPLETED');
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Order completed successfully.", 200);
-        }
-        if (!$isCreating && $val->task == 'DELIVERED') {
-            if (strlen(trim($val->delivery_notes)) < 1) {
-                return $this->error('Invalid delivery CODE. #' . $val->delivery_notes);
-            }
-            $order->status = strtoupper('DELIVERED');
-            $order->delivery_notes = $val->delivery_notes;
-            $order->delivery_driver_id = $u->id;
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Order delivered successfully.", 200);
-        }
-        if (!$isCreating && $val->task == 'OUT FOR DELIVERY') {
-            $order->status = strtoupper('OUT FOR DELIVERY');
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Order is out for delivery.", 200);
-        }
-
-        if (!$isCreating && $val->task == 'READY FOR DELIVERY') {
-            $driver = User::find($val->driver_id);
-            if ($driver == null) {
-                return $this->error('Driver not found.');
-            }
-            $order->driver_id = $driver->id;
-            $order->status = strtoupper('Ready for Delivery');
-            $order->delivery_notes = rand(10000, 99999);  //generate random number
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Ready for delivery.", 200);
-        }
-        if (!$isCreating && $val->task == 'WASHING IN PROGRESS') {
-            $order->status = strtoupper('Washing in Progress');
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Washing in progress.", 200);
-        }
-        if (!$isCreating && $val->task == 'ASSIGN WASHER') {
-            $washer = User::find($val->washer_id);
-            if ($washer == null) {
-                return $this->error('Washer not found.');
-            }
-
-
-            $items_json = $val->items;
-            if ($items_json == null) {
-                if ($isCreating) {
-                    return $this->error('Items are required.');
-                }
-            }
-            $items = [];
-            try {
-                $items = json_decode($items_json);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to parse items.');
-            }
-
-            //ifnotarray
-            if (!is_array($items)) {
-                return $this->error('Items must be an array.');
-            }
-
-            if (count($items) < 1) {
-                return $this->error('Items must have at least one item.');
-            }
-
-
-            foreach ($items as $item) {
-                $order_item = LaundryOrderItem::where([
-                    'local_id' => $item->local_id
-                ])->first();
-                if ($order_item == null) {
-                    $order_item = new LaundryOrderItem();
-                }
-                /* 
-                order_id	order_number	status	washer_id	washer_name	washer_notes	washer_photos		
-                */
-                //validate $item->name
-                if ($item->name == null || strlen($item->name) < 2) {
-                    return $this->error('Item name is required.');
-                }
-                //validate $item->type 
-                if ($item->type == null || strlen($item->type) < 2) {
-                    return $this->error('Item type is required.');
-                }
-                //customer_notes
-                if ($item->quantity == null || strlen($item->quantity) < 1) {
-                    return $this->error('Item quantity is required.');
-                }
-                //price
-                if ($item->price == null || strlen($item->price) < 1) {
-                    return $this->error('Item price is required.');
-                }
-                //total
-                if ($item->total == null || strlen($item->total) < 1) {
-                    return $this->error('Item total is required.');
-                }
-
-                //local_id
-                if ($item->local_id == null || strlen($item->local_id) < 1) {
-                    return $this->error('Item local_id is required.');
-                }
-                //order_local_id
-                if ($item->order_local_id == null || strlen($item->order_local_id) < 1) {
-                    return $this->error('Item order_local_id is required.');
-                }
-
-                //laundry_order_item_type_id
-                if ($item->laundry_order_item_type_id == null || strlen($item->laundry_order_item_type_id) < 1) {
-                    return $this->error('Item laundry_order_item_type_id is required.');
-                }
-
-                if ($order_item == null) {
-                    $order_item = new LaundryOrderItem();
-                }
-
-                $order_item->name = $item->name;
-                $order_item->type = $item->type;
-                $order_item->customer_notes = $item->customer_notes;
-                $order_item->customer_photos = $item->customer_photos;
-                $order_item->quantity = $item->quantity;
-                $order_item->price = $item->price;
-                $order_item->total = $item->total;
-                $order_item->order_id = $order->id;
-                $order_item->order_number = $order->order_number;
-                $order_item->status = $item->status;
-                $order_item->washer_id = $item->washer_id;
-                $order_item->washer_name = $item->washer_name;
-                $order_item->washer_notes = $item->washer_notes;
-                $order_item->washer_photos = $item->washer_photos;
-                $order_item->local_id = $item->local_id;
-                $order_item->order_local_id = $order->local_id;
-                $order_item->laundry_order_item_type_id = $item->laundry_order_item_type_id;
-                $order_item->save();
-            }
-
-            $order->washer_id = $washer->id;
-            $order->status = strtoupper('Awaiting Washing');
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Washer assigned successfully.", 200);
-        }
-        if (!$isCreating && $val->task == 'BILLING') {
-
-            $accepted_payment_status = [
-                'Paid',
-                'Not Paid',
-            ];
-
-            if (!in_array($val->payment_status, $accepted_payment_status)) {
-                return $this->error('Invalid payment status.');
-            }
-
-            //total_amount float
-            $total_amount = (float) $val->total_amount;
-            $weight = (float) $val->weight;
-
-            if ($weight < 0.1) {
-                return $this->error('Weight must be greater than 0.');
-            }
-
-            if (!is_float($total_amount)) {
-                return $this->error('Total amount must be a float.');
-            }
-            //service_amount float
-            $service_amount = (float)$val->service_amount;
-            if (!is_float($service_amount)) {
-                return $this->error('Service amount must be a float.');
-            }
-
-            //washing_amount float
-            $washing_amount = (float) $val->washing_amount;
-            if (!is_float($washing_amount)) {
-                return $this->error('Washing amount must be a float.');
-            }
-            $order->total_amount = $total_amount;
-            $order->service_amount = $service_amount;
-            $order->washing_amount = $washing_amount;
-            $order->weight = $weight;
-            $order->status = strtoupper('READY FOR PAYMENT');
-
-            $order->payment_status = $val->payment_status;
-            if ($val->payment_status == 'Paid') {
-                $order->payment_reference = $val->payment_reference;
-                $order->payment_method = $val->payment_method;
-                $order->payment_notes = $val->payment_notes;
-                $order->payment_status = 'Paid';
-                $order->payment_date = Carbon::now();
-                $order->status = strtoupper('PENDING');
-            }
-
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-
-            return $this->success($order, $message = "Billing updated successfully. #" . $order->id, 200);
-        }
-
-        if (!$isCreating && $val->task == 'PICKUP') {
-            //driver_id
-            $driver = User::find($val->driver_id);
-            if ($driver == null) {
-                return $this->error('Driver not found.');
-            }
-            $order->driver_id = $driver->id;
-            $order->pickup_notes = $val->pickup_notes;
-            $order->pickup_address = $val->pickup_address;
-            $order->status = 'Awaiting Pickup';
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Pickup updated successfully.", 200);
-        }
-
-        if (!$isCreating && $val->task == strtoupper('Picked Up')) {
-            $order->status = strtoupper('Picked Up');
-            $order->pickup_notes = $val->pickup_notes;
-            $order->delivery_driver_id = $u->id;
-            try {
-                $order->save();
-                $order = LaundryOrder::find($order->id);
-            } catch (\Throwable $th) {
-                return $this->error('Failed to update order because ' . $th->getMessage());
-            }
-            return $this->success($order, $message = "Order picked up successfully.", 200);
-        }
-
-        if (!$isCreating) {
-            return $this->error('Invalid task #' . $val->task);
-        }
-    }
-
-
-    public function get_order_payment_link(Request $val)
-    {
-        $order = LaundryOrder::find($val->id);
-        if ($order == null) {
-            return $this->error('Order not found.');
-        }
-        try {
-            $order->get_payment_link();
-        } catch (\Throwable $th) {
-            return $this->error($th->getMessage());
-        }
-        $order = LaundryOrder::find($val->id);
-        return $this->success($order, $message = "Success", 200);
-    }
-
-    public function tasks_create(Request $val)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => "User not found.",
-            ]);
-        }
-
-        if ($val->assign_to_type != 'to_me') {
-            if ($val->assigned_to == null) {
-                return Utils::response([
-                    'status' => 0,
-                    'code' => 0,
-                    'message' => "Assigned to is required.",
-                ]);
-            }
-        }
-
-        $message = "";
-        $newTask = new Task();
-        try {
-            $task = new Task();
-            $task->company_id = $u->id;
-            $task->meeting_id = null;
-            $task->assigned_to = $val->assigned_to;
-            $task->project_id = $val->project_id;
-            $task->created_by = $u->id;
-            $task->name = $val->name;
-            $task->task_description = $val->task_description;
-            $task->due_to_date = Carbon::parse($val->due_to_date);
-            $task->priority = 'Medium';
-            $task->save();
-        } catch (\Throwable $th) {
-            $message = $th->getMessage();
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => $message,
-            ]);
-        }
-
-        $newTask = Task::find($task->id);
-
-        return Utils::response([
-            'status' => 1,
-            'data' => $newTask,
-            'code' => 1,
-            'message' => 'Task created successfully.',
-        ]);
-    }
-
-
-    public function meetings_create(Request $val)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => "User not found.",
-            ]);
-        }
-
-        if (!(isset($val->resolutions)) || $val->resolutions == null) {
-            //return resolutions not set
-            return Utils::response([
-                'status' => 0,
-                'code' => 0,
-                'message' => "Resolutions not set"
-            ]);
-        }
-
-        $meeting = new Meeting();
-        $meeting->created_by = $u->id;
-        $meeting->company_id = $u->company_id;
-        $meeting->name = $val->gps_latitude;
-        $meeting->details = $val->details;
-        $meeting->minutes_of_meeting = $val->details;
-        $meeting->location = $val->location_text;
-        $meeting->meeting_start_time = $val->start_date;
-        $meeting->meeting_end_time = $val->end_date;
-        $meeting->meeting_end_time = $val->session_date;
-        $local_id = $val->id;
-        $files = [];
-        foreach (
-            Image::where([
-                'parent_id' => $local_id
-            ])->get() as $key => $value
-        ) {
-            $files[] = 'images/' . $value->src;
-        }
-        $meeting->attendance_list_pictures = $files;
-
-        try {
-            $meeting->save();
-        } catch (\Throwable $th) {
-            $msg = $th->getMessage();
-            return $this->error($msg);
-        }
-
-
-        $resolutions = null;
-        try {
-            $resolutions = json_decode($val->resolutions);
-        } catch (\Throwable $th) {
-            $resolutions = null;
-        }
-
-
-        if (($resolutions != null) && is_array($resolutions)) {
-            foreach ($resolutions as $key => $res) {
-                $task = new Task();
-                $task->company_id = $u->id;
-                $task->meeting_id = $meeting->id;
-                $task->created_by = $u->id;
-                $task->project_id = 1;
-                $task->project_section_id = 1;
-                $task->project_id = 1;
-                $task->rate = 0;
-                $task->hours = 0;
-                $task->assigned_to = $res->assigned_to;
-                $manager = Administrator::find($res->assigned_to);
-                if ($manager != null) {
-                    $task->manager_id = $manager->id;
-                }
-                $task->company_id = $u->company_id;
-                $task->name = $res->name;
-                $task->task_description = $res->task_description;
-                $task->due_to_date = $res->due_to_date;
-                $task->assign_to_type = $res->assign_to_type;
-                $task->delegate_submission_status = 'Pending';
-                $task->manager_submission_status = 'Pending';
-                $task->is_submitted = 'Pending';
-                $task->delegate_submission_remarks = '';
-                $task->manager_submission_remarks = '';
-                $task->priority = 'Medium';
-                $task->save();
-            }
-        }
-
-        $meeting = Meeting::find($meeting->id);
-        return Utils::response([
-            'status' => 1,
-            'data' => $meeting,
-            'code' => 1,
-            'message' => 'Meeting created successfully.',
-        ]);
-    }
-
-
-
+    /**
+     * @OA\Post(
+     *     path="/password-change",
+     *     summary="Change user password",
+     *     description="Allows an authenticated user to change their password by providing the current password and a new password.",
+     *     operationId="changePassword",
+     *     tags={"User"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Password change request data",
+     *         @OA\JsonContent(
+     *             required={"current_password", "password"},
+     *             @OA\Property(
+     *                 property="current_password",
+     *                 type="string",
+     *                 format="password",
+     *                 description="User's current password",
+     *                 example="OldPassword123"
+     *             ),
+     *             @OA\Property(
+     *                 property="password",
+     *                 type="string",
+     *                 format="password",
+     *                 description="New password (must be at least 2 characters)",
+     *                 example="NewSecurePassword123"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password changed successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Password changed successfully."),
+     *             @OA\Property(property="status", type="integer", example=1),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="username", type="string", example="johndoe"),
+     *                 @OA\Property(property="email", type="string", example="johndoe@example.com")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing required fields or incorrect password",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Current password is incorrect.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="User not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while changing the password.")
+     *         )
+     *     )
+     * )
+     */
     public function password_change(Request $request)
     {
         $u = auth('api')->user();
@@ -1515,6 +1668,53 @@ class ApiAuthController extends Controller
     }
 
 
+
+
+    /**
+     * @OA\Post(
+     *     path="/delete-account",
+     *     summary="Delete user account",
+     *     description="Marks the authenticated user's account as deleted by updating the status to '3'.",
+     *     operationId="deleteAccount",
+     *     tags={"User"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Account deleted successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Deleted successfully!"),
+     *             @OA\Property(property="status", type="integer", example=1),
+     *             @OA\Property(property="data", type="null", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="User not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="User not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while deleting the account.")
+     *         )
+     *     )
+     * )
+     */
+
     public function delete_profile(Request $request)
     {
         $u = auth('api')->user();
@@ -1533,448 +1733,100 @@ class ApiAuthController extends Controller
     }
 
 
-    public function consultation_card_payment(Request $request)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('User not found.');
-        }
-        $administrator_id = $u->id;
 
-        $u = Administrator::find($administrator_id);
-        if ($u == null) {
-            return $this->error('User not found.');
-        }
-        //check for consultation_id
-        if (
-            $request->consultation_id == null ||
-            strlen($request->consultation_id) < 1
-        ) {
-            return $this->error('Consultation ID is missing.');
-        }
-        $consultation = Consultation::find($request->consultation_id);
-        if ($consultation == null) {
-            return $this->error('Consultation not found.');
-        }
-
-        //validate amount_paid
-        if (
-            $request->amount_paid == null ||
-            strlen($request->amount_paid) < 1
-        ) {
-            return $this->error('Amount payable is missing.');
-        }
-
-        // amount_paid should be less than or equal to amount_paid
-        if (
-            $request->amount_paid > $consultation->total_due
-        ) {
-            return $this->error('Amount payable is greater than amount paid.');
-        }
-
-        //amount_payable should be more th 500
-        if (
-            $request->amount_paid < 500
-        ) {
-            return $this->error('Amount payable should be more than 500.');
-        }
-
-        //validate payment_method
-        if (
-            $request->payment_method == null ||
-            strlen($request->payment_method) < 1
-        ) {
-            return $this->error('Payment method is missing.');
-        }
-
-        $u = User::find($u->id);
-        $card = $u->get_card();
-        if ($card == null) {
-            return $this->error('Card not found.');
-        }
-
-        if ($card->card_status != 'Active') {
-            return $this->error('Card is not active. Current status is ' . $u->card_status . ".");
-        }
-
-        $amount = (int)($request->amount_paid);
-        $card_balance = (int)($card->card_balance);
-        if ($amount > $card_balance) {
-            $card_max_credit = (int)($card->card_max_credit);
-            $acceptable_credit = $card_max_credit - $card_balance;
-            if ($amount > $acceptable_credit) {
-                return $this->error('Amount payable is greater than card credit limit. (UGX ' . $card_max_credit . ")");
-            }
-        }
-
-
-        $paymentRecord = new PaymentRecord();
-        $paymentRecord->consultation_id = $consultation->id;
-        $paymentRecord->description = 'Consultation payment for ' . $consultation->name_text;
-        $paymentRecord->amount_payable = $consultation->total_due;
-        $paymentRecord->amount_paid = $amount;
-        $paymentRecord->balance = $consultation->total_due - $amount;
-        $paymentRecord->payment_date = Carbon::now();
-        $paymentRecord->payment_time = Carbon::now();
-        $paymentRecord->payment_method = $request->payment_method;
-        $paymentRecord->payment_reference = rand(100000, 999999) . rand(100000, 999999);
-        $paymentRecord->payment_status = 'Success';
-        $paymentRecord->payment_remarks = 'Payment through mobile money.';
-        $paymentRecord->payment_phone_number = $u->phone_number_1;
-        $paymentRecord->payment_channel = 'Mobile App';
-        $paymentRecord->created_by_id = $u->id;
-        $paymentRecord->cash_receipt_number = $paymentRecord->payment_reference;
-        $paymentRecord->card_id = $card->id;
-        $paymentRecord->company_id = $card->company_id;
-        $paymentRecord->card_number = $card->card_number;
-
-        try {
-            $paymentRecord->save();
-        } catch (\Throwable $th) {
-            return $this->error('Failed to save payment record.');
-        }
-        $paymentRecord = PaymentRecord::find($paymentRecord->id);
-        return $this->success($paymentRecord, $message = "Payment successful.", 1);
-    }
-
-
-
-    public function stripe_payment_verification(Request $request)
-    {
-        $fw = LaundryOrder::find($request->id);
-        if ($fw == null) {
-            return Utils::response([
-                'status' => 0,
-                'message' => "Payment record not found."
-            ]);
-        }
-        if ($fw->payment_status == 'Paid') {
-            return Utils::response([
-                'status' => 1,
-                'message' => 'Payment successful.',
-                'data' => $fw
-            ]);
-        }
-
-        $fw->is_order_paid();
-        $fw = LaundryOrder::find($request->id);
-        if ($fw->payment_status == 'Paid') {
-            return Utils::response([
-                'status' => 1,
-                'message' => 'Payment successful.',
-                'data' => $fw
-            ]);
-        } else {
-            return Utils::response([
-                'status' => 0,
-                'message' => "Payment not successful.",
-                'data' => $fw
-            ]);
-        }
-    }
-
-
-    public function flutterwave_payment_verification(Request $request)
-    {
-        $fw = FlutterWaveLog::find($request->id);
-        if ($fw == null) {
-            return Utils::response([
-                'status' => 0,
-                'message' => "Payment record not found."
-            ]);
-        }
-        $fw->is_order_paid();
-        $fw = FlutterWaveLog::find($request->id);
-        if ($fw->status == 'Paid') {
-            return Utils::response([
-                'status' => 1,
-                'message' => "Payment successful.",
-                'data' => $fw
-            ]);
-        } else {
-            return Utils::response([
-                'status' => 0,
-                'message' => "Payment not successful.",
-                'data' => $fw
-            ]);
-        }
-    }
-    public function consultation_flutterwave_payment(Request $request)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('User not found.');
-        }
-        $administrator_id = $u->id;
-
-        $u = Administrator::find($administrator_id);
-        if ($u == null) {
-            return $this->error('User not found.');
-        }
-        //check for consultation_id
-        if (
-            $request->consultation_id == null ||
-            strlen($request->consultation_id) < 1
-        ) {
-            return $this->error('Consultation ID is missing.');
-        }
-        $consultation = Consultation::find($request->consultation_id);
-        if ($consultation == null) {
-            return $this->error('Consultation not found.');
-        }
-
-        //validate amount_paid
-        if (
-            $request->amount_paid == null ||
-            strlen($request->amount_paid) < 1
-        ) {
-            return $this->error('Amount payable is missing.');
-        }
-
-        // amount_paid should be less than or equal to amount_paid
-        if (
-            $request->amount_paid > $consultation->total_due
-        ) {
-            return $this->error('Amount payable is greater than amount paid.');
-        }
-
-        $phone_number = Utils::prepare_phone_number($request->payment_phone_number);
-
-        //check if phone number is valid
-        if (!Utils::phone_number_is_valid($phone_number)) {
-            return $this->error('Invalid phone number.');
-        }
-
-        //amount_payable should be more th 500
-        if (
-            $request->amount_paid < 500
-        ) {
-            return $this->error('Amount payable should be more than 500.');
-        }
-
-        //validate payment_method
-        if (
-            $request->payment_method == null ||
-            strlen($request->payment_method) < 1
-        ) {
-            return $this->error('Payment method is missing.');
-        }
-        $amount = (int)($request->amount_paid);
-        FlutterWaveLog::where([
-            'status' => 'Pending',
-            'consultation_id' => $consultation->id,
-        ])->delete();
-
-
-        $fw = new FlutterWaveLog();
-        $fw->consultation_id = $consultation->id;
-        $fw->flutterwave_payment_amount = $amount;
-        $fw->status = 'Pending';
-        $fw->flutterwave_payment_type = 'Consultation';
-        $fw->flutterwave_payment_customer_phone_number = $phone_number;
-        $fw->flutterwave_payment_status = 'Pending';
-        $phone_number_type = substr($phone_number, 0, 6);
-
-
-        if (
-            $phone_number_type == '+25670' ||
-            $phone_number_type == '+25675' ||
-            $phone_number_type == '+25674'
-        ) {
-            $phone_number_type = 'AIRTEL';
-        } else if (
-            $phone_number_type == '+25677' ||
-            $phone_number_type == '+25678' ||
-            $phone_number_type == '+25676'
-        ) {
-            $phone_number_type = 'MTN';
-        }
-
-        if (
-            $phone_number_type != 'MTN' &&
-            $phone_number_type != 'AIRTEL'
-        ) {
-            return Utils::response([
-                'status' => 0,
-                'message' => "Phone number must be MTN or AIRTEL. ($phone_number_type)"
-            ]);
-        }
-
-        $phone_number = str_replace([
-            '+256'
-        ], "0", $phone_number);
-
-
-
-        try {
-            $fw->uuid = Utils::generate_uuid();
-            $payment_link = $fw->generate_payment_link(
-                $phone_number,
-                $phone_number_type,
-                $amount,
-                $fw->uuid
-            );
-            if (strlen($payment_link) < 5) {
-                return Utils::response([
-                    'status' => 0,
-                    'message' => "Failed to generate payment link."
-                ]);
-            }
-            $fw->flutterwave_payment_link = $payment_link;
-            $fw->save();
-            return Utils::response([
-                'status' => 1,
-                'message' => "Payment link generated successfully.",
-                'data' => $fw
-            ]);
-        } catch (\Throwable $th) {
-            return Utils::response([
-                'status' => 0,
-                'message' => "Failed because " . $th->getMessage()
-            ]);
-        }
-
-
-
-
-
-        return $this->success($paymentRecord, $message = "Payment successful.", 1);
-    }
-
-
-
-    public function update_profile(Request $request)
-    {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('User not found.');
-        }
-        $administrator_id = $u->id;
-
-        $u = Administrator::find($administrator_id);
-        if ($u == null) {
-            return $this->error('User not found.');
-        }
-
-        if (
-            $request->first_name == null ||
-            strlen($request->first_name) < 2
-        ) {
-            return $this->error('First name is missing.');
-        }
-        //validate all
-        if (
-            $request->last_name == null ||
-            strlen($request->last_name) < 2
-        ) {
-            return $this->error('Last name is missing.');
-        }
-
-
-
-        if ($request->phone_number_1 != null && strlen($request->phone_number_1) > 4) {
-            $anotherUser = Administrator::where([
-                'phone_number_1' => $request->phone_number_1
-            ])->first();
-            if ($anotherUser != null) {
-                if ($anotherUser->id != $u->id) {
-                    return $this->error('Phone number is already taken.');
-                }
-            }
-
-            $anotherUser = Administrator::where([
-                'username' => $request->phone_number_1
-            ])->first();
-            if ($anotherUser != null) {
-                if ($anotherUser->id != $u->id) {
-                    return $this->error('Phone number is already taken.');
-                }
-            }
-
-            $anotherUser = Administrator::where([
-                'email' => $request->phone_number_1
-            ])->first();
-            if ($anotherUser != null) {
-                if ($anotherUser->id != $u->id) {
-                    return $this->error('Phone number is already taken.');
-                }
-            }
-        }
-
-
-
-
-        if ($request->email != null && strlen($request->email) > 4) {
-
-            if (
-                $request->email != null &&
-                strlen($request->email) > 5
-            ) {
-                $anotherUser = Administrator::where([
-                    'email' => $request->email
-                ])->first();
-                if ($anotherUser != null) {
-                    if ($anotherUser->id != $u->id) {
-                        return $this->error('Email is already taken.');
-                    }
-                }
-                //check for username as well
-                $anotherUser = Administrator::where([
-                    'username' => $request->email
-                ])->first();
-                if ($anotherUser != null) {
-                    if ($anotherUser->id != $u->id) {
-                        return $this->error('Email is already taken.');
-                    }
-                }
-                // //validate email
-                // if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
-                //     return $this->error('Invalid email address.');
-                // }
-            }
-        }
-
-
-
-        $msg = "";
-        //first letter to upper case
-        $u->first_name = $request->first_name;
-
-        //change first letter to upper case
-        $u->first_name = ucfirst($u->first_name);
-
-
-        $u->last_name = ucfirst($request->last_name);
-        $u->phone_number_1 = $request->phone_number_1;
-        $u->email = $request->email;
-        $u->home_address = ucfirst($request->home_address);
-
-        $images = [];
-        if (!empty($_FILES)) {
-            $images = Utils::upload_images_2($_FILES, false);
-        }
-        if (!empty($images)) {
-            $u->avatar = 'images/' . $images[0];
-        }
-
-        $code = 1;
-        try {
-            $u->save();
-            $u = Administrator::find($administrator_id);
-            $msg = "Updated successfully.";
-            return $this->success($u, $msg, $code);
-        } catch (\Throwable $th) {
-            $msg = $th->getMessage();
-            $code = 0;
-            return $this->error($msg);
-        }
-        return $this->success(null, $msg, $code);
-    }
-
-
-
-
-
+    /**
+     * @OA\Post(
+     *     path="/post-media-upload",
+     *     summary="Upload media files",
+     *     description="Allows authenticated users to upload media files such as images. Supports file type validation and parent relationships.",
+     *     operationId="uploadMedia",
+     *     tags={"Media"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Media upload request data",
+     *         @OA\MultipartContent(
+     *             @OA\Property(
+     *                 property="type",
+     *                 type="string",
+     *                 description="Type of media being uploaded",
+     *                 example="image"
+     *             ),
+     *             @OA\Property(
+     *                 property="parent_id",
+     *                 type="integer",
+     *                 description="Parent entity ID associated with the media",
+     *                 example=123
+     *             ),
+     *             @OA\Property(
+     *                 property="parent_endpoint",
+     *                 type="string",
+     *                 description="Endpoint related to the parent entity (e.g., 'product', 'edit')",
+     *                 example="product"
+     *             ),
+     *             @OA\Property(
+     *                 property="product_id",
+     *                 type="integer",
+     *                 description="Associated product ID (if applicable)",
+     *                 example=45
+     *             ),
+     *             @OA\Property(
+     *                 property="note",
+     *                 type="string",
+     *                 description="Additional note about the media file",
+     *                 example="This is a sample product image."
+     *             ),
+     *             @OA\Property(
+     *                 property="file",
+     *                 type="string",
+     *                 format="binary",
+     *                 description="The media file to upload"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="File uploaded successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=1),
+     *             @OA\Property(property="code", type="integer", example=1),
+     *             @OA\Property(property="data", type="object", example={"file_url": "https://example.com/uploads/image123.jpg"}),
+     *             @OA\Property(property="message", type="string", example="File uploaded successfully.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing required fields",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=0),
+     *             @OA\Property(property="code", type="integer", example=0),
+     *             @OA\Property(property="message", type="string", example="Type is missing.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - User authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=0),
+     *             @OA\Property(property="code", type="integer", example=0),
+     *             @OA\Property(property="message", type="string", example="User not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=0),
+     *             @OA\Property(property="code", type="integer", example=0),
+     *             @OA\Property(property="message", type="string", example="Failed to upload files.")
+     *         )
+     *     )
+     * )
+     */
     public function upload_media(Request $request)
     {
 

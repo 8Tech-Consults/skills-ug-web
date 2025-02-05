@@ -1,95 +1,81 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "API Documentation",
+        "title": "Skills UG API Documentation",
+        "description": "API documentation for Skills UG.",
         "version": "1.0.0"
     },
     "paths": {
-        "/api/login": {
-            "post": {
-                "summary": "User Login",
-                "operationId": "adbe720dc4dcedd623b9794954f55254",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "username",
-                                    "password"
-                                ],
-                                "properties": {
-                                    "username": {
-                                        "type": "string",
-                                        "example": "admin"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "example": "admin"
-                                    }
-                                },
-                                "type": "object"
-                            }
+        "/api/jobs": {
+            "get": {
+                "tags": [
+                    "Jobs"
+                ],
+                "summary": "Retrieve a list of active jobs",
+                "description": "Fetches a paginated list of active jobs, with optional filtering by title or status.",
+                "operationId": "getJobs",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search term to filter jobs by title",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter jobs by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of jobs to display per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 16
                         }
                     }
-                },
+                ],
                 "responses": {
                     "200": {
-                        "description": "Logged in successfully"
-                    },
-                    "400": {
-                        "description": "Wrong or missing credentials"
-                    }
-                }
-            }
-        },
-        "/api/register": {
-            "post": {
-                "summary": "User Registration",
-                "operationId": "86b99167953f28d81ec79b565fdc5f52",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "phone_number_1",
-                                    "password",
-                                    "name"
-                                ],
-                                "properties": {
-                                    "phone_number_1": {
-                                        "type": "string",
-                                        "example": "+256700123456"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "description": "Paginated job data",
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        }
                                     },
-                                    "password": {
-                                        "type": "string",
-                                        "example": "secret"
-                                    },
-                                    "name": {
-                                        "type": "string",
-                                        "example": "John Doe"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "john@example.com"
-                                    }
-                                },
-                                "type": "object"
+                                    "type": "object"
+                                }
                             }
                         }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Account created successfully"
                     },
                     "400": {
-                        "description": "Validation errors or account already exists"
+                        "description": "Bad request"
                     }
                 }
             }
         }
     },
-    "tags": []
+    "tags": [
+        {
+            "name": "Jobs",
+            "description": "Jobs"
+        }
+    ]
 }

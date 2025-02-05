@@ -23,49 +23,25 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([EnsureTokenIsValid::class])->group(function () {});
 
 Route::POST("profile", [ApiAuthController::class, "profile_update"]);
-Route::POST("job-create", [ApiAuthController::class, "job_create"]);
-Route::POST("job-apply", [ApiAuthController::class, "job_apply"]);
-
-Route::get('users/me', [ApiAuthController::class, 'me']);
-Route::get('users', [ApiAuthController::class, 'users']);
-Route::get('manifest', [ApiAuthController::class, 'manifest']);
-Route::get('my-jobs', [ApiAuthController::class, 'my_jobs']);
-Route::get('jobs', [ApiAuthController::class, 'jobs']);
-Route::get('cvs', [ApiAuthController::class, 'cvs']);
-Route::get('jobs/{id}', [MainController::class, 'job_single']);
-Route::get('laundry-orders', [ApiAuthController::class, 'laundry_orders']);
-Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
-Route::get('trips', [ApiAuthController::class, 'trips']);
-
-
-Route::get('tasks', [ApiAuthController::class, 'tasks']);
-Route::get('laundry-order-item-types', [ApiAuthController::class, 'laundry_order_item_types']);
-Route::get('consultations', [ApiAuthController::class, 'consultations']);
-Route::get('services', [ApiAuthController::class, 'services']);
-Route::get('dose-item-records', [ApiAuthController::class, 'dose_item_records']);
-Route::POST("dose-item-records-state", [ApiAuthController::class, 'dose_item_records_state']);
-
-Route::POST("post-media-upload", [ApiAuthController::class, 'upload_media']);
-Route::POST("update-profile", [ApiAuthController::class, 'update_profile']);
-Route::POST("consultation-card-payment", [ApiAuthController::class, 'consultation_card_payment']);
-Route::POST("consultation-flutterwave-payment", [ApiAuthController::class, 'consultation_flutterwave_payment']);
-Route::POST("flutterwave-payment-verification", [ApiAuthController::class, 'flutterwave_payment_verification']);
-Route::POST("stripe-payment-verification", [ApiAuthController::class, 'stripe_payment_verification']);
-Route::POST("delete-account", [ApiAuthController::class, 'delete_profile']);
-Route::POST("password-change", [ApiAuthController::class, 'password_change']);
-Route::POST("tasks-create", [ApiAuthController::class, 'tasks_create']);
-Route::POST("consultation-create", [ApiAuthController::class, 'consultation_create']);
-Route::POST("order-create", [ApiAuthController::class, 'order_create_create']);
-Route::POST("trip-create", [ApiAuthController::class, 'trip_create']);
-Route::POST("get-order-payment-link", [ApiAuthController::class, 'get_order_payment_link']);
-Route::POST("meetings", [ApiAuthController::class, 'meetings_create']);
-Route::POST("tasks-update-status", [ApiAuthController::class, 'tasks_update_status']);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
 Route::POST("users/register", [ApiAuthController::class, "register"]);
+Route::POST("job-create", [ApiAuthController::class, "job_create"]);
+Route::POST("job-apply", [ApiAuthController::class, "job_apply"]);
+Route::get('users/me', [ApiAuthController::class, 'me']);
+Route::get('users', [ApiAuthController::class, 'users']);
+Route::get('jobs', [ApiAuthController::class, 'jobs']);
+Route::get('manifest', [ApiAuthController::class, 'manifest']);
+Route::get('my-jobs', [ApiAuthController::class, 'my_jobs']);
+Route::get('cvs', [ApiAuthController::class, 'cvs']);
+Route::get('jobs/{id}', [MainController::class, 'job_single']);
+Route::POST("post-media-upload", [ApiAuthController::class, 'upload_media']);
+Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
+Route::POST("delete-account", [ApiAuthController::class, 'delete_profile']);
+Route::POST("password-change", [ApiAuthController::class, 'password_change']);
+
 
 Route::get('api/{model}', [ApiResurceController::class, 'index']);
 Route::post('api/{model}', [ApiResurceController::class, 'update']);
-
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
