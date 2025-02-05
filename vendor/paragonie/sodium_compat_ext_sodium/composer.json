@@ -1,0 +1,16 @@
+{
+  "name": "paragonie/sodium_compat_ext_sodium",
+  "authors": [{
+    "name": "Paragon Initiative Enterprises",
+    "homepage": "https://paragonie.com",
+    "email": "security@paragonie.com"
+  }],
+  "license": "ISC",
+  "require": {
+    "paragonie/sodium_compat": "^1|^2"
+  },
+  "provide": {
+    "ext-libsodium": "*",
+    "ext-sodium": "*"
+  }
+}
