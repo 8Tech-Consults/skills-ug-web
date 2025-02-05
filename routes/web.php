@@ -295,6 +295,20 @@ Route::get('/gen-form', function () {
 })->name("gen-form");
 
 
+Route::get('clear', function () {
+    /* php artisan config:clear
+php artisan cache:clear
+php artisan route:clear
+php artisan view:clear
+php artisan optimize */
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    Artisan::call('optimize');
+    return Artisan::output();
+});
+
 Route::get('gen-companies', [MainController::class, 'gen_companies']);
 Route::get('gen-jobs', [MainController::class, 'gen_jobs']);
 Route::get('generate-class', [MainController::class, 'generate_class']);
