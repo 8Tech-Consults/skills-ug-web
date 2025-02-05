@@ -109,6 +109,14 @@ Route::get('migrate', function () {
     //returning the output
     return Artisan::output();
 });
+Route::get('artisan', function (Request $request) {
+    // Artisan::call('migrate');
+    //do run laravel migration command
+    //php artisan l5-swagger:generate
+    Artisan::call($request->command, ['--force' => true]);
+    //returning the output
+    return Artisan::output();
+});
 
 Route::get('medical-report', function () {
     $id = $_GET['id'];
