@@ -22,6 +22,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
+Route::get('my-cv', function () {
+    $cv = User::find(100);
+    $pdf = App::make('dompdf.wrapper');
+    $pdf->set_option('enable_html5_parser', TRUE);
+    if (isset($_GET['html'])) {
+        return view('cv', [
+            'cv' => $cv,
+        ]);
+    }
+    $pdf->loadHTML(view('cv', [
+        'cv' => $cv,
+    ])->render());
+    return $pdf->stream('cv.pdf');
+});
+
 Route::get('mail-test', function () {
 
     /* 
