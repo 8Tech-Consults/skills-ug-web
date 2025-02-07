@@ -36,9 +36,13 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary-color: #10475a;
+        }
+
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f2f2f2;
+            /* background-color: #f2f2f2; */
             color: #333;
             line-height: 1.5;
             padding: 20px;
@@ -143,21 +147,21 @@
         }
 
         .hr-1 {
-            border: 1px solid #ffb846;
+            border: 1.5px solid #10475a;
             padding: 0;
             margin: 0;
         }
 
         .hr-2 {
-            border: 2px solid #ffb846;
+            border: 4px solid #10475a;
             padding: 0;
             margin: 0;
         }
 
         .title-1 {
-            font-size: 24px;
-            font-weight: bold;
-            color: black;
+            font-size: 16px;
+            font-weight: bolder;
+            color: #F5A509;
             margin-bottom: 10px;
         }
 
@@ -168,51 +172,382 @@
         }
 
         .text-1 {
-            font-size: 16px !important;
+            font-size: 1px !important;
             color: #414141 !important;
             text-align: justify !important;
             line-height: 1.2 !important;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
         }
+
+        .my-table tr td {
+            padding: 0;
+            margin: 0;
+        }
+
+        .table-label {
+            width: 15%;
+            padding: 5px;
+            font-weight: bold;
+            text-transform: uppercase !important;
+        }
+
+        .table-value {
+            width: 30%;
+            padding: 5px;
+            background-color: #10475a;
+            color: #fff;
+            padding-left: 10px;
+        }
     </style>
 </head>
+@php
+    function dp($data)
+    {
+        $data = trim($data);
+        if ($data == null || $data == '' || $data == 'null' || $data == 'NULL' || $data == 'Null') {
+            return '-';
+        }
+        return $data;
+    }
+@endphp
 
-<body class="cv-container clearfix">
-    <table class="my-table" style="width: 100%; border-collapse: collapse; border: none; padding: 0; margin: 0;">
+<body class="cv-container ">
+    <table class="my-table w-100" style="width: 100%; border-collapse: collapse; border: none; padding: 0; margin: 0;">
         <tr>
-            <td class="sidebar p-3" style="vertical-align: top;">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Enim, quidem deserunt reprehenderit veniam sunt
-                ullam corporis illo vitae? Et quam atque voluptate dolorem ut placeat excepturi autem ullam cum minima?
+            <td style="width: 150px; vertical-align: top;">
+                <img src="{{ $avatar_path }}" alt="Profile Image" style="width: 150px;" class="profile-img">
             </td>
-            <td style="vertical-align: top;">
-                @for ($i = 0; $i < 100; $i++)
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Inventore ipsum incidunt voluptates dolorem
-                    rem
-                    quae, aut officia culpa! Totam eaque iure amet perferendis architecto esse enim dolorem dignissimos
-                    sunt
-                    omnis?
-                @endfor
+            <td class="pl-4" style="vertical-align: top;">
+                <div class="" style="border-right: 4px solid #10475a; padding-left: 0px;">
+                    <p class=" " style="font-weight: bolder;  font-size: 36px;  color: #000;">{{ $cv->name }}
+                    </p>
+                    <p style="font-weight: lighter!important; font-size: 20px; " class="text-uppercase">
+                        {{ dp($cv->special_qualification) }}
+                    </p>
+                </div>
+                <p class="title-1 mt-4 text-uppercase">
+                    Profile
+                </p>
+                <hr class="hr-1 ">
+                <p>{{ $cv->objective }}</p>
             </td>
         </tr>
     </table>
-    </table>
-    <table class="table my-table">
-        @for ($i = 0; $i < 100; $i++)
+
+
+    <div class="mr-3">
+        <div style="margin-top: 0px; background-color: #10475a;  color: #fff; 
+    width: 100%;
+    border-radius: 10px;
+ 
+    "
+            class="pl-3 pr-3 py-3   ">
+            <table style="border-collapse: collapse; width: 100%; color: #fff;">
+                <tr>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Email Address:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
+                            {{ dp($cv->email) }}
+                        </p>
+                    </td>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Phone number:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
+                            {{ dp($cv->phone_number_1) }}
+                        </p>
+                    </td>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Nationality:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
+                            {{ dp($cv->nationality) }}
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            District of residence:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
+                            {{ dp($cv->district_text) }}
+                        </p>
+                    </td>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Phone number:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
+                            {{ dp($cv->phone_number_1) }}
+                        </p>
+                    </td>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Nationality:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
+                            {{ dp($cv->nationality) }}
+                        </p>
+                    </td>
+                </tr>
+
+
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <table class="my-table w-100"
+            style="width: 100%; border-collapse: collapse; border: none; padding: 0; margin: 0;">
             <tr>
-                <td>
-                    <p class="mb-">
-                        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fugiat animi mollitia explicabo, ea
-                        porro
-                        maiores
-                        ex,
-                        laboriosam eaque modi, perferendis temporibus veniam nisi consectetur optio quae distinctio!
-                        Deserunt,
-                        eos
-                        unde.
-                    </p>
+                <td class="table-label">
+                    lable 1:
+                </td>
+                <td class="pr-3 ">
+                    <div class="  table-value pl-2 pt-1 pb-1 w-100">
+                        value 1
+                    </div>
+                </td>
+                <td class="table-label pl-3">
+                    lable 2:
+                </td>
+                <td class=" ">
+                    <div class="  table-value pl-2 pt-1 pb-1 w-100">
+                        value 2
+                    </div>
                 </td>
             </tr>
-        @endfor
-    </table>
+            <tr class="">
+                <td class="table-label">
+                    <div class="mt-2 w-100">
+                        lable 2:
+                    </div>
+                </td>
+                <td class="pr-3 ">
+                    <div class="mt-2 table-value pl-2 pt-1 pb-1 w-100">
+                        value 2
+                    </div>
+                </td>
+                <td class="table-label pl-3">
+                    <div class="mt-2">
+                        lable 3:
+                    </div>
+                </td>
+                <td class="">
+                    <div class="mt-2 table-value pl-2 pt-1 pb-1 w-100">
+                        value 2
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="row mr-1">
+        <div class="col-12 ">
+            <p class="title-1 mt-3 text-uppercase m-0 ">
+                career summary
+            </p>
+            <hr class="hr-1  ">
+            <p>{{ $cv->career_summary }}</p>
+
+        </div>
+    </div>
+
+    <div style="border-left: 3px solid #10475a; padding-left: 10px; margin-left: 23px; padding-bottom: 20px;"
+        class="pt-0 mt-0">
+        <p class="title-1 mt-3 text-uppercase"
+            style="margin-left: -35px!important; vertical-align: top !important; font-weight: bolder">
+            <span
+                style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+                width: 47px; height: 47px; text-align: center; vertical-align: middle; 
+                ">
+                <img class="mt-2" src="{{ public_path('assets/img/icons/briefcase.png') }}"
+                    style="width: 28px; height: 28px; ">
+            </span>
+            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;"> Work
+                Experience</span>
+        </p>
+
+        <div>
+            <p class="mt-3  mb-0 pb-0"
+                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                <span
+                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+            border: 4px solid white; 
+
+            ">
+                </span>
+                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                    Company name one #1</span>
+            </p>
+            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
+                eligendi
+                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
+                Officiis,
+                sequi ipsam?
+            </div>
+        </div>
+        <div>
+            <p class="mt-3  mb-0 pb-0"
+                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                <span
+                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+            border: 4px solid white; 
+
+            ">
+                </span>
+                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                    Company name one #1</span>
+            </p>
+            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
+                eligendi
+                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
+                Officiis,
+                sequi ipsam?
+            </div>
+        </div>
+        <div>
+            <p class="mt-3  mb-0 pb-0"
+                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                <span
+                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+            border: 4px solid white; 
+
+            ">
+                </span>
+                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                    Company name one #1</span>
+            </p>
+            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
+                eligendi
+                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
+                Officiis,
+                sequi ipsam?
+            </div>
+        </div>
+
+        <p class="title-1 mt-4 text-uppercase"
+            style="margin-left: -35px!important; vertical-align: top !important; font-weight: bolder">
+            <span
+                style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+            width: 47px; height: 47px; text-align: center; vertical-align: middle; 
+            ">
+                <img class="mt-2" src="{{ public_path('assets/img/icons/education.png') }}"
+                    style="width: 30px; height: 30px; ">
+            </span>
+            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;"> Education & Trainings</span>
+        </p>
+
+        <div>
+            <p class="mt-3  mb-0 pb-0"
+                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                <span
+                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+            border: 4px solid white; 
+
+            ">
+                </span>
+                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                    Company name one #1</span>
+            </p>
+            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
+                eligendi
+                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
+                Officiis,
+                sequi ipsam?
+            </div>
+        </div>
+        <div>
+            <p class="mt-3  mb-0 pb-0"
+                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                <span
+                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+            border: 4px solid white; 
+
+            ">
+                </span>
+                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                    Company name one #1</span>
+            </p>
+            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
+                eligendi
+                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
+                Officiis,
+                sequi ipsam?
+            </div>
+        </div>
+
+
+        <p class="title-1 mt-4 text-uppercase"
+            style="margin-left: -35px!important; vertical-align: top !important; font-weight: bolder">
+            <span
+                style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+        width: 47px; height: 47px; text-align: center; vertical-align: middle; 
+        ">
+                <img class="mt-2" src="{{ public_path('assets/img/icons/accomplishment.png') }}"
+                    style="width: 30px; height: 30px; ">
+            </span>
+            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;">Accomplishments</span>
+        </p>
+
+        <div>
+            <p class="mt-3  mb-0 pb-0"
+                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                <span
+                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+        width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+        border: 4px solid white; 
+
+        ">
+                </span>
+                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                    Company name one #1</span>
+            </p>
+            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
+                eligendi
+                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
+                Officiis,
+                sequi ipsam?
+            </div>
+        </div>
+    </div>
+    <div class="row mr-1 mt-2">
+        <div class="col-12 ">
+            <p class="title-1 mt-3 text-uppercase m-0 ">
+                Skills
+            </p>
+            <hr class="hr-1  ">
+            <p>{{ $cv->career_summary }}</p>
+
+        </div>
+    </div>
+    <div class="row mr-1 mt-3">
+        <div class="col-12 ">
+            <p class="title-1 mt-3 text-uppercase m-0 ">
+                Languages
+            </p>
+            <hr class="hr-1  ">
+            <p>{{ $cv->career_summary }}</p>
+
+        </div>
+    </div>
+
 
 </body>

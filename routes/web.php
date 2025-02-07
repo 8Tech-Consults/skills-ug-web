@@ -23,6 +23,11 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('my-cv', function () {
+    // $pass = password_hash('4321', PASSWORD_DEFAULT);
+    //update all users
+    /*  $SQL = "UPDATE admin_users SET password = '$pass'  ";
+    \DB::update($SQL);
+ */
     $cv = User::find(100);
     $pdf = App::make('dompdf.wrapper');
     $pdf->set_option('enable_html5_parser', TRUE);

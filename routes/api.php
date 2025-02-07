@@ -30,6 +30,7 @@ Route::POST("job-apply", [ApiAuthController::class, "job_apply"]);
 Route::get('users/me', [ApiAuthController::class, 'me']);
 Route::get('users', [ApiAuthController::class, 'users']);
 Route::get('jobs', [ApiAuthController::class, 'jobs']);
+Route::get('districts', [ApiAuthController::class, 'districts']);
 Route::get('manifest', [ApiAuthController::class, 'manifest']);
 Route::get('my-jobs', [ApiAuthController::class, 'my_jobs']);
 Route::get('cvs', [ApiAuthController::class, 'cvs']);

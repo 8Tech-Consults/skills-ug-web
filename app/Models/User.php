@@ -361,7 +361,17 @@ class User extends Authenticatable implements JWTSubject
 
 
     //appends
-    protected $appends = ['short_name'];
+    protected $appends = ['short_name', 'district_text'];
+
+    //get district text
+    public function getDistrictTextAttribute()
+    {
+        $district = District::find($this->district_id);
+        if ($district == null) {
+            return "";
+        }
+        return $district->name;
+    }
 
     public function getShortNameAttribute()
     {

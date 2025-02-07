@@ -25,7 +25,6 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Models\Utils;
 use App\Traits\ApiResponser;
-use Carbon\Carbon;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Facades\Admin;
 use Illuminate\Http\Request;
@@ -727,6 +726,60 @@ class ApiAuthController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/jobs",
+     *     summary="Get list of active jobs",
+     *     description="Retrieves a paginated list of active jobs with optional search by title and status filtering.",
+     *     operationId="getJobs",
+     *     tags={"Job"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search jobs by title",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Developer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by job status",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Active")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 16)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=16)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Jobs retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="title", type="string", example="Software Engineer"),
+     *                         @OA\Property(property="status", type="string", example="Active")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="last_page", type="integer", example=5),
+     *                 @OA\Property(property="per_page", type="integer", example=16),
+     *                 @OA\Property(property="total", type="integer", example=80)
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function jobs(Request $request)
     {
 
@@ -745,15 +798,13 @@ class ApiAuthController extends Controller
             $query->where('status', $status);
         }
 
-        // Order by newest (adjust as needed)
+        // Order by newest
         $query->orderBy('id', 'DESC');
 
-        // Paginate results (default to 10 per page)
+        // Paginate
         $perPage = $request->input('per_page', 16);
         $jobs = $query->paginate($perPage);
 
-        // Return paginated data
-        // 'data' contains "data, current_page, last_page, etc." from Laravel
         return $this->success($jobs, 'Success');
     }
 
