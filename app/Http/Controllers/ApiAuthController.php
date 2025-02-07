@@ -1113,7 +1113,7 @@ class ApiAuthController extends Controller
             'LIVE_JOBS' => number_format(Job::where('status', 'Active')->count()),
             'VACANCIES' => number_format(Job::where('status', 'Active')->sum('vacancies_count')),
             'COMPANIES' => number_format(User::count()),
-            'NEW_JOBS' => number_format(Job::where('status', 'Active')->where('created_at', '>=', Carbon::now()->subDays(7))->count()),
+            'NEW_JOBS' => number_format(Job::where('status', 'Active')->where('created_at', '>=', \Carbon\Carbon::now()->subDays(7))->count()),
             'TOP_CITIES' => $TOP_CITIES,
             'CATEGORIES' => $CATEGORIES,
             'TOP_JOBS' => $TOP_JOBS,
