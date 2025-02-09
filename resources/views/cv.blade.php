@@ -248,7 +248,7 @@
     </table>
 
 
-    <div class="mr-3 mt-4">
+    <div class="mr-3 mt-3">
         <div style="  background-color: #10475a;  color: #fff; 
     width: 100%;
     border-radius: 10px;
