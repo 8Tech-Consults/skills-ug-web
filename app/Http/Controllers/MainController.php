@@ -90,6 +90,76 @@ class MainController extends BaseController
     return $this->success($job, 'Job retrieved successfully.');
   }
 
+
+
+  /**
+   * @OA\Get(
+   *     path="/cvs/{id}",
+   *     summary="Get details of a user's CV",
+   *     description="Retrieves detailed information of a user's CV using the provided ID.",
+   *     operationId="getCvById",
+   *     tags={"CV"},
+   *     @OA\Parameter(
+   *         name="id",
+   *         in="path",
+   *         description="ID of the user profile to retrieve CV for",
+   *         required=true,
+   *         @OA\Schema(type="integer", example=1)
+   *     ),
+   *     @OA\Response(
+   *         response=200,
+   *         description="CV retrieved successfully",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Profile details"),
+   *             @OA\Property(property="data", type="object")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=404,
+   *         description="Account not found",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Account not found.")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=500,
+   *         description="Internal Server Error",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="An error occurred while retrieving CV details.")
+   *         )
+   *     )
+   * )
+   */
+  public function cv_single(Request $request)
+  {
+
+
+    $u = User::find($request->id);
+    if ($u == null) {
+      return $this->error('Account not found.');
+    }
+
+    $path = $u->school_pay_account_id;
+    $FullPath = public_path('storage/' . $path);
+    //check if file exists
+    if (
+      strlen($u->school_pay_account_id) < 5 ||
+      !file_exists($FullPath)
+    ) {
+      try {
+        User::save_cv($u);
+      } catch (\Throwable $th) {
+        return $this->error($th->getMessage());
+      }
+      $u = User::find($u->id);
+    }
+
+    return $this->success($u, $message = "Profile details", 200);
+  }
+
   public function index()
   {
 

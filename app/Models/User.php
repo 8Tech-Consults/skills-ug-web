@@ -12,6 +12,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Facades\Admin;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -24,6 +26,21 @@ class User extends Authenticatable implements JWTSubject
     {
         parent::boot();
 
+        //created 
+        self::created(function ($m) {
+            try {
+                User::save_cv($m);
+            } catch (\Throwable $th) {
+                // throw new \Exception($th->getMessage());
+            }
+        });
+        self::updated(function ($m) {
+            try {
+                User::save_cv($m);
+            } catch (\Throwable $th) {
+                // throw new \Exception($th->getMessage());
+            }
+        });
         self::creating(function ($m) {
 
             $m->email = trim($m->email);
@@ -361,7 +378,17 @@ class User extends Authenticatable implements JWTSubject
 
 
     //appends
-    protected $appends = ['short_name', 'district_text'];
+    protected $appends = ['short_name', 'district_text', 'preferred_job_category_text'];
+
+    //getter for preferred_job_category_text
+    public function getPreferredJobCategoryTextAttribute()
+    {
+        $category = JobCategory::find($this->preferred_job_category);
+        if ($category == null) {
+            return "";
+        }
+        return $category->name;
+    }
 
     //get district text
     public function getDistrictTextAttribute()
@@ -438,5 +465,124 @@ class User extends Authenticatable implements JWTSubject
         }
 
         return [$roles];
+    }
+
+    public function get_employment_history(): array
+    {
+        if ($this->primary_school_name == null || strlen($this->primary_school_name) < 2) {
+            return [];
+        }
+        $recs = [];
+        try {
+            $recs = json_decode($this->primary_school_name, true);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        $objects = [];
+        foreach ($recs as $key => $value) {
+            $objects[] = (object) $value;
+        }
+        return $objects;
+    }
+    public function get_education(): array
+    {
+        if ($this->degree_university_name == null || strlen($this->degree_university_name) < 2) {
+            return [];
+        }
+        $recs = [];
+        try {
+            $recs = json_decode($this->degree_university_name, true);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        $objects = [];
+        foreach ($recs as $key => $value) {
+            $objects[] = (object) $value;
+        }
+        return $objects;
+    }
+    public function get_trainings(): array
+    {
+        if ($this->high_school_name == null || strlen($this->high_school_name) < 2) {
+            return [];
+        }
+        $recs = [];
+        try {
+            $recs = json_decode($this->high_school_name, true);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        $objects = [];
+        foreach ($recs as $key => $value) {
+            $objects[] = (object) $value;
+        }
+        return $objects;
+    }
+
+    public function get_seconday_school(): array
+    {
+        if ($this->seconday_school_name == null || strlen($this->seconday_school_name) < 2) {
+            return [];
+        }
+        $recs = [];
+        try {
+            $recs = json_decode($this->seconday_school_name, true);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        $objects = [];
+        foreach ($recs as $key => $value) {
+            $objects[] = (object) $value;
+        }
+        return $objects;
+    }
+    public function get_accomplishments(): array
+    {
+        if ($this->school_pay_payment_code == null || strlen($this->school_pay_payment_code) < 2) {
+            return [];
+        }
+        $recs = [];
+        try {
+            $recs = json_decode($this->school_pay_payment_code, true);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        $objects = [];
+        foreach ($recs as $key => $value) {
+            $objects[] = (object) $value;
+        }
+        return $objects;
+    }
+
+    public static function save_cv($u)
+    {
+        $path = "files/gen-cv-" . $u->id . ".pdf";
+        $FullPath = public_path('storage/' . $path);
+        //check if file exists
+        if (file_exists($FullPath)) {
+            unlink($FullPath);
+        }
+        $pdf = App::make('dompdf.wrapper');
+        $pdf->set_option('enable_html5_parser', TRUE);
+        if (isset($_GET['html'])) {
+            return view('cv', [
+                'cv' => $u,
+            ]);
+        }
+        $pdf->loadHTML(view('cv', [
+            'cv' => $u,
+        ])->render());
+
+        try {
+            $pdf->save($FullPath);
+        } catch (\Throwable $th) {
+            throw new \Exception("Failed to save cv because " . $th->getMessage());
+        }
+
+        $sql = "update admin_users set school_pay_account_id = '$path' where id = " . $u->id;
+        DB::update($sql);
+
+
+        //
     }
 }

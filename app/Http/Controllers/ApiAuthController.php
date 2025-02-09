@@ -28,6 +28,7 @@ use App\Traits\ApiResponser;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Facades\Admin;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -56,6 +57,8 @@ class ApiAuthController extends Controller
             'jobs',
             'users',
             'jobs/*',
+            'cvs/*',
+            'districts',
             'cvs',
         ]]);
     }
@@ -711,7 +714,23 @@ class ApiAuthController extends Controller
     public function me()
     {
         $query = auth('api')->user();
-        return $this->success($query, $message = "Profile details", 200);
+        $u = User::find($query->id);
+        if ($u == null) {
+            return $this->error('Account not found.');
+        }
+
+        $path = $u->school_pay_account_id;
+        $FullPath = public_path('storage/' . $path);
+        //check if file exists
+        if (
+            strlen($u->school_pay_account_id) < 5 ||
+            !file_exists($FullPath)
+        ) {
+            User::save_cv($u);
+            $u = User::find($u->id);
+        }
+
+        return $this->success($u, $message = "Profile details", 200);
     }
 
 
@@ -723,6 +742,12 @@ class ApiAuthController extends Controller
             return $this->error('Job not found. => #' . $request->id);
         }
         return $this->success($job, 'Job retrieved successfully.');
+    }
+
+    public function districts()
+    {
+        $districts = District::all();
+        return $this->success($districts, 'Districts retrieved successfully.');
     }
 
 
@@ -1099,6 +1124,8 @@ class ApiAuthController extends Controller
      */
     public function manifest()
     {
+
+        $carbon = new Carbon();
         $TOP_CITIES = District::select('id', 'name', 'jobs_count', 'photo')
             ->orderBy('jobs_count', 'DESC')
             ->limit(10)
@@ -1113,7 +1140,7 @@ class ApiAuthController extends Controller
             'LIVE_JOBS' => number_format(Job::where('status', 'Active')->count()),
             'VACANCIES' => number_format(Job::where('status', 'Active')->sum('vacancies_count')),
             'COMPANIES' => number_format(User::count()),
-            'NEW_JOBS' => number_format(Job::where('status', 'Active')->where('created_at', '>=', \Carbon\Carbon::now()->subDays(7))->count()),
+            'NEW_JOBS' => number_format(Job::where('status', 'Active')->where('created_at', '>=', $carbon->now()->subDays(7))->count()),
             'TOP_CITIES' => $TOP_CITIES,
             'CATEGORIES' => $CATEGORIES,
             'TOP_JOBS' => $TOP_JOBS,

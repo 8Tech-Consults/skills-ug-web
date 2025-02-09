@@ -22,13 +22,44 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
+Route::get('get-cv', function (Request $request) {
+
+    $cv = User::find($request->id);
+    if ($cv == null) {
+        return throw new \Exception('User not found');
+    }
+
+    try {
+        User::save_cv($cv);
+    } catch (\Throwable $th) {
+        throw new \Exception($th->getMessage());
+    }
+    $cv = User::find($request->id);
+
+    $url = url('storage/' . $cv->school_pay_account_id);
+    return redirect($url);
+    dd($cv->school_pay_account_id);
+
+    $pdf = App::make('dompdf.wrapper');
+    $pdf->set_option('enable_html5_parser', TRUE);
+    if (isset($_GET['html'])) {
+        return view('cv', [
+            'cv' => $cv,
+        ]);
+    }
+    $pdf->loadHTML(view('cv', [
+        'cv' => $cv,
+    ])->render());
+    return $pdf->stream('cv.pdf');
+});
+
 Route::get('my-cv', function () {
-    // $pass = password_hash('4321', PASSWORD_DEFAULT);
-    //update all users
-    /*  $SQL = "UPDATE admin_users SET password = '$pass'  ";
-    \DB::update($SQL);
- */
-    $cv = User::find(100);
+
+    $cv = Auth::user();
+    if ($cv == null) {
+        return throw new \Exception('User not found');
+    }
+
     $pdf = App::make('dompdf.wrapper');
     $pdf->set_option('enable_html5_parser', TRUE);
     if (isset($_GET['html'])) {

@@ -1127,6 +1127,112 @@
                 ]
             }
         },
+        "/jobs": {
+            "get": {
+                "tags": [
+                    "Job"
+                ],
+                "summary": "Get list of active jobs",
+                "description": "Retrieves a paginated list of active jobs with optional search by title and status filtering.",
+                "operationId": "getJobs",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search jobs by title",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Developer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by job status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Active"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page (default: 16)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 16
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Jobs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "Software Engineer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Active"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 16
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 80
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
         "/cvs": {
             "get": {
                 "tags": [
@@ -2272,6 +2378,81 @@
                                         "message": {
                                             "type": "string",
                                             "example": "An error occurred while retrieving job details."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cvs/{id}": {
+            "get": {
+                "tags": [
+                    "CV"
+                ],
+                "summary": "Get details of a user's CV",
+                "description": "Retrieves detailed information of a user's CV using the provided ID.",
+                "operationId": "getCvById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user profile to retrieve CV for",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CV retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile details"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Account not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving CV details."
                                         }
                                     },
                                     "type": "object"

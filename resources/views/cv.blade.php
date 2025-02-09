@@ -1,9 +1,20 @@
 @php
-    // Layout dimensions
+
+    $employment_history = $cv->get_employment_history();
+    $educations = $cv->get_education();
+    $trainings = $cv->get_trainings();
+    $seconday_schools = $cv->get_seconday_school();
+    $accomplishments = $cv->get_accomplishments();
+
     $containerWidth = 800;
     $avatar_path = public_path('storage/' . $cv->avatar);
-    if (isset($_GET['html'])) {
-        $avatar_path = url('storage/' . $cv->avatar);
+
+    if (strlen($cv->avatar) < 4 || !file_exists($avatar_path)) {
+        $avatar_path = public_path('assets/img/user-1.png');
+    }
+
+    if (!file_exists($avatar_path)) {
+        $avatar_path = null;
     }
 
 @endphp
@@ -215,7 +226,9 @@
     <table class="my-table w-100" style="width: 100%; border-collapse: collapse; border: none; padding: 0; margin: 0;">
         <tr>
             <td style="width: 150px; vertical-align: top;">
-                <img src="{{ $avatar_path }}" alt="Profile Image" style="width: 150px;" class="profile-img">
+                @if ($avatar_path != null)
+                    <img src="{{ $avatar_path }}" alt="Profile Image" style="width: 150px;" class="profile-img">
+                @endif
             </td>
             <td class="pl-4" style="vertical-align: top;">
                 <div class="" style="border-right: 4px solid #10475a; padding-left: 0px;">
@@ -282,17 +295,44 @@
                     <td style="width: 33.33%; border: none;">
                         <p class="text-uppercase"
                             style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
-                            Phone number:</p>
+                            Address:</p>
                         <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
-                            {{ dp($cv->phone_number_1) }}
+                            {{ dp($cv->current_address) }}
                         </p>
                     </td>
                     <td style="width: 33.33%; border: none;">
                         <p class="text-uppercase"
                             style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
-                            Nationality:</p>
+                            Gender:</p>
                         <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-3">
-                            {{ dp($cv->nationality) }}
+                            {{ dp($cv->sex) }}
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Date of birth:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-0">
+                            {{ dp($cv->date_of_birth) }}
+                        </p>
+                    </td>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Marital Status:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-0">
+                            {{ dp($cv->marital_status) }}
+                        </p>
+                    </td>
+                    <td style="width: 33.33%; border: none;">
+                        <p class="text-uppercase"
+                            style="font-weight: bolder; font-size: 12px; line-height: .8rem; color: #F5A509;">
+                            Religion:</p>
+                        <p style="font-size: 14px; line-height: 1rem; font-weight: lighter;" class="mb-0">
+                            {{ dp($cv->religion) }}
                         </p>
                     </td>
                 </tr>
@@ -306,42 +346,42 @@
         <table class="my-table w-100"
             style="width: 100%; border-collapse: collapse; border: none; padding: 0; margin: 0;">
             <tr>
-                <td class="table-label">
-                    lable 1:
+                <td class="table-label" style="font-size: 12px; line-height: 1rem;">
+                    Looking for:
                 </td>
                 <td class="pr-3 ">
-                    <div class="  table-value pl-2 pt-1 pb-1 w-100">
-                        value 1
+                    <div class="  table-value pl-2 pt-0 pb-1 w-100" style="font-size: 14px;">
+                        {{ dp($cv->expected_job_level) }}
                     </div>
                 </td>
-                <td class="table-label pl-3">
-                    lable 2:
+                <td class="table-label pl-3" style="font-size: 12px; line-height: .9rem;">
+                    Available for:
                 </td>
                 <td class=" ">
-                    <div class="  table-value pl-2 pt-1 pb-1 w-100">
-                        value 2
+                    <div class="  table-value pl-2 pt-0 pb-1 w-100" style="font-size: 14px;">
+                        {{ dp($cv->expected_job_nature) }}
                     </div>
                 </td>
             </tr>
             <tr class="">
                 <td class="table-label">
-                    <div class="mt-2 w-100">
-                        lable 2:
+                    <div class="mt-2 w-100" style="font-size: 12px; line-height: 1rem;">
+                        Present Salary:
                     </div>
                 </td>
-                <td class="pr-3 ">
-                    <div class="mt-2 table-value pl-2 pt-1 pb-1 w-100">
-                        value 2
+                <td class="pr-3 " style="font-size: 12px;">
+                    <div class="mt-2 table-value pl-2 pt-1 pb-1 w-100" style="font-size: 12px;">
+                        {{ dp($cv->present_salary) }}
                     </div>
                 </td>
-                <td class="table-label pl-3">
+                <td class="table-label pl-3" style="font-size: 12px; line-height: .8rem;">
                     <div class="mt-2">
-                        lable 3:
+                        Expected SALARY:
                     </div>
                 </td>
                 <td class="">
-                    <div class="mt-2 table-value pl-2 pt-1 pb-1 w-100">
-                        value 2
+                    <div class="mt-2 table-value pl-2 pt-1 pb-1 w-100" style="font-size: 12px;">
+                        {{ dp($cv->expected_salary) }}
                     </div>
                 </td>
             </tr>
@@ -370,73 +410,50 @@
                 <img class="mt-2" src="{{ public_path('assets/img/icons/briefcase.png') }}"
                     style="width: 28px; height: 28px; ">
             </span>
-            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;"> Work
-                Experience</span>
+            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;">Employment History</span>
         </p>
 
-        <div>
-            <p class="mt-3  mb-0 pb-0"
-                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
-                <span
-                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
-            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
-            border: 4px solid white; 
-
-            ">
-                </span>
-                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
-                    Company name one #1</span>
-            </p>
-            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
-                eligendi
-                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
-                Officiis,
-                sequi ipsam?
+        {{-- if $employment_history is empty --}}
+        @if (count($employment_history) == 0)
+            <div>
+                <p class="mt-4 mb-0 pb-0" style="margin-left: -23px!important; font-weight: bolder">
+                    <span
+                        style="display: inline-block; background-color: #10475a; color: #fff; border-radius: 100%;
+                          width: 15px; height: 15px; text-align: center; border: 4px solid white;">
+                    </span>
+                    <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                        No Employment History
+                    </span>
+                </p>
             </div>
-        </div>
-        <div>
-            <p class="mt-3  mb-0 pb-0"
-                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
-                <span
-                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
-            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
-            border: 4px solid white; 
+        @else
+            @foreach ($employment_history as $job)
+                <div>
+                    <p class="mt-3  mb-0 pb-0"
+                        style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                        <span
+                            style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+                            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+                            border: 4px solid white; 
+                            ">
+                        </span>
+                        <span class="d-inline-block mb-0 ml-1" style="font-size: 18px; color: #10475a;">
+                            {{ $job->position }}</span>
+                    </p>
+                    <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;"
+                        class="mt-0">
+                        <p style="font-size: 16px; " class="mb-1">{{ $job->companyName }}</p>
+                        <p class="mb-1"><b>FROM:</b> {{ $job->startDate }}, <b>FOR:
+                            </b>{{ (int) $job->employmentPeriod }} Year(s)</p>
+                        <p class="mb-1"><b class="text-uppercase">Department:</b> {{ $job->department }} </p>
+                        <p class="mb-1"><b class="text-uppercase">Responsibilities:</b>
+                            {{ $job->responsibilities }} </p>
 
-            ">
-                </span>
-                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
-                    Company name one #1</span>
-            </p>
-            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
-                eligendi
-                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
-                Officiis,
-                sequi ipsam?
-            </div>
-        </div>
-        <div>
-            <p class="mt-3  mb-0 pb-0"
-                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
-                <span
-                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
-            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
-            border: 4px solid white; 
 
-            ">
-                </span>
-                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
-                    Company name one #1</span>
-            </p>
-            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
-                eligendi
-                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
-                Officiis,
-                sequi ipsam?
-            </div>
-        </div>
+                    </div>
+                </div>
+            @endforeach
+        @endif
 
         <p class="title-1 mt-4 text-uppercase"
             style="margin-left: -35px!important; vertical-align: top !important; font-weight: bolder">
@@ -447,51 +464,182 @@
                 <img class="mt-2" src="{{ public_path('assets/img/icons/education.png') }}"
                     style="width: 30px; height: 30px; ">
             </span>
-            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;"> Education & Trainings</span>
+            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;"> Education</span>
         </p>
 
-        <div>
-            <p class="mt-3  mb-0 pb-0"
-                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
-                <span
-                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
-            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
-            border: 4px solid white; 
-
-            ">
-                </span>
-                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
-                    Company name one #1</span>
-            </p>
-            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
-                eligendi
-                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
-                Officiis,
-                sequi ipsam?
+        {{-- if $educations is empty --}}
+        @if (count($educations) == 0)
+            <div>
+                <p class="mt-4 mb-0 pb-0" style="margin-left: -23px!important; font-weight: bolder">
+                    <span
+                        style="display: inline-block; background-color: #10475a; color: #fff; border-radius: 100%;
+                  width: 15px; height: 15px; text-align: center; border: 4px solid white;">
+                    </span>
+                    <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                        No Education History
+                    </span>
+                </p>
             </div>
-        </div>
-        <div>
-            <p class="mt-3  mb-0 pb-0"
-                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
-                <span
-                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
-            width:  15px; height: 15px; text-align: center; vertical-align: middle; 
-            border: 4px solid white; 
+        @else
+            @foreach ($educations as $education)
+                <div>
+                    <p class="mt-3  mb-0 pb-0"
+                        style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                        <span
+                            style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+                    width:  15px; height: 15px; text-align: center; vertical-align: middle; 
+                    border: 4px solid white;">
+                        </span>
+                        <span class="d-inline-block mb-0 ml-1 text-uppercase"
+                            style="font-size: 16px; color: #10475a;">
+                            {{ $education->education_level }}
+                        </span>
+                    </p>
+                    <div class="mt-0" style="margin-left: 10px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <tr>
+                                <th style="background-color: #f7f7f7; padding: 8px; text-align: left;">Institution</th>
+                                <td style="border: 1px solid #ddd; padding: 8px;">{{ $education->institution }}</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f7f7f7; padding: 8px; text-align: left;">Major</th>
+                                <td style="border: 1px solid #ddd; padding: 8px;">{{ $education->major }}</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f7f7f7; padding: 8px; text-align: left;">Duration</th>
+                                <td style="border: 1px solid #ddd; padding: 8px;">{{ $education->duration }}</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f7f7f7; padding: 8px; text-align: left;">Graduation Year
+                                </th>
+                                <td style="border: 1px solid #ddd; padding: 8px;">{{ $education->graduation_year }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f7f7f7; padding: 8px; text-align: left;">Result</th>
+                                <td style="border: 1px solid #ddd; padding: 8px;">{{ $education->result }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            @endforeach
+        @endif
 
-            ">
-                </span>
-                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
-                    Company name one #1</span>
-            </p>
-            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
-                eligendi
-                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
-                Officiis,
-                sequi ipsam?
+        <p class="title-1 mt-4 text-uppercase"
+            style="margin-left: -35px!important; vertical-align: top !important; font-weight: bolder">
+            <span
+                style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+            width: 47px; height: 47px; text-align: center; vertical-align: middle;">
+                <img class="mt-2" src="{{ public_path('assets/img/icons/trainings.png') }}"
+                    style="width: 30px; height: 30px;">
+            </span>
+            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;">Trainings</span>
+        </p>
+        @if (count($trainings) == 0)
+            <div>
+                <p class="mt-4 mb-0 pb-0" style="margin-left: -23px!important; font-weight: bolder">
+                    <span
+                        style="display: inline-block; background-color: #10475a; color: #fff; border-radius: 100%;
+                      width: 15px; height: 15px; text-align: center; border: 4px solid white;">
+                    </span>
+                    <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                        No Trainings Listed
+                    </span>
+                </p>
             </div>
-        </div>
+        @else
+            @foreach ($trainings as $training)
+                <div>
+                    <p class="mt-3 mb-0 pb-0"
+                        style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                        <span
+                            style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+                                    width: 15px; height: 15px; text-align: center; vertical-align: middle; 
+                                    border: 4px solid white;">
+                        </span>
+                        <span class="d-inline-block mb-0 ml-1 text-uppercase"
+                            style="font-size: 16px; color: #10475a;">
+                            {{ $training->training_title }} ({{ $training->year }})
+                        </span>
+                    </p>
+                    <div class="mt-0" style="margin-left: 10px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <tr style="background-color: #f2f6f8;">
+                                <th style="padding: 8px; text-align: left; color: #333; border: 1px solid #ddd;">
+                                    Provider</th>
+                                <td style="padding: 8px; background-color: #fff; border: 1px solid #ddd;">
+                                    {{ $training->provider }}
+                                </td>
+                            </tr>
+                            <tr style="background-color: #f8fbfc;">
+                                <th style="padding: 8px; text-align: left; color: #333; border: 1px solid #ddd;">
+                                    Remarks</th>
+                                <td style="padding: 8px; background-color: #fff; border: 1px solid #ddd;">
+                                    {{ $training->remarks }}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            @endforeach
+        @endif
+
+        <p class="title-1 mt-4 text-uppercase"
+            style="margin-left: -35px!important; vertical-align: top !important; font-weight: bolder">
+            <span
+                style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+                width: 47px; height: 47px; text-align: center; vertical-align: middle;">
+                <img src="{{ public_path('assets/img/icons/certificate.png') }}"
+                    style="width: 30px; height: 30px; margin-top: 12px;">
+            </span>
+            <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;">Certificates</span>
+        </p>
+        @if (count($seconday_schools) == 0)
+            <div>
+                <p class="mt-4 mb-0 pb-0" style="margin-left: -23px!important; font-weight: bolder">
+                    <span
+                        style="display: inline-block; background-color: #10475a; color: #fff; border-radius: 100%;
+                          width: 15px; height: 15px; text-align: center; border: 4px solid white;">
+                    </span>
+                    <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                        No Certificates Listed
+                    </span>
+                </p>
+            </div>
+        @else
+            @foreach ($seconday_schools as $certificate)
+                <div>
+                    <p class="mt-3 mb-0 pb-0"
+                        style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                        <span
+                            style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+                                    width: 15px; height: 15px; text-align: center; vertical-align: middle; 
+                                    border: 4px solid white;">
+                        </span>
+                        <span class="d-inline-block mb-0 ml-1 text-uppercase"
+                            style="font-size: 16px; color: #10475a;">
+                            {{ $certificate->certificate_title }} ({{ $certificate->date_issued }})
+                        </span>
+                    </p>
+                    <div class="mt-0" style="margin-left: 10px;">
+                        <table style="width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 14px;">
+                            <tr style="background-color: #10475a;">
+                                <th style="padding: 8px; text-align: left; color: #fff;">Issuing Authority</th>
+                                <td style="border: 1px solid #ddd; padding: 8px; background-color: #fff;">
+                                    {{ $certificate->issuing_authority }}
+                                </td>
+                            </tr>
+                            <tr style="background-color: #10475a;">
+                                <th style="padding: 8px; text-align: left; color: #fff;">Certificate ID</th>
+                                <td style="border: 1px solid #ddd; padding: 8px; background-color: #fff;">
+                                    {{ $certificate->certificate_id }}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            @endforeach
+        @endif
 
 
         <p class="title-1 mt-4 text-uppercase"
@@ -506,35 +654,67 @@
             <span class="d-inline-block mb-1 ml-1" style="font-size: 22px;">Accomplishments</span>
         </p>
 
-        <div>
-            <p class="mt-3  mb-0 pb-0"
-                style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
-                <span
-                    style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
-        width:  15px; height: 15px; text-align: center; vertical-align: middle; 
-        border: 4px solid white; 
-
-        ">
-                </span>
-                <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
-                    Company name one #1</span>
-            </p>
-            <div style="margin-left: 10px; line-height: 1.2; font-size: 14px; text-align: justify;" class="mt-0">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam rem architecto debitis dolore quam
-                eligendi
-                ab doloremque dolores soluta natus minima consequatur veritatis ipsam, consequuntur deserunt unde!
-                Officiis,
-                sequi ipsam?
+        @if (count($accomplishments) == 0)
+            <div>
+                <p class="mt-4 mb-0 pb-0" style="margin-left: -23px!important; font-weight: bolder">
+                    <span
+                        style="display: inline-block; background-color: #10475a; color: #fff; border-radius: 100%;
+                          width: 15px; height: 15px; text-align: center; border: 4px solid white;">
+                    </span>
+                    <span class="d-inline-block mb-0 ml-1" style="font-size: 16px; color: #10475a;">
+                        No Accomplishments Listed
+                    </span>
+                </p>
             </div>
-        </div>
+        @else
+            @foreach ($accomplishments as $accomplishment)
+                <div>
+                    <p class="mt-3 mb-0 pb-0"
+                        style="margin-left: -23px!important; vertical-align: top !important; font-weight: bolder">
+                        <span
+                            style="display: inline-block;  background-color: #10475a; color: #fff;  border-radius: 100%;
+                                    width: 15px; height: 15px; text-align: center; vertical-align: middle; 
+                                    border: 4px solid white;">
+                        </span>
+                        <span class="d-inline-block mb-0 ml-1 text-uppercase"
+                            style="font-size: 16px; color: #10475a;">
+                            {{ $accomplishment->title }} ({{ $accomplishment->issueDate }})
+                        </span>
+                    </p>
+                    <div class="mt-0" style="margin-left: 10px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px;">
+                            <tr style="background-color: #f7f7f7;">
+                                <th style="padding: 8px; text-align: left; color: #333;">Type</th>
+                                <td style="padding: 8px; background-color: #fff; border: 1px solid #ddd;">
+                                    {{ $accomplishment->type }}
+                                </td>
+                            </tr>
+                            <tr style="background-color: #f7f7f7;">
+                                <th style="padding: 8px; text-align: left; color: #333;">Description</th>
+                                <td style="padding: 8px; background-color: #fff; border: 1px solid #ddd;">
+                                    {{ $accomplishment->description }}
+                                </td>
+                            </tr>
+                            <tr style="background-color: #f7f7f7;">
+                                <th style="padding: 8px; text-align: left; color: #333;">URL</th>
+                                <td style="padding: 8px; background-color: #fff; border: 1px solid #ddd;">
+                                    <a href="{{ $accomplishment->url }}"
+                                        target="_blank">{{ $accomplishment->url }}</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            @endforeach
+        @endif
     </div>
     <div class="row mr-1 mt-2">
         <div class="col-12 ">
             <p class="title-1 mt-3 text-uppercase m-0 ">
-                Skills
+                Special Skills
             </p>
             <hr class="hr-1  ">
-            <p>{{ $cv->career_summary }}</p>
+            <p>{{ dp($cv->special_qualification) }}</p>
 
         </div>
     </div>
@@ -544,7 +724,7 @@
                 Languages
             </p>
             <hr class="hr-1  ">
-            <p>{{ $cv->career_summary }}</p>
+            <p>{{ dp($cv->languages) }}</p>
 
         </div>
     </div>

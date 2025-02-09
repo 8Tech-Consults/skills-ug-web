@@ -35,6 +35,7 @@ Route::get('manifest', [ApiAuthController::class, 'manifest']);
 Route::get('my-jobs', [ApiAuthController::class, 'my_jobs']);
 Route::get('cvs', [ApiAuthController::class, 'cvs']);
 Route::get('jobs/{id}', [MainController::class, 'job_single']);
+Route::get('cvs/{id}', [MainController::class, 'cv_single']);
 Route::POST("post-media-upload", [ApiAuthController::class, 'upload_media']);
 Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
 Route::POST("delete-account", [ApiAuthController::class, 'delete_profile']);
