@@ -5,59 +5,87 @@
         "description": "API documentation for Skills UG.",
         "version": "1.0.0"
     },
+    "servers": [
+        {
+            "url": "http://localhost/skills-ug-web/api",
+            "description": "Local server"
+        },
+        {
+            "url": "https://skills-ug.8technologies.net/api",
+            "description": "Production server"
+        }
+    ],
     "paths": {
-        "/api/jobs": {
-            "get": {
+        "/job-apply": {
+            "post": {
                 "tags": [
-                    "Jobs"
+                    "Job"
                 ],
-                "summary": "Retrieve a list of active jobs",
-                "description": "Fetches a paginated list of active jobs, with optional filtering by title or status.",
-                "operationId": "getJobs",
-                "parameters": [
-                    {
-                        "name": "search",
-                        "in": "query",
-                        "description": "Search term to filter jobs by title",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "description": "Filter jobs by status",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Number of jobs to display per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 16
+                "summary": "Apply for a job",
+                "description": "Submits a job application for the authenticated user. The user must not have already applied for the job.",
+                "operationId": "jobApply",
+                "requestBody": {
+                    "description": "Job application details",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "job_id"
+                                ],
+                                "properties": {
+                                    "job_id": {
+                                        "description": "The ID of the job the user is applying for.",
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "cover_letter": {
+                                        "description": "Optional cover letter provided by the applicant.",
+                                        "type": "string",
+                                        "example": "I am very interested in this position and believe I am a great fit."
+                                    },
+                                    "resume_url": {
+                                        "description": "Optional URL pointing to the applicant's resume.",
+                                        "type": "string",
+                                        "example": "https://example.com/resume.pdf"
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
+                        "description": "Job Application submitted successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "data": {
-                                            "description": "Paginated job data",
-                                            "type": "object"
-                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Job Application submitted successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 100
+                                                },
+                                                "job_id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "applicant_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -66,7 +94,2371 @@
                         }
                     },
                     "400": {
-                        "description": "Bad request"
+                        "description": "Bad Request - Missing or invalid input or account not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Duplicate application",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You have already applied for this job."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/job-create": {
+            "post": {
+                "tags": [
+                    "Job"
+                ],
+                "summary": "Create or update a job posting",
+                "description": "Creates a new job posting or updates an existing one if an 'id' is provided. The authenticated user is automatically set as the poster.",
+                "operationId": "jobCreate",
+                "requestBody": {
+                    "description": "Job posting details",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Job ID for updating an existing job. Omit or set to 0 for new job creation.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "created_at": {
+                                        "description": "Job creation date (usually ignored on creation)",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-01-01T00:00:00Z"
+                                    },
+                                    "updated_at": {
+                                        "description": "Job update date (usually ignored on creation)",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-01-02T00:00:00Z"
+                                    },
+                                    "title": {
+                                        "description": "Job title",
+                                        "type": "string",
+                                        "example": "Software Engineer"
+                                    },
+                                    "status": {
+                                        "description": "Job status",
+                                        "type": "string",
+                                        "example": "active"
+                                    },
+                                    "deadline": {
+                                        "description": "Application deadline",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-12-31"
+                                    },
+                                    "category_id": {
+                                        "description": "Job category ID",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "district_id": {
+                                        "description": "District ID",
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "sub_county_id": {
+                                        "description": "Sub-county ID",
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "address": {
+                                        "description": "Job address",
+                                        "type": "string",
+                                        "example": "123 Main St, City"
+                                    },
+                                    "vacancies_count": {
+                                        "description": "Number of vacancies",
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "employment_status": {
+                                        "description": "Employment status (e.g., Full Time, Part Time, Contract, Internship)",
+                                        "type": "string",
+                                        "example": "Full Time"
+                                    },
+                                    "workplace": {
+                                        "description": "Workplace type (Onsite or Remote)",
+                                        "type": "string",
+                                        "example": "Onsite"
+                                    },
+                                    "responsibilities": {
+                                        "description": "Key responsibilities",
+                                        "type": "string",
+                                        "example": "Develop and maintain software applications"
+                                    },
+                                    "experience_field": {
+                                        "description": "Relevant experience field",
+                                        "type": "string",
+                                        "example": "Software Development"
+                                    },
+                                    "experience_period": {
+                                        "description": "Experience duration",
+                                        "type": "string",
+                                        "example": "2-3 years"
+                                    },
+                                    "show_salary": {
+                                        "description": "Whether to display salary information",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "minimum_salary": {
+                                        "description": "Minimum salary range",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50000
+                                    },
+                                    "maximum_salary": {
+                                        "description": "Maximum salary range",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 70000
+                                    },
+                                    "benefits": {
+                                        "description": "Job benefits",
+                                        "type": "string",
+                                        "example": "Health insurance, Paid time off"
+                                    },
+                                    "job_icon": {
+                                        "description": "Icon or image path for the job",
+                                        "type": "string",
+                                        "example": "/images/job_icon.png"
+                                    },
+                                    "gender": {
+                                        "description": "Gender requirement",
+                                        "type": "string",
+                                        "example": "Any"
+                                    },
+                                    "min_age": {
+                                        "description": "Minimum age requirement",
+                                        "type": "integer",
+                                        "example": 21
+                                    },
+                                    "max_age": {
+                                        "description": "Maximum age requirement",
+                                        "type": "integer",
+                                        "example": 60
+                                    },
+                                    "required_video_cv": {
+                                        "description": "Whether a video CV is required",
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "minimum_academic_qualification": {
+                                        "description": "Academic requirement",
+                                        "type": "string",
+                                        "example": "Bachelor's Degree"
+                                    },
+                                    "application_method": {
+                                        "description": "Method of application",
+                                        "type": "string",
+                                        "example": "Email"
+                                    },
+                                    "application_method_details": {
+                                        "description": "Additional details on how to apply",
+                                        "type": "string",
+                                        "example": "Send your resume to hr@example.com"
+                                    },
+                                    "slug": {
+                                        "description": "SEO-friendly URL slug",
+                                        "type": "string",
+                                        "example": "software-engineer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Job created or updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job created successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Software Engineer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/users/profile/update": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user profile",
+                "description": "Updates the authenticated user's profile details. Accepts a wide range of user fields. Uploaded images (if any) are used to update the avatar.",
+                "operationId": "updateUserProfile",
+                "requestBody": {
+                    "description": "User profile data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Descending ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "example": "johndoe"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "remember_token": {
+                                        "type": "string",
+                                        "example": "token123"
+                                    },
+                                    "created_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-01-01T00:00:00Z"
+                                    },
+                                    "updated_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-01-02T00:00:00Z"
+                                    },
+                                    "enterprise_id": {
+                                        "type": "integer",
+                                        "example": 101
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "date_of_birth": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1990-01-01"
+                                    },
+                                    "place_of_birth": {
+                                        "type": "string",
+                                        "example": "New York"
+                                    },
+                                    "sex": {
+                                        "type": "string",
+                                        "example": "male"
+                                    },
+                                    "home_address": {
+                                        "type": "string",
+                                        "example": "123 Main St"
+                                    },
+                                    "current_address": {
+                                        "type": "string",
+                                        "example": "456 Secondary St"
+                                    },
+                                    "phone_number_1": {
+                                        "type": "string",
+                                        "example": "+1234567890"
+                                    },
+                                    "phone_number_2": {
+                                        "type": "string",
+                                        "example": "+0987654321"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "nationality": {
+                                        "type": "string",
+                                        "example": "American"
+                                    },
+                                    "religion": {
+                                        "type": "string",
+                                        "example": "Christian"
+                                    },
+                                    "spouse_name": {
+                                        "type": "string",
+                                        "example": "Jane Doe"
+                                    },
+                                    "spouse_phone": {
+                                        "type": "string",
+                                        "example": "+1122334455"
+                                    },
+                                    "father_name": {
+                                        "type": "string",
+                                        "example": "Robert Doe"
+                                    },
+                                    "father_phone": {
+                                        "type": "string",
+                                        "example": "+1231231234"
+                                    },
+                                    "mother_name": {
+                                        "type": "string",
+                                        "example": "Mary Doe"
+                                    },
+                                    "mother_phone": {
+                                        "type": "string",
+                                        "example": "+3213214321"
+                                    },
+                                    "languages": {
+                                        "type": "string",
+                                        "example": "English, Spanish"
+                                    },
+                                    "emergency_person_name": {
+                                        "type": "string",
+                                        "example": "Alice Doe"
+                                    },
+                                    "emergency_person_phone": {
+                                        "type": "string",
+                                        "example": "+14445556666"
+                                    },
+                                    "national_id_number": {
+                                        "type": "string",
+                                        "example": "ID123456789"
+                                    },
+                                    "passport_number": {
+                                        "type": "string",
+                                        "example": "P123456789"
+                                    },
+                                    "tin": {
+                                        "type": "string",
+                                        "example": "TIN987654321"
+                                    },
+                                    "nssf_number": {
+                                        "type": "string",
+                                        "example": "NSSF123456"
+                                    },
+                                    "bank_name": {
+                                        "type": "string",
+                                        "example": "Bank of America"
+                                    },
+                                    "bank_account_number": {
+                                        "type": "string",
+                                        "example": "123456789012"
+                                    },
+                                    "primary_school_name": {
+                                        "type": "string",
+                                        "example": "Greenwood Primary School"
+                                    },
+                                    "primary_school_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2000
+                                    },
+                                    "seconday_school_name": {
+                                        "type": "string",
+                                        "example": "Central High School"
+                                    },
+                                    "seconday_school_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2004
+                                    },
+                                    "high_school_name": {
+                                        "type": "string",
+                                        "example": "City High School"
+                                    },
+                                    "high_school_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2008
+                                    },
+                                    "degree_university_name": {
+                                        "type": "string",
+                                        "example": "State University"
+                                    },
+                                    "degree_university_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2012
+                                    },
+                                    "masters_university_name": {
+                                        "type": "string",
+                                        "example": "State University"
+                                    },
+                                    "masters_university_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2014
+                                    },
+                                    "phd_university_name": {
+                                        "type": "string",
+                                        "example": "State University"
+                                    },
+                                    "phd_university_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2018
+                                    },
+                                    "user_type": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "demo_id": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "user_batch_importer_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "school_pay_account_id": {
+                                        "type": "integer",
+                                        "example": 200
+                                    },
+                                    "school_pay_payment_code": {
+                                        "type": "string",
+                                        "example": "PAY123456"
+                                    },
+                                    "given_name": {
+                                        "type": "string",
+                                        "example": "Johnny"
+                                    },
+                                    "deleted_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-01-03T00:00:00Z",
+                                        "nullable": true
+                                    },
+                                    "marital_status": {
+                                        "type": "string",
+                                        "example": "single"
+                                    },
+                                    "verification": {
+                                        "type": "string",
+                                        "example": "verified"
+                                    },
+                                    "current_class_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "current_theology_class_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    },
+                                    "parent_id": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "main_role_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "stream_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "account_id": {
+                                        "type": "integer",
+                                        "example": 1001
+                                    },
+                                    "has_personal_info": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "has_educational_info": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "has_account_info": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "diploma_school_name": {
+                                        "type": "string",
+                                        "example": "Diploma Institute"
+                                    },
+                                    "diploma_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2010
+                                    },
+                                    "certificate_school_name": {
+                                        "type": "string",
+                                        "example": "Certificate School"
+                                    },
+                                    "certificate_year_graduated": {
+                                        "type": "integer",
+                                        "example": 2011
+                                    },
+                                    "company_id": {
+                                        "type": "integer",
+                                        "example": 500
+                                    },
+                                    "managed_by": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Mr."
+                                    },
+                                    "dob": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1990-01-01"
+                                    },
+                                    "intro": {
+                                        "type": "string",
+                                        "example": "Hello, I am John."
+                                    },
+                                    "rate": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4.5
+                                    },
+                                    "can_evaluate": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "work_load_pending": {
+                                        "type": "number",
+                                        "example": 2
+                                    },
+                                    "work_load_completed": {
+                                        "type": "number",
+                                        "example": 5
+                                    },
+                                    "belongs_to_company": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "card_status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    },
+                                    "card_number": {
+                                        "type": "string",
+                                        "example": "CARD123456"
+                                    },
+                                    "card_balance": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100.5
+                                    },
+                                    "card_accepts_credit": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "card_max_credit": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    },
+                                    "card_accepts_cash": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "is_dependent": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "dependent_status": {
+                                        "type": "string",
+                                        "example": "none"
+                                    },
+                                    "dependent_id": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "card_expiry": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-12-31"
+                                    },
+                                    "belongs_to_company_status": {
+                                        "type": "string",
+                                        "example": "verified"
+                                    },
+                                    "objective": {
+                                        "type": "string",
+                                        "example": "To excel in my career"
+                                    },
+                                    "special_qualification": {
+                                        "type": "string",
+                                        "example": "Certified Expert"
+                                    },
+                                    "career_summary": {
+                                        "type": "string",
+                                        "example": "Over 10 years of experience in IT"
+                                    },
+                                    "present_salary": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    },
+                                    "expected_salary": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 6000
+                                    },
+                                    "expected_job_level": {
+                                        "type": "string",
+                                        "example": "Senior"
+                                    },
+                                    "expected_job_nature": {
+                                        "type": "string",
+                                        "example": "Full-time"
+                                    },
+                                    "preferred_job_location": {
+                                        "type": "string",
+                                        "example": "Remote"
+                                    },
+                                    "preferred_job_category": {
+                                        "type": "string",
+                                        "example": "Technology"
+                                    },
+                                    "preferred_job_category_other": {
+                                        "type": "string",
+                                        "example": "Software Development"
+                                    },
+                                    "preferred_job_districts": {
+                                        "type": "string",
+                                        "example": "District 1"
+                                    },
+                                    "preferred_job_abroad": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "preferred_job_countries": {
+                                        "type": "string",
+                                        "example": "USA, Canada"
+                                    },
+                                    "has_disability": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "is_registered_on_disability": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "disability_type": {
+                                        "type": "string",
+                                        "example": "N/A"
+                                    },
+                                    "dificulty_to_see": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "dificulty_to_hear": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "dificulty_to_walk": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "dificulty_to_speak": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "dificulty_display_on_cv": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "country_code": {
+                                        "type": "string",
+                                        "example": "+1"
+                                    },
+                                    "blood_group": {
+                                        "type": "string",
+                                        "example": "O+"
+                                    },
+                                    "height": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 175.5
+                                    },
+                                    "weight": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 70
+                                    },
+                                    "company_name": {
+                                        "type": "string",
+                                        "example": "Example Corp"
+                                    },
+                                    "company_year_of_establishment": {
+                                        "type": "integer",
+                                        "example": 2000
+                                    },
+                                    "company_employees_range": {
+                                        "type": "string",
+                                        "example": "50-200"
+                                    },
+                                    "company_country": {
+                                        "type": "string",
+                                        "example": "USA"
+                                    },
+                                    "company_address": {
+                                        "type": "string",
+                                        "example": "123 Corporate Blvd"
+                                    },
+                                    "company_district_id": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "company_sub_county_id": {
+                                        "type": "integer",
+                                        "example": 20
+                                    },
+                                    "company_main_category_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "company_sub_category_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "company_phone_number": {
+                                        "type": "string",
+                                        "example": "+123456789"
+                                    },
+                                    "company_description": {
+                                        "type": "string",
+                                        "example": "Leading provider of example solutions."
+                                    },
+                                    "company_trade_license_no": {
+                                        "type": "string",
+                                        "example": "TLN123456"
+                                    },
+                                    "company_website_url": {
+                                        "type": "string",
+                                        "example": "https://example.com"
+                                    },
+                                    "company__email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "info@example.com"
+                                    },
+                                    "company__phone": {
+                                        "type": "string",
+                                        "example": "+123456789"
+                                    },
+                                    "company_has_accessibility": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "company_has_disability_inclusion_policy": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "company_logo": {
+                                        "type": "string",
+                                        "example": "https://example.com/logo.png"
+                                    },
+                                    "company_tax_id": {
+                                        "type": "string",
+                                        "example": "TAX123456"
+                                    },
+                                    "company_facebook_url": {
+                                        "type": "string",
+                                        "example": "https://facebook.com/example"
+                                    },
+                                    "company_linkedin_url": {
+                                        "type": "string",
+                                        "example": "https://linkedin.com/company/example"
+                                    },
+                                    "company_operating_hours": {
+                                        "type": "string",
+                                        "example": "9AM-5PM"
+                                    },
+                                    "company_certifications": {
+                                        "type": "string",
+                                        "example": "ISO9001"
+                                    },
+                                    "company_ownership_type": {
+                                        "type": "string",
+                                        "example": "Private"
+                                    },
+                                    "company_status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    },
+                                    "is_company": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "johndoe"
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "John"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "avatar": {
+                                                    "type": "string",
+                                                    "example": "images/avatar.png"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while updating the profile."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/users/me": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get current user profile",
+                "description": "Returns the authenticated user's profile details.",
+                "operationId": "getCurrentUserProfile",
+                "responses": {
+                    "200": {
+                        "description": "Profile details returned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile details"
+                                        },
+                                        "data": {
+                                            "description": "User profile details",
+                                            "type": "object",
+                                            "example": {
+                                                "id": 1,
+                                                "username": "johndoe",
+                                                "first_name": "John",
+                                                "last_name": "Doe",
+                                                "email": "john@example.com"
+                                            },
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing authentication token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/jobs": {
+            "get": {
+                "tags": [
+                    "Job"
+                ],
+                "summary": "Get list of active jobs",
+                "description": "Retrieves a paginated list of active jobs with optional search by title and status filtering.",
+                "operationId": "getJobs",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search jobs by title",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Developer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by job status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Active"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page (default: 16)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 16
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Jobs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "Software Engineer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Active"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 16
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 80
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/cvs": {
+            "get": {
+                "tags": [
+                    "CV"
+                ],
+                "summary": "Get list of user CVs",
+                "description": "Retrieves a paginated list of users' CVs, with optional filtering by name (search) and status.",
+                "operationId": "getCVs",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search user CVs by name",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "John Doe"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by user status (e.g., active, inactive)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "active"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page (default: 21)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 21
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User CVs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "example": "johndoe@example.com"
+                                                    },
+                                                    "phone_number_1": {
+                                                        "type": "string",
+                                                        "example": "+1234567890"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-01T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-02T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "description": "Pagination details",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 100
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 21
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving CVs."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/my-jobs": {
+            "get": {
+                "tags": [
+                    "Job"
+                ],
+                "summary": "Get jobs posted by the authenticated user",
+                "description": "Retrieves a list of jobs that the currently authenticated user has posted.",
+                "operationId": "getMyJobs",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Jobs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Jobs retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Software Engineer"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "category_id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "district_id": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "employment_status": {
+                                                        "type": "string",
+                                                        "example": "Full Time"
+                                                    },
+                                                    "workplace": {
+                                                        "type": "string",
+                                                        "example": "Onsite"
+                                                    },
+                                                    "minimum_salary": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 50000
+                                                    },
+                                                    "maximum_salary": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 70000
+                                                    },
+                                                    "posted_by_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-01T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-02T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "description": "Pagination details",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving jobs."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/manifest": {
+            "get": {
+                "tags": [
+                    "Manifest"
+                ],
+                "summary": "Retrieve application manifest",
+                "description": "Fetches the manifest data of the application, including version, name, description, build, and environment.",
+                "operationId": "getManifest",
+                "responses": {
+                    "200": {
+                        "description": "Manifest retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Manifest details"
+                                        },
+                                        "data": {
+                                            "description": "The manifest details",
+                                            "properties": {
+                                                "version": {
+                                                    "type": "string",
+                                                    "example": "1.0.0"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "My Application"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "This is a sample application manifest."
+                                                },
+                                                "build": {
+                                                    "type": "string",
+                                                    "example": "2025-02-05-build"
+                                                },
+                                                "environment": {
+                                                    "type": "string",
+                                                    "example": "production"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Manifest not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Manifest not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving manifest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get list of users",
+                "description": "Retrieves a list of registered users with their basic details.",
+                "operationId": "getUsers",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Users retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Users retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "username": {
+                                                        "type": "string",
+                                                        "example": "johndoe"
+                                                    },
+                                                    "first_name": {
+                                                        "type": "string",
+                                                        "example": "John"
+                                                    },
+                                                    "last_name": {
+                                                        "type": "string",
+                                                        "example": "Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "example": "john@example.com"
+                                                    },
+                                                    "phone_number_1": {
+                                                        "type": "string",
+                                                        "example": "+1234567890"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-01T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-02T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "description": "Pagination details",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 100
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving users."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/users/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User login",
+                "description": "Authenticate a user by verifying the username and password.",
+                "operationId": "userLogin",
+                "requestBody": {
+                    "description": "Pass username and password for login",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "description": "The username, email, or phone number of the user",
+                                        "type": "string",
+                                        "example": "johndoe"
+                                    },
+                                    "password": {
+                                        "description": "The user password",
+                                        "type": "string",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged in successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "johndoe"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                                                },
+                                                "remember_token": {
+                                                    "type": "string",
+                                                    "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Username is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Wrong credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wrong credentials."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new user",
+                "description": "Registers a new user by validating the phone number, password, name, and optional email. On success, returns the user details along with a JWT token.",
+                "operationId": "userRegister",
+                "requestBody": {
+                    "description": "User registration details",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone_number_1",
+                                    "password",
+                                    "name"
+                                ],
+                                "properties": {
+                                    "phone_number_1": {
+                                        "description": "User's primary phone number",
+                                        "type": "string",
+                                        "example": "+256789123456"
+                                    },
+                                    "password": {
+                                        "description": "User password (must be at least 6 characters)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "StrongPass123"
+                                    },
+                                    "name": {
+                                        "description": "Full name of the user (must include at least first and last name)",
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "description": "Optional email address",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Account created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account created successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "John"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Doe"
+                                                },
+                                                "phone_number_1": {
+                                                    "type": "string",
+                                                    "example": "+256789123456"
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "+256789123456"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john.doe@example.com"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Phone number is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - User already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User with same phone number already exists."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to create account. Please try again."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/password-change": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Change user password",
+                "description": "Allows an authenticated user to change their password by providing the current password and a new password.",
+                "operationId": "changePassword",
+                "requestBody": {
+                    "description": "Password change request data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "current_password",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "description": "User's current password",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "OldPassword123"
+                                    },
+                                    "password": {
+                                        "description": "New password (must be at least 2 characters)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "NewSecurePassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password changed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password changed successfully."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "johndoe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "johndoe@example.com"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing required fields or incorrect password",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Current password is incorrect."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while changing the password."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/delete-account": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete user account",
+                "description": "Marks the authenticated user's account as deleted by updating the status to '3'.",
+                "operationId": "deleteAccount",
+                "responses": {
+                    "200": {
+                        "description": "Account deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Deleted successfully!"
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
+                                            "type": "null",
+                                            "example": null
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while deleting the account."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/jobs/{id}": {
+            "get": {
+                "tags": [
+                    "Job"
+                ],
+                "summary": "Get details of a single job",
+                "description": "Retrieves detailed information about a specific job using its ID.",
+                "operationId": "getJobById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the job to retrieve",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Software Engineer"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                },
+                                                "category_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "district_id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "employment_status": {
+                                                    "type": "string",
+                                                    "example": "Full Time"
+                                                },
+                                                "workplace": {
+                                                    "type": "string",
+                                                    "example": "Onsite"
+                                                },
+                                                "minimum_salary": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000
+                                                },
+                                                "maximum_salary": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 70000
+                                                },
+                                                "posted_by_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-02T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Job not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job not found. => #10"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving job details."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cvs/{id}": {
+            "get": {
+                "tags": [
+                    "CV"
+                ],
+                "summary": "Get details of a user's CV",
+                "description": "Retrieves detailed information of a user's CV using the provided ID.",
+                "operationId": "getCvById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user profile to retrieve CV for",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CV retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile details"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Account not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving CV details."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -74,8 +2466,24 @@
     },
     "tags": [
         {
-            "name": "Jobs",
-            "description": "Jobs"
+            "name": "Job",
+            "description": "Job"
+        },
+        {
+            "name": "User",
+            "description": "User"
+        },
+        {
+            "name": "CV",
+            "description": "CV"
+        },
+        {
+            "name": "Manifest",
+            "description": "Manifest"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
         }
     ]
 }
