@@ -98,7 +98,7 @@ class ApiAuthController extends Controller
      *             )
      *         )
      *     ),
-     *     @OA\Response(
+     *     @OA\Response( 
      *         response=200,
      *         description="Job Application submitted successfully",
      *         @OA\JsonContent(
@@ -837,7 +837,7 @@ class ApiAuthController extends Controller
     /**
      * @OA\Get(
      *     path="/cvs",
-     *     summary="Get list of user CVs",
+     *     summary="Get list of user CVs.",
      *     description="Retrieves a paginated list of users' CVs, with optional filtering by name (search) and status.",
      *     operationId="getCVs",
      *     tags={"CV"},

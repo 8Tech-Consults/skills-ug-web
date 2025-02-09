@@ -1238,7 +1238,7 @@
                 "tags": [
                     "CV"
                 ],
-                "summary": "Get list of user CVs",
+                "summary": "Get list of user CVs.",
                 "description": "Retrieves a paginated list of users' CVs, with optional filtering by name (search) and status.",
                 "operationId": "getCVs",
                 "parameters": [
