@@ -27,6 +27,7 @@ Route::POST("users/login", [ApiAuthController::class, "login"]);
 Route::POST("users/register", [ApiAuthController::class, "register"]);
 Route::POST("job-create", [ApiAuthController::class, "job_create"]);
 Route::POST("job-apply", [ApiAuthController::class, "job_apply"]);
+Route::get("my-job-applications", [ApiAuthController::class, "my_job_applications"]);
 Route::get('users/me', [ApiAuthController::class, 'me']);
 Route::get('users', [ApiAuthController::class, 'users']);
 Route::get('jobs', [ApiAuthController::class, 'jobs']);

@@ -735,6 +735,7 @@ class Utils extends Model
 
     public static function phone_number_is_valid($phone_number)
     {
+        return true;
         if (strlen($phone_number) < 5) {
             return false;
         }

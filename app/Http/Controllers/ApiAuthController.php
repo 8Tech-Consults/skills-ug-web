@@ -833,6 +833,100 @@ class ApiAuthController extends Controller
         return $this->success($jobs, 'Success');
     }
 
+    /**
+     * @OA\Get(
+     *     path="/my-job-applications",
+     *     summary="Get job applications by the authenticated user",
+     *     description="Retrieves a list of job applications that the currently authenticated user has submitted.",
+     *     operationId="getMyJobApplications",
+     *     tags={"Job Application"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=100)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job applications retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="job_id", type="integer", example=10),
+     *                     @OA\Property(property="applicant_id", type="integer", example=1),
+     *                     @OA\Property(property="status", type="string", example="pending"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 description="Pagination details",
+     *                 @OA\Property(property="total", type="integer", example=20),
+     *                 @OA\Property(property="per_page", type="integer", example=10),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=2)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving job applications.")
+     *         )
+     *     )
+     * )
+     */
+    public function my_job_applications(Request $request)
+    {
+        //my-job-applications 
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        // Start building query
+        $query = JobApplication::where('applicant_id', $user->id);
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 100);
+        $jobs = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($jobs, 'Success');
+    }
+
+
 
     /**
      * @OA\Get(
