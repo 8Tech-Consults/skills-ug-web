@@ -148,13 +148,19 @@ class ApiAuthController extends Controller
         $jobAppication = new JobApplication();
 
 
-        $except = ['id', 'applicant_id', 'status', 'slug'];
+        $except = ['id', 'applicant_id', 'status', 'slug', 'attachments'];
         try {
             $jobAppication = Utils::fetch_post($jobAppication, $except, $r->all());
         } catch (\Throwable $th) {
             return $this->error($th->getMessage());
         }
 
+        // return $this->error('Applicant not found.', $jobAppication);
+        $attachments = [];
+        /* if (!empty($_FILES['attachments'])) {
+            $attachments = Utils::upload_files($_FILES['attachments'], 'attachments');
+        } */
+        $jobAppication->attachments = json_encode($attachments);
         $jobAppication->applicant_id = $user->id;
         try {
             $jobAppication->save();
