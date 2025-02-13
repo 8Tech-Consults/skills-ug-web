@@ -157,10 +157,16 @@ Route::get('migrate', function () {
     // Artisan::call('migrate');
     //do run laravel migration command
     Artisan::call('migrate', ['--force' => true]);
-    //returning the output
+    //returning the output 
     return Artisan::output();
 });
 Route::get('clear', function () {
+
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    Artisan::call('optimize');
     Artisan::call('cache:clear');
     Artisan::call('view:clear');
     Artisan::call('route:clear');
@@ -354,20 +360,7 @@ Route::get('/gen-form', function () {
     die(Gen::find($_GET['id'])->make_forms());
 })->name("gen-form");
 
-
-Route::get('clear', function () {
-    /* php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
-php artisan optimize */
-    Artisan::call('config:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('route:clear');
-    Artisan::call('view:clear');
-    Artisan::call('optimize');
-    return Artisan::output();
-});
+ 
 
 Route::get('gen-companies', [MainController::class, 'gen_companies']);
 Route::get('gen-jobs', [MainController::class, 'gen_jobs']);
