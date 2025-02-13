@@ -556,7 +556,21 @@ class User extends Authenticatable implements JWTSubject
 
     public static function save_cv($u)
     {
-        $path = "files/gen-cv-" . $u->id . ".pdf";
+        $old_path = $u->school_pay_account_id;
+
+        if ($old_path != null && strlen($old_path) > 2) {
+            $old_path = public_path('storage/' . $old_path);
+            if (file_exists($old_path)) {
+                unlink($old_path);
+            }
+        }
+
+        $name_slug = \Str::slug($u->name);
+        //date slug
+        $name_slug = $name_slug . "-cv-" . date('Y-m-d') . "-";
+        $path = "files/" . $name_slug . "-skills-ug" . '-' . $u->id . '-' . rand(1000000, 9999999) . ".pdf";
+
+
         $FullPath = public_path('storage/' . $path);
         //check if file exists
         if (file_exists($FullPath)) {

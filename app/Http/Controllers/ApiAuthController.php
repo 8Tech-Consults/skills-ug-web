@@ -176,6 +176,108 @@ class ApiAuthController extends Controller
     }
 
 
+    /**
+     * @OA\Put(
+     *     path="/job-application-update/{id}",
+     *     summary="Update a job application",
+     *     description="Updates the details of an existing job application.",
+     *     operationId="updateJobApplication",
+     *     tags={"Job Application"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the job application to update",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Job application update details",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="cover_letter",
+     *                 type="string",
+     *                 example="Updated cover letter",
+     *                 description="Updated cover letter provided by the applicant."
+     *             ),
+     *             @OA\Property(
+     *                 property="resume_url",
+     *                 type="string",
+     *                 example="https://example.com/updated_resume.pdf",
+     *                 description="Updated URL pointing to the applicant's resume."
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job Application updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job Application updated successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="job_id", type="integer", example=10),
+     *                 @OA\Property(property="applicant_id", type="integer", example=1),
+     *                 @OA\Property(property="status", type="string", example="pending")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Invalid input.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found - Job Application not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job Application not found.")
+     *         )
+     *     )
+     * )
+     */
+    public function job_application_update(Request $r)
+    {
+        $jobAppication = JobApplication::find($r->id);
+        if ($jobAppication == null) {
+            return $this->error('Job Application not found.');
+        }
+
+        $except = [
+            'id',
+            'applicant_id',
+            'slug',
+            'attachments',
+        ];
+        try {
+            $jobAppication = Utils::fetch_post($jobAppication, $except, $r->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+
+        try {
+            $jobAppication->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $jobAppication = JobApplication::find($jobAppication->id);
+        if ($jobAppication == null) {
+            return $this->error('jobAppication not found.');
+        }
+        return $this->success($jobAppication, 'Job Application UPDATED successfully.');
+    }
+
+
 
     /**
      * @OA\Post(
@@ -445,7 +547,7 @@ class ApiAuthController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/users/profile/update",
+     *     path="/profile",
      *     summary="Update user profile",
      *     description="Updates the authenticated user's profile details. Accepts a wide range of user fields. Uploaded images (if any) are used to update the avatar.",
      *     operationId="updateUserProfile",
@@ -839,11 +941,120 @@ class ApiAuthController extends Controller
         return $this->success($jobs, 'Success');
     }
 
+
+
+
     /**
      * @OA\Get(
-     *     path="/my-job-applications",
-     *     summary="Get job applications by the authenticated user",
-     *     description="Retrieves a list of job applications that the currently authenticated user has submitted.",
+     *     path="/company-jobs",
+     *     summary="Get jobs posted by the authenticated company",
+     *     description="Retrieves a list of jobs that the currently authenticated company has posted.",
+     *     operationId="getCompanyJobs",
+     *     tags={"Job"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search jobs by title",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Developer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by job status",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Active")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 16)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=16)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Jobs retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="title", type="string", example="Software Engineer"),
+     *                         @OA\Property(property="status", type="string", example="Active")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="last_page", type="integer", example=5),
+     *                 @OA\Property(property="per_page", type="integer", example=16),
+     *                 @OA\Property(property="total", type="integer", example=80)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Invalid or missing authentication token",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving jobs.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_jobs(Request $request)
+    {
+
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+        // Start building query
+        $query = Job::where('status', 'Active')
+            ->where('posted_by_id', $user->id);
+
+        // Optional: search filter by title
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('title', 'LIKE', "%{$search}%");
+        }
+
+        // Optional: filter by status
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $query->where('status', $status);
+        }
+
+        // Order by newest
+        $query->orderBy('id', 'DESC');
+
+        // Paginate
+        $perPage = $request->input('per_page', 10);
+        $jobs = $query->paginate($perPage);
+
+        return $this->success($jobs, 'Success');
+    }
+
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/company-job-applications",
+     *     summary="Get job applications by the authenticated company",
+     *     description="Retrieves a list of job applications that the currently authenticated company has submitted.",
      *     operationId="getMyJobApplications",
      *     tags={"Job Application"},
      *     security={{ "apiAuth": {} }},
@@ -919,6 +1130,101 @@ class ApiAuthController extends Controller
 
         // Start building query
         $query = JobApplication::where('applicant_id', $user->id);
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 100);
+        $jobs = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($jobs, 'Success');
+    }
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/my-job-applications",
+     *     summary="Get job applications by the authenticated user",
+     *     description="Retrieves a list of job applications that the currently authenticated user has submitted.",
+     *     operationId="getMyJobApplications",
+     *     tags={"Job Application"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=100)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job applications retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="job_id", type="integer", example=10),
+     *                     @OA\Property(property="applicant_id", type="integer", example=1),
+     *                     @OA\Property(property="status", type="string", example="pending"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 description="Pagination details",
+     *                 @OA\Property(property="total", type="integer", example=20),
+     *                 @OA\Property(property="per_page", type="integer", example=10),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=2)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving job applications.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_job_applications(Request $request)
+    {
+        //my-job-applications 
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        // Start building query
+        $query = JobApplication::where('employer_id', $user->id);
 
         // Order by newest (adjust as needed)
         $query->orderBy('id', 'DESC');
