@@ -157,7 +157,7 @@ Route::get('migrate', function () {
     // Artisan::call('migrate');
     //do run laravel migration command
     Artisan::call('migrate', ['--force' => true]);
-    //returning the output 
+    //returning the output
     return Artisan::output();
 });
 Route::get('clear', function () {
