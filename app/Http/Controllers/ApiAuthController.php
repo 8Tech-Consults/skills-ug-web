@@ -782,7 +782,7 @@ class ApiAuthController extends Controller
     /**
      * @OA\Get(
      *     path="/users/me",
-     *     summary="Get current user profile",
+     *     summary="Get current user profile.",
      *     description="Returns the authenticated user's profile details.",
      *     operationId="getCurrentUserProfile",
      *     tags={"User"},
