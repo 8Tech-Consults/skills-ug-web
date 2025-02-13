@@ -160,6 +160,15 @@ Route::get('migrate', function () {
     //returning the output
     return Artisan::output();
 });
+Route::get('clear', function () {
+    Artisan::call('cache:clear');
+    Artisan::call('view:clear');
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    Artisan::call('optimize:clear');
+    exec('composer dump-autoload -o');
+    return Artisan::output();
+});
 Route::get('artisan', function (Request $request) {
     // Artisan::call('migrate');
     //do run laravel migration command

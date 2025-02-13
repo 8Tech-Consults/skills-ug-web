@@ -584,11 +584,9 @@ class User extends Authenticatable implements JWTSubject
                 'cv' => $u,
             ]);
         }
-      /*   $pdf->loadHTML(view('cv', [
+        $pdf->loadHTML(view('cv', [
             'cv' => $u,
-        ])->render()); */
-
-        $pdf->loadHTML('test')->render();
+        ])->render());
 
         try {
             $pdf->save($FullPath);
