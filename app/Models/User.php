@@ -578,6 +578,7 @@ class User extends Authenticatable implements JWTSubject
         }
         $pdf = App::make('dompdf.wrapper');
         $pdf->set_option('enable_html5_parser', TRUE);
+        $pdf->set_option('isHtml5ParserEnabled', TRUE);
         if (isset($_GET['html'])) {
             return view('cv', [
                 'cv' => $u,
