@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminRoleUser;
+use App\Models\CompanyFollow;
 use App\Models\Consultation;
 use App\Models\District;
 use App\Models\DoseItem;
@@ -13,6 +14,7 @@ use App\Models\Image;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobCategory;
+use App\Models\JobOffer;
 use App\Models\LaundryOrder;
 use App\Models\LaundryOrderItem;
 use App\Models\LaundryOrderItemType;
@@ -174,6 +176,8 @@ class ApiAuthController extends Controller
         }
         return $this->success($jobAppication, 'Job Application submitted successfully.');
     }
+
+    //Route::POST("job-apply", [ApiAuthController::class, "job_apply"]);
 
 
     /**
@@ -545,6 +549,398 @@ class ApiAuthController extends Controller
     }
 
 
+
+    /**
+     * @OA\Post(
+     *     path="/company-follow",
+     *     summary="Follow a company",
+     *     description="Allows an authenticated user to follow a company.",
+     *     operationId="companyFollow",
+     *     tags={"Company"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Company follow request data",
+     *         @OA\JsonContent(
+     *             required={"company_id"},
+     *             @OA\Property(
+     *                 property="company_id",
+     *                 type="integer",
+     *                 example=1,
+     *                 description="ID of the company to follow"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Company followed successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Company followed successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="company_id", type="integer", example=1)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Candidate not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict - Already following the company",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="You have already followed this company. Go to your dashboard to unfollow.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_follow(Request $r)
+    {
+        $user = auth('api')->user();
+        if ($user == null) {
+            return $this->error('Account not found.');
+        }
+        $company = User::find($r->company_id);
+        if ($company == null) {
+            return $this->error('Candidate not found.');
+        }
+        //check if not already followuing
+        $follow = CompanyFollow::where([
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+        ])->first();
+        if ($follow != null) {
+            return $this->error('You have already followed this company. Go to your dashboard to unfollow.');
+        }
+        $follow = new CompanyFollow();
+        $follow->user_id = $user->id;
+        $follow->company_id = $company->id;
+
+        try {
+            $follow->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $follow = CompanyFollow::find($follow->id);
+        if ($follow == null) {
+            return $this->error('Follow not found.');
+        }
+        return $this->success($follow, 'Company followed successfully.');
+    }
+
+
+    /**
+     * @OA\Post(
+     *     path="/company-unfollow",
+     *     summary="Unfollow a company",
+     *     description="Allows an authenticated user to unfollow a company.",
+     *     operationId="companyUnfollow",
+     *     tags={"Company"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Company unfollow request data",
+     *         @OA\JsonContent(
+     *             required={"company_id"},
+     *             @OA\Property(
+     *                 property="company_id",
+     *                 type="integer",
+     *                 example=1,
+     *                 description="ID of the company to unfollow"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Company unfollowed successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Company unfollowed successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="company_id", type="integer", example=1)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Invalid input.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found - Follow record not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Follow record not found.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_unfollow(Request $r)
+    {
+        $user = auth('api')->user();
+        if ($user == null) {
+            return $this->error('Account not found.');
+        }
+        $company = User::find($r->company_id);
+        if ($company == null) {
+            return $this->error('Company not found.');
+        }
+        $follow = CompanyFollow::where([
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+        ])->first();
+        if ($follow == null) {
+            return $this->error('You are not following this company.');
+        }
+        try {
+            $follow->delete();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+        return $this->success(null, 'Company unfollowed successfully.');
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/company-followers",
+     *     summary="Get followers of the authenticated company",
+     *     description="Retrieves a list of users who are following the currently authenticated company.",
+     *     operationId="getCompanyFollowers",
+     *     tags={"Company"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Followers retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Followers retrieved successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="user_id", type="integer", example=1),
+     *                     @OA\Property(property="company_id", type="integer", example=1),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving followers.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_followers(Request $request)
+    {
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        // Start building query
+        $query = CompanyFollow::where('company_id', $user->id);
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 100);
+        $followers = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($followers, 'Followers retrieved successfully.');
+    }
+
+
+    /**
+     * @OA\Post(
+     *     path="/job-offer-create",
+     *     summary="Create a job offer",
+     *     description="Creates a new job offer for a candidate by the authenticated company.",
+     *     operationId="createJobOffer",
+     *     tags={"Job Offer"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Job offer details",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"candidate_id", "job_title", "company_name", "salary", "start_date", "job_description"},
+     *             @OA\Property(
+     *                 property="candidate_id",
+     *                 type="integer",
+     *                 example=1,
+     *                 description="ID of the candidate to whom the job offer is made"
+     *             ),
+     *             @OA\Property(
+     *                 property="job_title",
+     *                 type="string",
+     *                 example="Software Engineer",
+     *                 description="Title of the job being offered"
+     *             ),
+     *             @OA\Property(
+     *                 property="company_name",
+     *                 type="string",
+     *                 example="Example Corp",
+     *                 description="Name of the company making the offer"
+     *             ),
+     *             @OA\Property(
+     *                 property="salary",
+     *                 type="number",
+     *                 format="float",
+     *                 example=70000,
+     *                 description="Salary offered for the job"
+     *             ),
+     *             @OA\Property(
+     *                 property="start_date",
+     *                 type="string",
+     *                 format="date",
+     *                 example="2023-01-01",
+     *                 description="Start date for the job"
+     *             ),
+     *             @OA\Property(
+     *                 property="job_description",
+     *                 type="string",
+     *                 example="Develop and maintain software applications",
+     *                 description="Description of the job responsibilities"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job offer created successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job offer created successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="job_title", type="string", example="Software Engineer"),
+     *                 @OA\Property(property="company_name", type="string", example="Example Corp"),
+     *                 @OA\Property(property="salary", type="number", format="float", example=70000),
+     *                 @OA\Property(property="start_date", type="string", format="date", example="2023-01-01"),
+     *                 @OA\Property(property="job_description", type="string", example="Develop and maintain software applications"),
+     *                 @OA\Property(property="candidate_id", type="integer", example=1),
+     *                 @OA\Property(property="company_id", type="integer", example=1),
+     *                 @OA\Property(property="status", type="string", example="Pending")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Invalid input.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict - Duplicate job offer",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="You have already made an offer to this candidate and it is still pending.")
+     *         )
+     *     )
+     * )
+     */
+    public function job_offer_create(Request $r)
+    {
+        $user = auth('api')->user();
+        if ($user == null) {
+            return $this->error('Account not found.');
+        }
+        $candidate = User::find($r->candidate_id);
+        if ($candidate == null) {
+            return $this->error('Candidate not found.');
+        }
+
+        //check if the company has already made an offer to the candidate and still pending
+        $jobOffer = JobOffer::where([
+            'company_id' => $user->id,
+            'candidate_id' => $candidate->id,
+            'status' => 'Pending',
+        ])->first();
+        if ($jobOffer != null) {
+            return $this->error('You have already made an offer to this candidate and it is still pending.');
+        }
+
+        $id = (int)($r->id);
+        $job = JobOffer::find($id);
+        $isCreating = false;
+        if ($job == null) {
+            $job = new JobOffer();
+            $isCreating = true;
+            $job->company_id =  $user->id;
+            $job->candidate_id =   $candidate->id;
+        }
+
+        $except = ['id', 'candidate_id', 'company_id', 'slug'];
+        try {
+            $job = Utils::fetch_post($job, $except, $r->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        /* 
+        id	created_at	updated_at	job_title	company_name	salary	start_date	job_description	candidate_id	company_id	status	candidate_message	
+        */
+
+
+
+        try {
+            $job->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $job = JobOffer::find($job->id);
+        if ($job == null) {
+            return $this->error('Job offer not found.');
+        }
+        $message = ($isCreating) ? 'Job offer created successfully.' : 'Job offer updated successfully.';
+        return $this->success($job, $message);
+    }
+
+
     /**
      * @OA\Post(
      *     path="/profile",
@@ -765,6 +1161,155 @@ class ApiAuthController extends Controller
             $u->avatar = 'images/' . $images[0];
         }
 
+        try {
+            $u->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $u = User::find($u->id);
+        if ($u == null) {
+            return $this->error('Account not found.');
+        }
+        return $this->success($u,  "Profile updated successfully.");
+    }
+
+
+    /**
+     * @OA\Post(
+     *     path="/logout",
+     *     summary="Logout user",
+     *     description="Logs out the authenticated user by invalidating the JWT token.",
+     *     operationId="logoutUser",
+     *     tags={"Authentication"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logged out successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Logged out successfully."),
+     *             @OA\Property(property="status", type="integer", example=1)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     )
+     * )
+     */
+    public function logout()
+    {
+        auth('api')->logout();
+        return $this->success(null, 'Logged out successfully.');
+    }
+
+
+
+    /**
+     * @OA\Post(
+     *     path="/company-profile-update",
+     *     summary="Update company profile",
+     *     description="Updates the authenticated company's profile details. Accepts a wide range of company fields. Uploaded images (if any) are used to update the company logo.",
+     *     operationId="updateCompanyProfile",
+     *     tags={"Company"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Company profile data",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="company_name", type="string", example="Example Corp"),
+     *             @OA\Property(property="company_year_of_establishment", type="integer", example=2000),
+     *             @OA\Property(property="company_employees_range", type="string", example="50-200"),
+     *             @OA\Property(property="company_country", type="string", example="USA"),
+     *             @OA\Property(property="company_address", type="string", example="123 Corporate Blvd"),
+     *             @OA\Property(property="company_district_id", type="integer", example=10),
+     *             @OA\Property(property="company_sub_county_id", type="integer", example=20),
+     *             @OA\Property(property="company_main_category_id", type="integer", example=5),
+     *             @OA\Property(property="company_sub_category_id", type="integer", example=3),
+     *             @OA\Property(property="company_phone_number", type="string", example="+123456789"),
+     *             @OA\Property(property="company_description", type="string", example="Leading provider of example solutions."),
+     *             @OA\Property(property="company_trade_license_no", type="string", example="TLN123456"),
+     *             @OA\Property(property="company_website_url", type="string", example="https://example.com"),
+     *             @OA\Property(property="company_email", type="string", format="email", example="info@example.com"),
+     *             @OA\Property(property="company_phone", type="string", example="+123456789"),
+     *             @OA\Property(property="company_has_accessibility", type="boolean", example=true),
+     *             @OA\Property(property="company_has_disability_inclusion_policy", type="boolean", example=true),
+     *             @OA\Property(property="company_logo", type="string", example="https://example.com/logo.png"),
+     *             @OA\Property(property="company_tax_id", type="string", example="TAX123456"),
+     *             @OA\Property(property="company_facebook_url", type="string", example="https://facebook.com/example"),
+     *             @OA\Property(property="company_linkedin_url", type="string", example="https://linkedin.com/company/example"),
+     *             @OA\Property(property="company_operating_hours", type="string", example="9AM-5PM"),
+     *             @OA\Property(property="company_certifications", type="string", example="ISO9001"),
+     *             @OA\Property(property="company_ownership_type", type="string", example="Private"),
+     *             @OA\Property(property="company_status", type="string", example="active"),
+     *             @OA\Property(property="is_company", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="company_name", type="string", example="Example Corp"),
+     *                 @OA\Property(property="company_logo", type="string", example="images/logo.png")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while updating the profile.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_profile_update(Request $r)
+    {
+        $u = auth('api')->user();
+        if ($u == null) {
+            return $this->error('Account not found.');
+        }
+        $u = User::find($u->id);
+        if ($u == null) {
+            return $this->error('User Account not found.');
+        }
+        $except = ['password', 'password_confirmation', 'avatar',];
+        try {
+            $u = Utils::fetch_post($u, $except, $r->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+
+        $images = [];
+        if (!empty($_FILES)) {
+            $images = Utils::upload_images_2($_FILES, false);
+        }
+        if (!empty($images)) {
+            $u->company_logo = 'images/' . $images[0];
+        }
+        $u->is_company = 'Yes';
         try {
             $u->save();
         } catch (\Throwable $th) {
@@ -1142,6 +1687,467 @@ class ApiAuthController extends Controller
         // 'data' contains "data, current_page, last_page, etc." from Laravel
         return $this->success($jobs, 'Success');
     }
+
+    /**
+     * @OA\Get(
+     *     path="/my-job-offers",
+     *     summary="Get job offers for the authenticated user",
+     *     description="Retrieves a list of job offers that the currently authenticated user has received.",
+     *     operationId="getMyJobOffers",
+     *     tags={"Job Offer"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=100)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job offers retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="job_title", type="string", example="Software Engineer"),
+     *                     @OA\Property(property="company_name", type="string", example="Example Corp"),
+     *                     @OA\Property(property="salary", type="number", format="float", example=70000),
+     *                     @OA\Property(property="start_date", type="string", format="date", example="2023-01-01"),
+     *                     @OA\Property(property="status", type="string", example="Pending"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 description="Pagination details",
+     *                 @OA\Property(property="total", type="integer", example=20),
+     *                 @OA\Property(property="per_page", type="integer", example=10),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=2)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving job offers.")
+     *         )
+     *     )
+     * )
+     */
+    public function my_job_offers(Request $request)
+    {
+        //my-job-applications 
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        // Start building query
+        $query = JobOffer::where('candidate_id', $user->id);
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 100);
+        $jobs = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($jobs, 'Success');
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/my-company-follows",
+     *     summary="Get companies followed by the authenticated user",
+     *     description="Retrieves a list of companies that the currently authenticated user is following.",
+     *     operationId="getMyCompanyFollows",
+     *     tags={"Company"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Companies followed retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="company_id", type="integer", example=10),
+     *                     @OA\Property(property="user_id", type="integer", example=1),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving company follows.")
+     *         )
+     *     )
+     * )
+     */
+    public function my_company_follows(Request $request)
+    {
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        // Start building query
+        $query = CompanyFollow::where('user_id', $user->id);
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 60);
+        $follows = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($follows, 'Success');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/company-job-offers",
+     *     summary="Get job offers made by the authenticated company",
+     *     description="Retrieves a list of job offers that the currently authenticated company has made.",
+     *     operationId="getCompanyJobOffers",
+     *     tags={"Job Offer"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=100)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job offers retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Success"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="job_title", type="string", example="Software Engineer"),
+     *                     @OA\Property(property="candidate_id", type="integer", example=10),
+     *                     @OA\Property(property="company_id", type="integer", example=1),
+     *                     @OA\Property(property="status", type="string", example="Pending"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-02T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="pagination",
+     *                 type="object",
+     *                 description="Pagination details",
+     *                 @OA\Property(property="total", type="integer", example=20),
+     *                 @OA\Property(property="per_page", type="integer", example=10),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=2)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while retrieving job offers.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_job_offers(Request $request)
+    {
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        // Start building query
+        $query = JobOffer::where('company_id', $user->id);
+
+        // Order by newest (adjust as needed)
+        $query->orderBy('id', 'DESC');
+
+        // Paginate results (default to 10 per page)
+        $perPage = $request->input('per_page', 100);
+        $offers = $query->paginate($perPage);
+
+        // Return paginated data
+        // 'data' contains "data, current_page, last_page, etc." from Laravel
+        return $this->success($offers, 'Success');
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/job-offers/{id}",
+     *     summary="Delete a job offer",
+     *     description="Deletes a job offer by its ID. Only the owner of the job offer can delete it.",
+     *     operationId="deleteJobOffer",
+     *     tags={"Job Offer"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the job offer to delete",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job offer deleted successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job offer deleted successfully."),
+     *             @OA\Property(property="status", type="integer", example=1)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden - Only the owner can delete the job offer",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="You are not authorized to delete this job offer.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found - Job offer not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job offer not found.")
+     *         )
+     *     )
+     * )
+     */
+    public function delete_job_offer($id)
+    {
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Unauthorized', 401);
+        }
+
+        $jobOffer = JobOffer::find($id);
+        if (!$jobOffer) {
+            return $this->error('Job offer not found.', 404);
+        }
+
+        if ($jobOffer->company_id !== $user->id) {
+            return $this->error('You are not authorized to delete this job offer.', 403);
+        }
+
+        try {
+            $jobOffer->delete();
+        } catch (\Throwable $th) {
+            return $this->error('An error occurred while deleting the job offer.', 500);
+        }
+
+        return $this->success(null, 'Job offer deleted successfully.');
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/job-offers/{id}",
+     *     summary="Update a job offer",
+     *     description="Updates the details of an existing job offer.",
+     *     operationId="updateJobOffer",
+     *     tags={"Job Offer"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the job offer to update",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Job offer update details",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="job_title",
+     *                 type="string",
+     *                 example="Senior Software Engineer",
+     *                 description="Updated job title"
+     *             ),
+     *             @OA\Property(
+     *                 property="company_name",
+     *                 type="string",
+     *                 example="Updated Company Name",
+     *                 description="Updated company name"
+     *             ),
+     *             @OA\Property(
+     *                 property="salary",
+     *                 type="number",
+     *                 format="float",
+     *                 example=80000,
+     *                 description="Updated salary"
+     *             ),
+     *             @OA\Property(
+     *                 property="start_date",
+     *                 type="string",
+     *                 format="date",
+     *                 example="2023-02-01",
+     *                 description="Updated start date"
+     *             ),
+     *             @OA\Property(
+     *                 property="job_description",
+     *                 type="string",
+     *                 example="Updated job description",
+     *                 description="Updated job description"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Job offer updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job offer updated successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="job_title", type="string", example="Senior Software Engineer"),
+     *                 @OA\Property(property="company_name", type="string", example="Updated Company Name"),
+     *                 @OA\Property(property="salary", type="number", format="float", example=80000),
+     *                 @OA\Property(property="start_date", type="string", format="date", example="2023-02-01"),
+     *                 @OA\Property(property="job_description", type="string", example="Updated job description")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Invalid input.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found - Job offer not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Job offer not found.")
+     *         )
+     *     )
+     * )
+     */
+    public function update_job_offer(Request $request, $id)
+    {
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found');
+        }
+
+        $jobOffer = JobOffer::find($id);
+        if (!$jobOffer) {
+            return $this->error('Job offer not found.');
+        }
+
+        if ($jobOffer->company_id !== $user->id) {
+            return $this->error('You are not authorized to update this job offer.', 403);
+        }
+
+        $except = ['id', 'candidate_id', 'company_id', 'slug'];
+        try {
+            $jobOffer = Utils::fetch_post($jobOffer, $except, $request->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        try {
+            $jobOffer->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        $jobOffer = JobOffer::find($jobOffer->id);
+        if (!$jobOffer) {
+            return $this->error('Job offer not found.');
+        }
+
+        return $this->success($jobOffer, 'Job offer updated successfully.');
+    }
+
+
 
 
 
@@ -2439,5 +3445,304 @@ class ApiAuthController extends Controller
             'data' => json_encode($_POST),
             'message' => "File uploaded successfully.",
         ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/view-record-create",
+     *     summary="Create a new view record",
+     *     description="Creates a view record for a specific type and item by the authenticated user. Only one record per day is allowed for the same viewer_id, type, and item_id.",
+     *     operationId="viewRecordCreate",
+     *     tags={"ViewRecord"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="View record details",
+     *         @OA\JsonContent(
+     *             required={"type", "item_id"},
+     *             @OA\Property(
+     *                 property="type",
+     *                 type="string",
+     *                 example="company",
+     *                 description="The type of item being viewed (e.g. 'company', 'job', 'profile', etc.)"
+     *             ),
+     *             @OA\Property(
+     *                 property="item_id",
+     *                 type="integer",
+     *                 example=123,
+     *                 description="The ID of the item being viewed"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="View record created successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="View record created successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="type", type="string", example="company"),
+     *                 @OA\Property(property="viewer_id", type="integer", example=10),
+     *                 @OA\Property(property="item_id", type="integer", example=123),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-02-08T12:34:56Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Invalid input: type is required.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict - Already viewed today",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="You have already viewed this item today.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - User not found or invalid token",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account not found.")
+     *         )
+     *     )
+     * )
+     */
+    public function view_record_create(Request $r)
+    {
+        // Ensure user is authenticated
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found.');
+        }
+
+        // Validate required fields
+        if (!$r->filled('type') || !$r->filled('item_id')) {
+            return $this->error('type and item_id are required.');
+        }
+
+        $type = trim($r->type);
+        $itemId = (int) trim($r->item_id);
+
+        if (strlen($type) < 2 || $itemId < 1) {
+            return $this->error('Invalid type or item_id.');
+        }
+
+        // Check if we already have a record for this user, type, item_id on the same day
+        // Using Carbon for date check
+        $today = \Carbon\Carbon::now()->startOfDay();
+
+        // Adjust the model's namespace if needed, e.g. App\Models\ViewRecord
+        $existing = \App\Models\ViewRecord::where('viewer_id', $user->id)
+            ->where('type', $type)
+            ->where('item_id', $itemId)
+            // Compare created_at >= today
+            ->where('created_at', '>=', $today)
+            ->first();
+
+        if ($existing) {
+            return $this->error('You have already viewed this item today.');
+        }
+
+        // Create a new record
+        $record = new \App\Models\ViewRecord();
+        $record->type = $type;
+        $record->viewer_id = $user->id;
+        $record->item_id = $itemId;
+
+        try {
+            $record->save();
+        } catch (\Throwable $th) {
+            return $this->error("Failed to create view record: " . $th->getMessage());
+        }
+
+        // Return success with the newly created record
+        $freshRecord = \App\Models\ViewRecord::find($record->id);
+        return $this->success($freshRecord, 'View record created successfully.');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/view-records",
+     *     summary="Fetch view records for the authenticated viewer",
+     *     description="Retrieves a paginated list of view records of a specific type for the authenticated user. The type query parameter is required.",
+     *     operationId="getViewRecords",
+     *     tags={"ViewRecord"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="The type of item to fetch views for (e.g., 'company', 'job', 'profile')",
+     *         required=true,
+     *         @OA\Schema(type="string", example="company")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page (default: 10)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="View records retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="View records retrieved successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 description="Paginated view records data",
+     *                 additionalProperties=true
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing type parameter",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Type parameter is required.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Invalid or missing token",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account not found.")
+     *         )
+     *     )
+     * )
+     */
+    public function view_records(Request $r)
+    {
+        // Ensure the user is authenticated
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found.');
+        }
+
+        // Require the "type" query parameter
+        $type = $r->input('type');
+        if (!$type) {
+            return $this->error('Type parameter is required.');
+        }
+
+        // Optionally support pagination; default to 10 per page
+        $perPage = $r->input('per_page', 100);
+
+        try {
+            // Retrieve paginated view records for this viewer and type
+            $records = \App\Models\ViewRecord::where('viewer_id', $user->id)
+                ->where('type', $type)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+        } catch (\Throwable $e) {
+            return $this->error("Failed to fetch view records: " . $e->getMessage());
+        }
+
+        return $this->success($records, 'View records retrieved successfully.');
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/company-view-records",
+     *     summary="Fetch view records for the authenticated company",
+     *     description="Retrieves a paginated list of view records for the authenticated company filtered by type.",
+     *     operationId="getCompanyViewRecords",
+     *     tags={"ViewRecord"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="The type of view records to fetch (e.g., 'job', 'profile', 'company')",
+     *         required=true,
+     *         @OA\Schema(type="string", example="job")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of records per page (default: 10)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="View records retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="View records retrieved successfully."),
+     *             @OA\Property(property="data", type="object", additionalProperties=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing type parameter",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Type parameter is required.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Invalid or missing token",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Account not found.")
+     *         )
+     *     )
+     * )
+     */
+    public function company_view_records(Request $r)
+    {
+        // Ensure the user is authenticated
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('Account not found.');
+        }
+
+        // Require the "type" query parameter
+        $type = $r->input('type');
+        if (!$type) {
+            return $this->error('Type parameter is required.');
+        }
+
+        // Optionally support pagination (default 10 per page)
+        $perPage = $r->input('per_page', 100);
+
+        try {
+            // Retrieve view records for the authenticated company (assuming company_id is stored in the view record)
+            $records = \App\Models\ViewRecord::where('company_id', $user->id)
+                ->where('type', $type)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+        } catch (\Throwable $e) {
+            return $this->error("Failed to fetch view records: " . $e->getMessage());
+        }
+
+        return $this->success($records, 'View records retrieved successfully.');
     }
 }

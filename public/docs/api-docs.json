@@ -495,6 +495,468 @@
                 ]
             }
         },
+        "/company-follow": {
+            "post": {
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Follow a company",
+                "description": "Allows an authenticated user to follow a company.",
+                "operationId": "companyFollow",
+                "requestBody": {
+                    "description": "Company follow request data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "company_id"
+                                ],
+                                "properties": {
+                                    "company_id": {
+                                        "description": "ID of the company to follow",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Company followed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Company followed successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "company_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Candidate not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Already following the company",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You have already followed this company. Go to your dashboard to unfollow."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/company-unfollow": {
+            "post": {
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Unfollow a company",
+                "description": "Allows an authenticated user to unfollow a company.",
+                "operationId": "companyUnfollow",
+                "requestBody": {
+                    "description": "Company unfollow request data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "company_id"
+                                ],
+                                "properties": {
+                                    "company_id": {
+                                        "description": "ID of the company to unfollow",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Company unfollowed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Company unfollowed successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "company_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid input."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - Follow record not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Follow record not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/company-followers": {
+            "get": {
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Get followers of the authenticated company",
+                "description": "Retrieves a list of users who are following the currently authenticated company.",
+                "operationId": "getCompanyFollowers",
+                "responses": {
+                    "200": {
+                        "description": "Followers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Followers retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "company_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-01T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-02T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving followers."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/job-offer-create": {
+            "post": {
+                "tags": [
+                    "Job Offer"
+                ],
+                "summary": "Create a job offer",
+                "description": "Creates a new job offer for a candidate by the authenticated company.",
+                "operationId": "createJobOffer",
+                "requestBody": {
+                    "description": "Job offer details",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "candidate_id",
+                                    "job_title",
+                                    "company_name",
+                                    "salary",
+                                    "start_date",
+                                    "job_description"
+                                ],
+                                "properties": {
+                                    "candidate_id": {
+                                        "description": "ID of the candidate to whom the job offer is made",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "job_title": {
+                                        "description": "Title of the job being offered",
+                                        "type": "string",
+                                        "example": "Software Engineer"
+                                    },
+                                    "company_name": {
+                                        "description": "Name of the company making the offer",
+                                        "type": "string",
+                                        "example": "Example Corp"
+                                    },
+                                    "salary": {
+                                        "description": "Salary offered for the job",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 70000
+                                    },
+                                    "start_date": {
+                                        "description": "Start date for the job",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-01-01"
+                                    },
+                                    "job_description": {
+                                        "description": "Description of the job responsibilities",
+                                        "type": "string",
+                                        "example": "Develop and maintain software applications"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Job offer created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job offer created successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "job_title": {
+                                                    "type": "string",
+                                                    "example": "Software Engineer"
+                                                },
+                                                "company_name": {
+                                                    "type": "string",
+                                                    "example": "Example Corp"
+                                                },
+                                                "salary": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 70000
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2023-01-01"
+                                                },
+                                                "job_description": {
+                                                    "type": "string",
+                                                    "example": "Develop and maintain software applications"
+                                                },
+                                                "candidate_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "company_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pending"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid input."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Duplicate job offer",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You have already made an offer to this candidate and it is still pending."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
         "/profile": {
             "post": {
                 "tags": [
@@ -1187,12 +1649,265 @@
                 ]
             }
         },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout user",
+                "description": "Logs out the authenticated user by invalidating the JWT token.",
+                "operationId": "logoutUser",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out successfully."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/company-profile-update": {
+            "post": {
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Update company profile",
+                "description": "Updates the authenticated company's profile details. Accepts a wide range of company fields. Uploaded images (if any) are used to update the company logo.",
+                "operationId": "updateCompanyProfile",
+                "requestBody": {
+                    "description": "Company profile data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "company_name": {
+                                        "type": "string",
+                                        "example": "Example Corp"
+                                    },
+                                    "company_year_of_establishment": {
+                                        "type": "integer",
+                                        "example": 2000
+                                    },
+                                    "company_employees_range": {
+                                        "type": "string",
+                                        "example": "50-200"
+                                    },
+                                    "company_country": {
+                                        "type": "string",
+                                        "example": "USA"
+                                    },
+                                    "company_address": {
+                                        "type": "string",
+                                        "example": "123 Corporate Blvd"
+                                    },
+                                    "company_district_id": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "company_sub_county_id": {
+                                        "type": "integer",
+                                        "example": 20
+                                    },
+                                    "company_main_category_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "company_sub_category_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "company_phone_number": {
+                                        "type": "string",
+                                        "example": "+123456789"
+                                    },
+                                    "company_description": {
+                                        "type": "string",
+                                        "example": "Leading provider of example solutions."
+                                    },
+                                    "company_trade_license_no": {
+                                        "type": "string",
+                                        "example": "TLN123456"
+                                    },
+                                    "company_website_url": {
+                                        "type": "string",
+                                        "example": "https://example.com"
+                                    },
+                                    "company_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "info@example.com"
+                                    },
+                                    "company_phone": {
+                                        "type": "string",
+                                        "example": "+123456789"
+                                    },
+                                    "company_has_accessibility": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "company_has_disability_inclusion_policy": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "company_logo": {
+                                        "type": "string",
+                                        "example": "https://example.com/logo.png"
+                                    },
+                                    "company_tax_id": {
+                                        "type": "string",
+                                        "example": "TAX123456"
+                                    },
+                                    "company_facebook_url": {
+                                        "type": "string",
+                                        "example": "https://facebook.com/example"
+                                    },
+                                    "company_linkedin_url": {
+                                        "type": "string",
+                                        "example": "https://linkedin.com/company/example"
+                                    },
+                                    "company_operating_hours": {
+                                        "type": "string",
+                                        "example": "9AM-5PM"
+                                    },
+                                    "company_certifications": {
+                                        "type": "string",
+                                        "example": "ISO9001"
+                                    },
+                                    "company_ownership_type": {
+                                        "type": "string",
+                                        "example": "Private"
+                                    },
+                                    "company_status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    },
+                                    "is_company": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "company_name": {
+                                                    "type": "string",
+                                                    "example": "Example Corp"
+                                                },
+                                                "company_logo": {
+                                                    "type": "string",
+                                                    "example": "images/logo.png"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while updating the profile."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
         "/users/me": {
             "get": {
                 "tags": [
                     "User"
                 ],
-                "summary": "Get current user profile",
+                "summary": "Get current user profile.",
                 "description": "Returns the authenticated user's profile details.",
                 "operationId": "getCurrentUserProfile",
                 "responses": {
@@ -1620,6 +2335,644 @@
                                         "message": {
                                             "type": "string",
                                             "example": "An error occurred while retrieving job applications."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/my-job-offers": {
+            "get": {
+                "tags": [
+                    "Job Offer"
+                ],
+                "summary": "Get job offers for the authenticated user",
+                "description": "Retrieves a list of job offers that the currently authenticated user has received.",
+                "operationId": "getMyJobOffers",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page (default: 100)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job offers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "job_title": {
+                                                        "type": "string",
+                                                        "example": "Software Engineer"
+                                                    },
+                                                    "company_name": {
+                                                        "type": "string",
+                                                        "example": "Example Corp"
+                                                    },
+                                                    "salary": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 70000
+                                                    },
+                                                    "start_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2023-01-01"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "Pending"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-01T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-02T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "description": "Pagination details",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving job offers."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/my-company-follows": {
+            "get": {
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Get companies followed by the authenticated user",
+                "description": "Retrieves a list of companies that the currently authenticated user is following.",
+                "operationId": "getMyCompanyFollows",
+                "responses": {
+                    "200": {
+                        "description": "Companies followed retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "company_id": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-01T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-02T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving company follows."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/company-job-offers": {
+            "get": {
+                "tags": [
+                    "Job Offer"
+                ],
+                "summary": "Get job offers made by the authenticated company",
+                "description": "Retrieves a list of job offers that the currently authenticated company has made.",
+                "operationId": "getCompanyJobOffers",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page (default: 100)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job offers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "job_title": {
+                                                        "type": "string",
+                                                        "example": "Software Engineer"
+                                                    },
+                                                    "candidate_id": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "company_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "Pending"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-01T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2023-01-02T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "description": "Pagination details",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while retrieving job offers."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/job-offers/{id}": {
+            "put": {
+                "tags": [
+                    "Job Offer"
+                ],
+                "summary": "Update a job offer",
+                "description": "Updates the details of an existing job offer.",
+                "operationId": "updateJobOffer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the job offer to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Job offer update details",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "job_title": {
+                                        "description": "Updated job title",
+                                        "type": "string",
+                                        "example": "Senior Software Engineer"
+                                    },
+                                    "company_name": {
+                                        "description": "Updated company name",
+                                        "type": "string",
+                                        "example": "Updated Company Name"
+                                    },
+                                    "salary": {
+                                        "description": "Updated salary",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 80000
+                                    },
+                                    "start_date": {
+                                        "description": "Updated start date",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-02-01"
+                                    },
+                                    "job_description": {
+                                        "description": "Updated job description",
+                                        "type": "string",
+                                        "example": "Updated job description"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Job offer updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job offer updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "job_title": {
+                                                    "type": "string",
+                                                    "example": "Senior Software Engineer"
+                                                },
+                                                "company_name": {
+                                                    "type": "string",
+                                                    "example": "Updated Company Name"
+                                                },
+                                                "salary": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 80000
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2023-02-01"
+                                                },
+                                                "job_description": {
+                                                    "type": "string",
+                                                    "example": "Updated job description"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid input."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - Job offer not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job offer not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Job Offer"
+                ],
+                "summary": "Delete a job offer",
+                "description": "Deletes a job offer by its ID. Only the owner of the job offer can delete it.",
+                "operationId": "deleteJobOffer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the job offer to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job offer deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job offer deleted successfully."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Only the owner can delete the job offer",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are not authorized to delete this job offer."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - Job offer not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job offer not found."
                                         }
                                     },
                                     "type": "object"
@@ -2804,6 +4157,343 @@
                 ]
             }
         },
+        "/view-record-create": {
+            "post": {
+                "tags": [
+                    "ViewRecord"
+                ],
+                "summary": "Create a new view record",
+                "description": "Creates a view record for a specific type and item by the authenticated user. Only one record per day is allowed for the same viewer_id, type, and item_id.",
+                "operationId": "viewRecordCreate",
+                "requestBody": {
+                    "description": "View record details",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "item_id"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "description": "The type of item being viewed (e.g. 'company', 'job', 'profile', etc.)",
+                                        "type": "string",
+                                        "example": "company"
+                                    },
+                                    "item_id": {
+                                        "description": "The ID of the item being viewed",
+                                        "type": "integer",
+                                        "example": 123
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "View record created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "View record created successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "company"
+                                                },
+                                                "viewer_id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "item_id": {
+                                                    "type": "integer",
+                                                    "example": 123
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-08T12:34:56Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing or invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid input: type is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Already viewed today",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You have already viewed this item today."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - User not found or invalid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/view-records": {
+            "get": {
+                "tags": [
+                    "ViewRecord"
+                ],
+                "summary": "Fetch view records for the authenticated viewer",
+                "description": "Retrieves a paginated list of view records of a specific type for the authenticated user. The type query parameter is required.",
+                "operationId": "getViewRecords",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "The type of item to fetch views for (e.g., 'company', 'job', 'profile')",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "company"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of results per page (default: 10)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "View records retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "View records retrieved successfully."
+                                        },
+                                        "data": {
+                                            "description": "Paginated view records data",
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing type parameter",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Type parameter is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
+        "/company-view-records": {
+            "get": {
+                "tags": [
+                    "ViewRecord"
+                ],
+                "summary": "Fetch view records for the authenticated company",
+                "description": "Retrieves a paginated list of view records for the authenticated company filtered by type.",
+                "operationId": "getCompanyViewRecords",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "The type of view records to fetch (e.g., 'job', 'profile', 'company')",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "job"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of records per page (default: 10)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "View records retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "View records retrieved successfully."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Missing type parameter",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Type parameter is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
+            }
+        },
         "/jobs/{id}": {
             "get": {
                 "tags": [
@@ -3019,8 +4709,20 @@
             "description": "Job Application"
         },
         {
+            "name": "Company",
+            "description": "Company"
+        },
+        {
+            "name": "Job Offer",
+            "description": "Job Offer"
+        },
+        {
             "name": "User",
             "description": "User"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
         },
         {
             "name": "CV",
@@ -3031,8 +4733,8 @@
             "description": "Manifest"
         },
         {
-            "name": "Authentication",
-            "description": "Authentication"
+            "name": "ViewRecord",
+            "description": "ViewRecord"
         }
     ]
 }
