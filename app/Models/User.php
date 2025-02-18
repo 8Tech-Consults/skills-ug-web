@@ -599,4 +599,68 @@ class User extends Authenticatable implements JWTSubject
 
         //
     }
+
+    /**
+     * Calculate the profile completion percentage based on important personal fields.
+     *
+     * Only fields that are considered important for a job-seeker's profile are included.
+     * The final percentage is rounded to the nearest quarter (0, 25, 50, 75, or 100).
+     *
+     * @return int The profile completion percentage.
+     */
+    public function calculateProfileCompletion(): int
+    {
+        // List of important personal fields (adjust/add as needed)
+        $fields = [
+            'first_name',
+            'last_name',
+            'date_of_birth',
+            'place_of_birth',
+            'sex',
+            'home_address',
+            'current_address',
+            'phone_number_1',
+            'email',
+            'nationality',
+            'religion',
+            'marital_status',
+            'spouse_name',
+            'languages',
+            'emergency_person_name',
+            'national_id_number',
+            'passport_number',
+            'tin',
+            'nssf_number',
+            'primary_school_name',
+            'primary_school_year_graduated',
+            'seconday_school_name', // or "secondary_school_name" if that is your naming convention
+            'seconday_school_year_graduated',
+            'high_school_name',
+            'high_school_year_graduated',
+            'degree_university_name',
+            'degree_university_year_graduated',
+            'masters_university_name',
+            'masters_university_year_graduated',
+            'phd_university_name',
+            'phd_university_year_graduated',
+            'given_name',
+        ];
+
+        $total = count($fields);
+        $filled = 0;
+
+        // Loop through each field and count if it is set and not empty
+        foreach ($fields as $field) {
+            if (isset($this->$field) && trim($this->$field) !== "") {
+                $filled++;
+            }
+        }
+
+        // Calculate raw percentage of completed fields
+        $rawPercent = ($filled / $total) * 100;
+        // Round to nearest quarter (25% increments)
+        $roundedPercent = round($rawPercent / 25) * 25;
+
+        return (int) $roundedPercent;
+    }
 }

@@ -48,6 +48,7 @@ Route::get('jobs', [ApiAuthController::class, 'jobs']);
 Route::get('company-jobs', [ApiAuthController::class, 'company_jobs']);
 Route::get('districts', [ApiAuthController::class, 'districts']);
 Route::get('manifest', [ApiAuthController::class, 'manifest']);
+Route::get('job-seeker-manifest', [ApiAuthController::class, 'job_seeker_manifest']);
 Route::get('my-jobs', [ApiAuthController::class, 'my_jobs']);
 Route::get('cvs', [ApiAuthController::class, 'cvs']);
 Route::get('jobs/{id}', [MainController::class, 'job_single']);

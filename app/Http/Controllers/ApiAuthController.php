@@ -26,6 +26,7 @@ use App\Models\Task;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Utils;
+use App\Models\ViewRecord;
 use App\Traits\ApiResponser;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Facades\Admin;
@@ -1433,6 +1434,83 @@ class ApiAuthController extends Controller
      *         required=false,
      *         @OA\Schema(type="integer", example=16)
      *     ),
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="query",
+     *         description="Filter by job category ID",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=5)
+     *     ),
+     *     @OA\Parameter(
+     *         name="industry",
+     *         in="query",
+     *         description="Filter by industry",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Technology")
+     *     ),
+     *     @OA\Parameter(
+     *         name="district",
+     *         in="query",
+     *         description="Filter by district ID",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="deadline",
+     *         in="query",
+     *         description="Filter by application deadline (jobs with a deadline on or after the provided date)",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date", example="2023-12-31")
+     *     ),
+     *     @OA\Parameter(
+     *         name="company",
+     *         in="query",
+     *         description="Filter by company name",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Example Corp")
+     *     ),
+     *     @OA\Parameter(
+     *         name="salary",
+     *         in="query",
+     *         description="Filter by minimum salary",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", example=50000)
+     *     ),
+     *     @OA\Parameter(
+     *         name="employment_status",
+     *         in="query",
+     *         description="Filter by employment status (e.g., Full Time, Part Time, Contract, Internship)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Full Time")
+     *     ),
+     *     @OA\Parameter(
+     *         name="workplace",
+     *         in="query",
+     *         description="Filter by workplace type (Onsite or Remote)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Onsite")
+     *     ),
+     *     @OA\Parameter(
+     *         name="gender",
+     *         in="query",
+     *         description="Filter by gender requirement",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Any")
+     *     ),
+     *     @OA\Parameter(
+     *         name="experience_field",
+     *         in="query",
+     *         description="Filter by relevant experience field",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Software Development")
+     *     ),
+     *     @OA\Parameter(
+     *         name="sort",
+     *         in="query",
+     *         description="Sort results by (Newest, Oldest, High Salary, Low Salary)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Newest")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Jobs retrieved successfully",
@@ -1460,31 +1538,93 @@ class ApiAuthController extends Controller
      */
     public function jobs(Request $request)
     {
-
-        // Start building query
+        // Start building the query on active jobs
         $query = Job::where('status', 'Active');
 
-        // Optional: search filter by title
+        // Filter by search keyword (in the title)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where('title', 'LIKE', "%{$search}%");
         }
 
-        // Optional: filter by status
-        if ($request->filled('status')) {
-            $status = $request->input('status');
-            $query->where('status', $status);
+        // Filter by category (assuming category_id stores the category)
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->input('category'));
         }
 
-        // Order by newest
-        $query->orderBy('id', 'DESC');
+        // Filter by industry (if your jobs table has an 'industry' column)
+        if ($request->filled('industry')) {
+            $query->where('industry', $request->input('industry'));
+        }
 
-        // Paginate
+        // Filter by district
+        if ($request->filled('district')) {
+            $query->where('district_id', $request->input('district'));
+        }
+
+        // Filter by deadline (jobs with a deadline on or after the provided date)
+        if ($request->filled('deadline')) {
+            $query->whereDate('deadline', '>=', $request->input('deadline'));
+        }
+
+        // Filter by company (if your jobs table stores a company name)
+        if ($request->filled('company')) {
+            $query->where('company', 'LIKE', "%{$request->input('company')}%");
+        }
+
+        // Filter by salary – for example, jobs whose minimum salary is at least a given value
+        if ($request->filled('salary')) {
+            $query->where('minimum_salary', '>=', $request->input('salary'));
+        }
+
+        // Filter by employment status
+        if ($request->filled('employment_status')) {
+            $query->where('employment_status', $request->input('employment_status'));
+        }
+
+        // Filter by workplace
+        if ($request->filled('workplace')) {
+            $query->where('workplace', $request->input('workplace'));
+        }
+
+        // Filter by gender – if the filter is set to "Any" we ignore it
+        if ($request->filled('gender') && $request->input('gender') !== 'Any') {
+            $query->where('gender', $request->input('gender'));
+        }
+
+        // Filter by experience field (partial match)
+        if ($request->filled('experience_field')) {
+            $experienceField = $request->input('experience_field');
+            $query->where('experience_field', 'LIKE', "%{$experienceField}%");
+        }
+
+        // Sorting logic based on 'sort' parameter
+        if ($request->filled('sort')) {
+            $sort = $request->input('sort');
+            if ($sort === "Newest") {
+                $query->orderBy('created_at', 'DESC');
+            } elseif ($sort === "Oldest") {
+                $query->orderBy('created_at', 'ASC');
+            } elseif ($sort === "High Salary") {
+                $query->orderBy('maximum_salary', 'DESC');
+            } elseif ($sort === "Low Salary") {
+                $query->orderBy('minimum_salary', 'ASC');
+            } else {
+                // Fallback ordering
+                $query->orderBy('id', 'DESC');
+            }
+        } else {
+            // Default ordering
+            $query->orderBy('id', 'DESC');
+        }
+
+        // Paginate results (default 16 per page)
         $perPage = $request->input('per_page', 16);
         $jobs = $query->paginate($perPage);
 
         return $this->success($jobs, 'Success');
     }
+
 
 
 
@@ -2557,6 +2697,122 @@ class ApiAuthController extends Controller
             'CATEGORIES' => $CATEGORIES,
             'TOP_JOBS' => $TOP_JOBS,
         ];
+
+        return $this->success($manifest, 'Success');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/job-seeker-manifest",
+     *     summary="Retrieve job seeker manifest",
+     *     description="Fetches the manifest data for the authenticated job seeker, including CV views, profile completion percentage, job applications, job offers, and more.",
+     *     operationId="getJobSeekerManifest",
+     *     tags={"Manifest"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Manifest retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Success"
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 description="The manifest details",
+     *                 @OA\Property(property="cv_views", type="integer", example=10),
+     *                 @OA\Property(property="profile_completion_percentage", type="integer", example=80),
+     *                 @OA\Property(property="job_application_count", type="integer", example=5),
+     *                 @OA\Property(property="job_application_pending", type="integer", example=2),
+     *                 @OA\Property(property="job_application_accepted", type="integer", example=1),
+     *                 @OA\Property(property="job_application_rejected", type="integer", example=2),
+     *                 @OA\Property(
+     *                     property="job_offers",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="job_title", type="string", example="Software Engineer"),
+     *                         @OA\Property(property="company_name", type="string", example="Example Corp"),
+     *                         @OA\Property(property="salary", type="number", format="float", example=70000),
+     *                         @OA\Property(property="start_date", type="string", format="date", example="2023-01-01"),
+     *                         @OA\Property(property="status", type="string", example="Pending")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="job_applications",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="job_id", type="integer", example=10),
+     *                         @OA\Property(property="applicant_id", type="integer", example=1),
+     *                         @OA\Property(property="status", type="string", example="pending")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="upcoming_interviews",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="job_id", type="integer", example=10),
+     *                         @OA\Property(property="applicant_id", type="integer", example=1),
+     *                         @OA\Property(property="status", type="string", example="Interview")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="saved_jobs",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="title", type="string", example="Software Engineer"),
+     *                         @OA\Property(property="status", type="string", example="Active")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - Authentication required",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Account not found."
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function job_seeker_manifest()
+    {
+        $u = auth('api')->user();
+        if ($u == null) {
+            return $this->error('Account not found');
+        }
+        $u = User::find($u->id);
+        //manifest object
+        $manifest = [];
+        $manifest['cv_views'] = ViewRecord::where([
+            'company_id' => $u->id,
+            'type' => 'CV',
+        ])->count();
+        $manifest['profile_completion_percentage'] = $u->calculateProfileCompletion();
+        $manifest['job_application_count'] = JobApplication::where('applicant_id', $u->id)->count();
+        $manifest['job_application_pending'] = JobApplication::where('applicant_id', $u->id)->where('status', 'Pending')->count();
+        $manifest['job_application_accepted'] = JobApplication::where('applicant_id', $u->id)->wherein('status', ['Interview', 'Hired'])->count();
+        $manifest['job_application_rejected'] = JobApplication::where('applicant_id', $u->id)->wherein('status', ['Declined', 'Rejected', 'On Hold'])->count();
+        $manifest['job_offers'] = JobOffer::where(['candidate_id' => $u->id])->limit(10)->get();
+        $manifest['job_applications'] = JobApplication::where(['applicant_id' => $u->id])->limit(10)->get();
+        $manifest['upcoming_interviews'] = JobApplication::where(['applicant_id' => $u->id, 'status' => 'Interview'])->limit(10)->get();
+        $manifest['saved_jobs'] = Job::where([])->limit(10)->get();
 
         return $this->success($manifest, 'Success');
     }

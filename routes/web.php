@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ApiAuthController;
 use App\Http\Controllers\MainController;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -160,6 +161,7 @@ Route::get('migrate', function () {
     //returning the output
     return Artisan::output();
 });
+ 
 Route::get('clear', function () {
 
     Artisan::call('config:clear');
