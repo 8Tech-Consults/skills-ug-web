@@ -2001,6 +2001,118 @@
                             "type": "integer",
                             "example": 16
                         }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter by job category ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    },
+                    {
+                        "name": "industry",
+                        "in": "query",
+                        "description": "Filter by industry",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Technology"
+                        }
+                    },
+                    {
+                        "name": "district",
+                        "in": "query",
+                        "description": "Filter by district ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "deadline",
+                        "in": "query",
+                        "description": "Filter by application deadline (jobs with a deadline on or after the provided date)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2023-12-31"
+                        }
+                    },
+                    {
+                        "name": "company",
+                        "in": "query",
+                        "description": "Filter by company name",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Example Corp"
+                        }
+                    },
+                    {
+                        "name": "salary",
+                        "in": "query",
+                        "description": "Filter by minimum salary",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 50000
+                        }
+                    },
+                    {
+                        "name": "employment_status",
+                        "in": "query",
+                        "description": "Filter by employment status (e.g., Full Time, Part Time, Contract, Internship)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Full Time"
+                        }
+                    },
+                    {
+                        "name": "workplace",
+                        "in": "query",
+                        "description": "Filter by workplace type (Onsite or Remote)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Onsite"
+                        }
+                    },
+                    {
+                        "name": "gender",
+                        "in": "query",
+                        "description": "Filter by gender requirement",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Any"
+                        }
+                    },
+                    {
+                        "name": "experience_field",
+                        "in": "query",
+                        "description": "Filter by relevant experience field",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Software Development"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by (Newest, Oldest, High Salary, Low Salary)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Newest"
+                        }
                     }
                 ],
                 "responses": {
@@ -3532,6 +3644,187 @@
                         }
                     }
                 }
+            }
+        },
+        "/job-seeker-manifest": {
+            "get": {
+                "tags": [
+                    "Manifest"
+                ],
+                "summary": "Retrieve job seeker manifest",
+                "description": "Fetches the manifest data for the authenticated job seeker, including CV views, profile completion percentage, job applications, job offers, and more.",
+                "operationId": "getJobSeekerManifest",
+                "responses": {
+                    "200": {
+                        "description": "Manifest retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "description": "The manifest details",
+                                            "properties": {
+                                                "cv_views": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "profile_completion_percentage": {
+                                                    "type": "integer",
+                                                    "example": 80
+                                                },
+                                                "job_application_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "job_application_pending": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "job_application_accepted": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "job_application_rejected": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "job_offers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "job_title": {
+                                                                "type": "string",
+                                                                "example": "Software Engineer"
+                                                            },
+                                                            "company_name": {
+                                                                "type": "string",
+                                                                "example": "Example Corp"
+                                                            },
+                                                            "salary": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 70000
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-01-01"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Pending"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "job_applications": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "job_id": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "applicant_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "pending"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "upcoming_interviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "job_id": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "applicant_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Interview"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "saved_jobs": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "Software Engineer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Active"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "apiAuth": []
+                    }
+                ]
             }
         },
         "/users": {
