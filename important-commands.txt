@@ -2,7 +2,7 @@ php artisan migrate
 
 php artisan make:migration create_courses_table
 
-php artisan make:migration add_company_id_to_view_records --table=view_records
+php artisan make:migration add_code_to_admin_users --table=admin_users
 change these to snake case, make all of them text and nullable, first chech if field eixst in table before add, they are nullable
  
 php artisan admin:make LaundryOrderItemTypeController --model=App\\Models\\LaundryOrderItemType

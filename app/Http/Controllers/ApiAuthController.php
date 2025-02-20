@@ -3415,6 +3415,93 @@ class ApiAuthController extends Controller
 
 
 
+    /**
+     * @OA\Post(
+     *     path="/email-verify",
+     *     summary="Verify the user's email address",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Email and verification code",
+     *         @OA\JsonContent(
+     *             required={"email", "code"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="code", type="string", example="123456")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Email verified successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object"),
+     *             @OA\Property(property="message", type="string", example="Email verified successfully."),
+     *             @OA\Property(property="code", type="integer", example=1)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Verification failed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Verification code is incorrect.")
+     *         )
+     *     )
+     * )
+     */
+    public function email_verify(Request $request)
+    {
+        // Get the currently authenticated user via the API guard
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('User not found.');
+        }
+
+        // Re-fetch the user record from the database (assuming the model is Administrator)
+        $user = Administrator::find($user->id);
+        if (!$user) {
+            return $this->error('User not found.');
+        }
+
+        // Validate email input: it must be present and a valid email address.
+        if (empty($request->email) || !filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
+            return $this->error('Email is missing or invalid.');
+        }
+
+        // Validate the verification code: ensure it is present and of a minimum length.
+        if (empty($request->code) || strlen($request->code) < 3) {
+            return $this->error('Verification code is missing.');
+        }
+
+        // Ensure the provided email matches the authenticated user's email.
+        if ($user->email !== $request->email) {
+            return $this->error('Provided email does not match our records.');
+        }
+
+        // Check the provided verification code against the user's stored code.
+        // (Assumes the user has a "verification_code" field set when the code was sent.)
+        if ($user->code !== $request->code) {
+            return $this->error('Verification code is incorrect.');
+        }
+
+        // Mark the user as verified and clear the stored verification code.
+        $user->verification = "Yes";
+        $user->code = null;
+        $user->code_sent_at = null;
+        $user->code_is_sent = null;
+
+        try {
+            $user->save();
+            $message = "Email verified successfully.";
+            $user = User::find($user->id);
+            // Return updated user data along with a success message and code.
+            return $this->success($user, $message, 1);
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+
 
     /**
      * @OA\Post(

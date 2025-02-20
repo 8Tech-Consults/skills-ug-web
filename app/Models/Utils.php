@@ -225,12 +225,33 @@ class Utils extends Model
         }
     }
 
+    
+    public static function mail_sender_1($data)
+    {
+        try {
+            Mail::send(
+                'mails/mail-1',
+                [
+                    'body' => $data['body'],
+                    'title' => $data['subject']
+                ],
+                function ($m) use ($data) {
+                    $m->to($data['email'], $data['name'])
+                        ->subject($data['subject']);
+                    $m->from(env('MAIL_FROM_ADDRESS'), $data['subject']);
+                }
+            );
+        } catch (\Throwable $th) {
+            $msg = 'failed';
+            throw $th;
+        }
+    }
+
 
 
     //mail sender
     public static function mail_sender($data)
-    {
-        return;
+    { 
         try {
             //$data['email']
             if (env('APP_DEBUG')) {

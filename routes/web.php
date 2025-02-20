@@ -225,6 +225,17 @@ Route::get('regenerate-invoice', function () {
     return $pdf->stream('test.pdf');
 });
 
+Route::get('mail-test', function () {
+
+    $data['body'] = 'This should be the body of the <b>email</b>.';
+    $data['data'] = $data['body'];
+    $data['name'] = 'Hohn peter';
+    $data['email'] = 'mubahood360@gmail.com';
+    $data['subject'] = 'TEST UGANDA ' . ' - M-Omulimisa';
+
+    Utils::mail_sender_1($data);
+    die("success");
+}); 
 
 
 Route::get('app', function () {

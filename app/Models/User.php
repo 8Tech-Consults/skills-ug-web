@@ -46,7 +46,7 @@ class User extends Authenticatable implements JWTSubject
             $m->email = trim($m->email);
             if ($m->email != null && strlen($m->email) > 3) {
                 if (!Utils::validateEmail($m->email)) {
-                    // throw new \Exception("Invalid email address");
+                    throw new \Exception("Invalid email address");
                 } else {
                     //check if email exists
                     $u = User::where('email', $m->email)->first();
@@ -109,67 +109,7 @@ class User extends Authenticatable implements JWTSubject
                 throw new \Exception("Username already exists");
             }
             $m->username = $username;
-
-            //check if card_status is not set
-            if ($m->card_status == null) {
-                $m->card_status = "Inactive";
-            }
-
-            if ($m->card_status == "Active") {
-                if ($m->card_number == null || strlen($m->card_number) < 2) {
-                    $m->card_number = date('Y') . rand(100000, 999999) . rand(100000, 999999);
-                    //check if card_number exists
-                    $u = User::where('card_number', $m->card_number)->first();
-                    if ($u != null) {
-                        $m->card_number = date('Y') . rand(100000, 999999) . rand(100000, 999999);
-                    }
-                    //check if card_number exists
-                    $u = User::where('card_number', $m->card_number)->first();
-                    if ($u != null) {
-                        $m->card_number = date('Y') . rand(100000, 999999) . rand(100000, 999999);
-                    }
-                    //check if card_number exists
-                    $u = User::where('card_number', $m->card_number)->first();
-                    if ($u != null) {
-                        throw new \Exception("Card number already exists.");
-                    }
-                }
-
-                if ($m->card_expiry == null || strlen($m->card_expiry) < 2) {
-                    $m->card_expiry = date('Y-m-d', strtotime('+2 year'));
-                }
-                //card_accepts_credit
-                if ($m->card_accepts_credit == null) {
-                    $m->card_accepts_credit = 'No';
-                }
-
-                //card_max_credit
-                if ($m->card_max_credit == null) {
-                    $m->card_max_credit = 0;
-                }
-                //is_dependent
-                if ($m->is_dependent == null) {
-                    $m->is_dependent = 'No';
-                }
-                //dependent_status
-                if ($m->dependent_status == null) {
-                    $m->dependent_status = 'Inactive';
-                }
-                if ($m->is_dependent == 'Yes') {
-                    $u = User::find($m->dependent_id);
-                    if ($u == null) {
-                        throw new \Exception("Dependent not found.");
-                    }
-                }
-                //card_expiry
-                if ($m->card_expiry == null) {
-                    $m->card_expiry = date('Y-m-d', strtotime('+2 year'));
-                }
-                //belongs_to_company_status
-                if ($m->belongs_to_company_status == null) {
-                    $m->belongs_to_company_status = 'Inactive';
-                }
-            }
+            $m->verification = 'No';
         });
 
 
@@ -178,7 +118,7 @@ class User extends Authenticatable implements JWTSubject
             $m->email = trim($m->email);
             if ($m->email != null && strlen($m->email) > 3) {
                 if (!Utils::validateEmail($m->email)) {
-                    // throw new \Exception("Invalid email address");
+                    throw new \Exception("Invalid email address");
                 } else {
                     //check if email exists
                     $u = User::where('email', $m->email)->first();
@@ -241,67 +181,6 @@ class User extends Authenticatable implements JWTSubject
                 throw new \Exception("Username already exists");
             }
             $m->username = $username;
-
-            //check if card_status is not set
-            if ($m->card_status == null) {
-                $m->card_status = "Inactive";
-            }
-
-            if ($m->card_status == "Active") {
-                if ($m->card_number == null || strlen($m->card_number) < 2) {
-                    $m->card_number = date('Y') . rand(100000, 999999) . rand(100000, 999999);
-                    //check if card_number exists
-                    $u = User::where('card_number', $m->card_number)->first();
-                    if ($u != null && $u->id != $m->id) {
-                        $m->card_number = date('Y') . rand(100000, 999999) . rand(100000, 999999);
-                    }
-                    //check if card_number exists
-                    $u = User::where('card_number', $m->card_number)->first();
-                    if ($u != null && $u->id != $m->id) {
-                        $m->card_number = date('Y') . rand(100000, 999999) . rand(100000, 999999);
-                    }
-                    //check if card_number exists
-                    $u = User::where('card_number', $m->card_number)->first();
-                    if ($u != null && $u->id != $m->id) {
-                        throw new \Exception("Card number already exists.");
-                    }
-                }
-
-                if ($m->card_expiry == null || strlen($m->card_expiry) < 2) {
-                    $m->card_expiry = date('Y-m-d', strtotime('+2 year'));
-                }
-                //card_accepts_credit
-                if ($m->card_accepts_credit == null) {
-                    $m->card_accepts_credit = 'No';
-                }
-
-                //card_max_credit
-                if ($m->card_max_credit == null) {
-                    $m->card_max_credit = 0;
-                }
-                //is_dependent
-                if ($m->is_dependent == null) {
-                    $m->is_dependent = 'No';
-                }
-                //dependent_status
-                if ($m->dependent_status == null) {
-                    $m->dependent_status = 'Inactive';
-                }
-                if ($m->is_dependent == 'Yes') {
-                    $u = User::find($m->dependent_id);
-                    if ($u == null) {
-                        throw new \Exception("Dependent not found.");
-                    }
-                }
-                //card_expiry
-                if ($m->card_expiry == null) {
-                    $m->card_expiry = date('Y-m-d', strtotime('+2 year'));
-                }
-                //belongs_to_company_status
-                if ($m->belongs_to_company_status == null) {
-                    $m->belongs_to_company_status = 'Inactive';
-                }
-            }
         });
     }
 

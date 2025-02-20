@@ -57,6 +57,7 @@ Route::POST("post-media-upload", [ApiAuthController::class, 'upload_media']);
 Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
 Route::POST("delete-account", [ApiAuthController::class, 'delete_profile']);
 Route::POST("password-change", [ApiAuthController::class, 'password_change']);
+Route::POST("email-verify", [ApiAuthController::class, 'email_verify']);
 
 
 Route::get('api/{model}', [ApiResurceController::class, 'index']);
