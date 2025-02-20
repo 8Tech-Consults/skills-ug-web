@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Encore\Admin\Facades\Admin;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
@@ -285,7 +286,7 @@ class Utils extends Model
                 $message = $response['message'];
             }
             if (strtolower($response['status']) != 'success') {
-                dd($response);  
+                dd($response);
                 throw new \Exception($message); //throw exception
             }
             return $response;
@@ -299,30 +300,27 @@ class Utils extends Model
     //mail sender
     public static function mail_sender($data)
     {
-        self::mail_sender_1($data);
-        return;
-        try {
-            //$data['email']
-            if (env('APP_DEBUG')) {
-                $data['email'] = 'mubahood360@gmail.com';
+        $template = 'mails.mail-1';
+        if (isset($data['use_empty_template'])) {
+            if ($data['use_empty_template']) {
+                $template = 'mails.mail-2';
             }
+        }
+        try {
             Mail::send(
-                'mail',
+                $template,
                 [
-                    'body' => view('mail-1', [
-                        'body' => $data['body'],
-                    ]),
+                    'body' => $data['body'],
                     'title' => $data['subject']
                 ],
                 function ($m) use ($data) {
                     $m->to($data['email'], $data['name'])
                         ->subject($data['subject']);
-                    $m->from(env('MAIL_USERNAME', 'noreply@taskease.net'), $data['subject']);
+                    $m->from(env('MAIL_FROM_ADDRESS'), $data['subject']);
                 }
             );
         } catch (\Throwable $th) {
-            $msg = 'failed';
-            throw $th;
+            throw new Exception($th->getMessage());
         }
     }
 

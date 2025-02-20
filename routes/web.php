@@ -233,7 +233,7 @@ Route::get('mail-test', function () {
     $data['email'] = 'mubahood360@gmail.com';
     $data['subject'] = 'TEST UGANDA ' . ' - M-Omulimisa';
 
-    Utils::mail_sender_1($data);
+    Utils::mail_sender($data);
     die("success");
 });
 
