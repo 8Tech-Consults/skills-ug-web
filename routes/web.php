@@ -230,7 +230,7 @@ Route::get('mail-test', function () {
     $data['body'] = 'This should be the body of the <b>email</b>.';
     $data['data'] = $data['body'];
     $data['name'] = 'Hohn peter';
-    $data['email'] = 'muhindo@8technologies.com';
+    $data['email'] = 'mubahood360@gmail.com';
     $data['subject'] = 'TEST UGANDA ' . ' - M-Omulimisa';
 
     Utils::mail_sender_1($data);
@@ -239,8 +239,8 @@ Route::get('mail-test', function () {
 
 Route::get('mail-template-test', function (Request $request) {
 
-    $data['email'] = 'muhindo@8technologies.com';
-    $data['name'] = 'Mubaraka Muhindo';
+    $data['email'] = 'muhindo@8technologies.net'; 
+    $data['name'] = 'Mubaraka Muhindo'; 
     $data['subject'] = env('APP_NAME') . " - Mail Test";
     $data['body'] = "<br>Dear " .  $data['name'] . ",<br>";
     $data['body'] .= "<br>Please click the link below to reset your " . env('APP_NAME') . " System password.<br><br>";
@@ -252,7 +252,7 @@ Route::get('mail-template-test', function (Request $request) {
     try {
         Utils::mail_sender($data);
     } catch (\Throwable $th) {
-        die("Error: " . $th->getMessage());
+        die($th->getMessage());
     } finally {
         die("Email sent");
     }
