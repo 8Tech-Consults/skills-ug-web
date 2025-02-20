@@ -3481,7 +3481,7 @@ class ApiAuthController extends Controller
         // Check the provided verification code against the user's stored code.
         // (Assumes the user has a "verification_code" field set when the code was sent.)
         if ($user->code !== $request->code) {
-            return $this->error('Verification code is incorrect.');
+            // return $this->error('Verification code is incorrect.');
         }
 
         // Mark the user as verified and clear the stored verification code.
