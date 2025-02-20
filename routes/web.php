@@ -239,7 +239,7 @@ Route::get('mail-test', function () {
 
 Route::get('mail-template-test', function (Request $request) {
 
-    $data['email'] = 'mubahood360@gmail.com';
+    $data['email'] = 'muhindo@8technologies.com';
     $data['name'] = 'Mubaraka Muhindo';
     $data['subject'] = env('APP_NAME') . " - Mail Test";
     $data['body'] = "<br>Dear " .  $data['name'] . ",<br>";
