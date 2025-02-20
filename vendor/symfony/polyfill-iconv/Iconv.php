@@ -451,7 +451,7 @@ final class Iconv
             return false;
         }
 
-        return \strlen(utf8_decode($s));
+        return \strlen(($s));
     }
 
     public static function strlen2($s, $encoding = null)
