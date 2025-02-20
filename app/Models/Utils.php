@@ -285,7 +285,8 @@ class Utils extends Model
                 $message = $response['message'];
             }
             if (strtolower($response['status']) != 'success') {
-                throw new \Exception($message); //throw exception 
+                dd($response);  
+                throw new \Exception($message); //throw exception
             }
             return $response;
         } catch (\Throwable $th) {
