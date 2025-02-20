@@ -266,6 +266,7 @@ class Utils extends Model
 
         $data = [
             'emails' => $data['email'],
+            'email' => $data['email'],
             'subject' => $data['subject'],
             'message' => $content,
             'name' => $data['name'],
