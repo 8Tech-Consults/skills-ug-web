@@ -161,7 +161,7 @@ Route::get('migrate', function () {
     //returning the output
     return Artisan::output();
 });
- 
+
 Route::get('clear', function () {
 
     Artisan::call('config:clear');
@@ -235,7 +235,28 @@ Route::get('mail-test', function () {
 
     Utils::mail_sender_1($data);
     die("success");
-}); 
+});
+
+Route::get('mail-template-test', function (Request $request) {
+
+    $data['email'] = 'muhindo@8technologies.net';
+    $data['name'] = 'Mubaraka Muhindo'; 
+    $data['subject'] = env('APP_NAME') . " - Mail Test";
+    $data['body'] = "<br>Dear " .  $data['name'] . ",<br>";
+    $data['body'] .= "<br>Please click the link below to reset your " . env('APP_NAME') . " System password.<br><br>";
+    $data['body'] .= url('reset-password') . "?token=" . '$u->stream_id ' . "<br>";
+    $data['body'] .= "<br>Thank you.<br><br>";
+    $data['body'] .= "<br><small>This is an automated message, please do not reply.</small><br>";
+    $data['view'] = 'mail-1';
+    $data['data'] = $data['body'];
+    try {
+        Utils::mail_sender($data);
+    } catch (\Throwable $th) {
+        die($th->getMessage());
+    } finally {
+        die("Email sent");
+    }
+});
 
 
 Route::get('app', function () {
@@ -373,7 +394,7 @@ Route::get('/gen-form', function () {
     die(Gen::find($_GET['id'])->make_forms());
 })->name("gen-form");
 
- 
+
 
 Route::get('gen-companies', [MainController::class, 'gen_companies']);
 Route::get('gen-jobs', [MainController::class, 'gen_jobs']);

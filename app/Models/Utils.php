@@ -31,6 +31,33 @@ class Utils extends Model
         return $obj;
     }
 
+    public static function http_post($url, $data)
+    {
+        try {
+            $payload = json_encode($data);
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            $response = curl_exec($ch);
+            if (curl_errno($ch)) {
+                throw new \Exception(curl_error($ch));
+            }
+
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($status >= 200 && $status < 300) {
+                return json_decode($response, true);
+            }
+            throw new \Exception("HTTP Status: $status");
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
 
     //static function generate_uuid
     static function generate_uuid()
@@ -225,24 +252,43 @@ class Utils extends Model
         }
     }
 
-    
+
     public static function mail_sender_1($data)
     {
+        $content = view('mails.mail-1', [
+            'body' => $data['body'],
+            'title' => $data['subject'],
+            'subject' => $data['subject'],
+        ])->render();
+        //change the content type to string
+        $content = (string) $content;
+        $url = 'https://schooldynamics.ug/api/mail-sender';
+
+        $data = [
+            'emails' => $data['email'],
+            'subject' => $data['subject'],
+            'message' => $content,
+            'name' => $data['name'],
+            'use_empty_template' => true,
+        ];
+
         try {
-            Mail::send(
-                'mails/mail-1',
-                [
-                    'body' => $data['body'],
-                    'title' => $data['subject']
-                ],
-                function ($m) use ($data) {
-                    $m->to($data['email'], $data['name'])
-                        ->subject($data['subject']);
-                    $m->from(env('MAIL_FROM_ADDRESS'), $data['subject']);
-                }
-            );
+            $response = Utils::http_post($url, $data);
+            if (!is_array($response)) {
+                throw new \Exception("Invalid response");
+            }
+            if (!isset($response['status'])) {
+                throw new \Exception("Invalid response");
+            }
+            $message = 'Invalid response';
+            if (isset($response['message'])) {
+                $message = $response['message'];
+            }
+            if (strtolower($response['status']) != 'success') {
+                throw new \Exception($message);
+            }
+            return $response;
         } catch (\Throwable $th) {
-            $msg = 'failed';
             throw $th;
         }
     }
@@ -251,7 +297,9 @@ class Utils extends Model
 
     //mail sender
     public static function mail_sender($data)
-    { 
+    {
+        self::mail_sender_1($data);
+        return;
         try {
             //$data['email']
             if (env('APP_DEBUG')) {

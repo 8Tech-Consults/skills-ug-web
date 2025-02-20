@@ -1,112 +1,38 @@
-<?php
-if (!isset($body)) {
-    $body = 'Hello Muhindo Mubarka, Use the following to reset your taskease password.';
-}
-?>
+{{-- resources/views/emails/creative_template.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ env('APP_NAME') }}</title>
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
-        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
-    <!-- Custom Styles -->
-    <style>
-        /* create css var primary color as rgb(230, 207, 0) */
-        :root {
-            --primary-color: rgb(230, 207, 0);
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-        }
-
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 10px;
-        }
-
-        .header {
-            background-color: #e89f02;
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .content {
-            padding: 20px;
-            background-color: #fff;
-            color: #424649;
-        }
-
-        .footer {
-            background-color: white;
-            text-align: center;
-            padding: 10px;
-            padding-top: 20px;
-        }
-
-        .text-primary {
-            color: var(--primary-color) !important;
-        }
-
-        .text-primary-2 {
-            color: white !important;
-            font-weight: 900;
-        }
-
-        .my-hr {
-            margin: 0;
-            height: 0px;
-        }
-
-        .my-title {
-            font-size: 1.5rem;
-            font-weight: 900;
-            line-height: 1;
-            text-transform: uppercase;
-        }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ $title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
 
-<body style="background-color: #f7efdd">
-
-    <div class="email-container" style="background-color: #f7efdd;">
-        <!-- Header -->
-        <div class="footer" {{-- style="border-bottom: 2px solid  #AB7602" --}}>
-            <h2 style="color: rgb(0, 0, 50);" class="my-title">{{ env('APP_NAME') }}</h2>
+<body
+    style="font-family: 'Montserrat', sans-serif; background-color: #e3eff8; color: #333; line-height: 1.6; padding: 10px;">
+    <div
+        style="max-width: 600px; margin: 20px auto; background: #fff; border: 1px solid #e0e0e0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); overflow: hidden;">
+        <div style="background: linear-gradient(90deg, #114786, #f33d02); padding: 15px; text-align: center;">
+            <h1 style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 3px;">{{ env('APP_NAME') }}</h1>
+            <p style="font-size: 12px; color: #fff; opacity: 0.9;">{{ $title }}</p>
         </div>
-        <div class="my-hr" style="border: 3px solid  black"></div>
-        <div class="my-hr "style="border: 3px solid yellow"></div>
-        <div class="my-hr " style="border: 3px solid  red"></div>
-        <!-- Content -->
-        <div class="content"
-            style="
-        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-        font-size: 16px;
-        ">
+        <div style="padding: 20px;">
             {!! $body !!}
         </div>
-        <a href="http://unified.m-omulimisa.com/">
-            <div class="header small">
-                <div class="d-flex justify-content-center" style="font-size: 12px">
-                    <a href="https://tat.go.ug/about-us/"
-                        class=" mx-2 text-primary-2 text-uppercase">{{ strtoupper('About TAT') }}</a> &nbsp;•&nbsp;
-                    <a href="https://tat.go.ug/legislation/"
-                        class=" mx-2 text-primary-2 text-uppercase">{{ strtoupper('Resourses') }}</a> &nbsp;•&nbsp;
-                    <a href="https://tat.go.ug/upcoming-events/"
-                        class=" mx-2 text-primary-2 text-uppercase">{{ strtoupper('News') }}</a> &nbsp;•&nbsp;
-                    <a href="https://tat.go.ug/contact-us/"
-                        class=" mx-2 text-primary-2 text-uppercase">{{ strtoupper('Contact Us') }}
-                </div>
-            </div>
-        </a>
+        <div
+            style="background: #fafafa; padding: 10px 15px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #e0e0e0;">
+            <a href="#" style="color: #114786; text-decoration: none; margin: 0 6px; font-weight: 600;">About
+                Us</a> |
+            <a href="#" style="color: #114786; text-decoration: none; margin: 0 6px; font-weight: 600;">Privacy
+                Policy</a> |
+            <a href="#" style="color: #114786; text-decoration: none; margin: 0 6px; font-weight: 600;">Terms of
+                Service</a> |
+            <a href="#"
+                style="color: #114786; text-decoration: none; margin: 0 6px; font-weight: 600;">Contact</a>
+            <br />
+            &copy; {{ date('Y') }} {{ env('APP_NAME') }}. All rights reserved.
+        </div>
     </div>
 </body>
 
