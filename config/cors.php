@@ -17,7 +17,17 @@ return [
 
     'paths' => ['api/*', 'email-verify', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['https://skills-api.comfarnet.org'],
+    'allowed_origins' => [
+        'https://skills-api.comfarnet.org',
+        'https://skills.comfarnet.org',
+        'comfarnet.org',
+        'http://localhost',
+        'https://skills-ug.8technologies.net',
+        'https://skills-ug.8technologies.net',
+        'http://skills-ug.8technologies.net',
+        'skills-ug.8technologies.net',
+        'http://localhost:5173',
+    ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
