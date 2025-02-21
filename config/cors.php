@@ -17,7 +17,7 @@ return [
 
     'paths' => ['api/*', 'email-verify', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['https://skills-ug.8technologies.net'],
+    'allowed_origins' => ['https://skills-api.comfarnet.org'],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
