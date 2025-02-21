@@ -30,6 +30,7 @@ use App\Models\ViewRecord;
 use App\Traits\ApiResponser;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Facades\Admin;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
@@ -61,6 +62,8 @@ class ApiAuthController extends Controller
             'users',
             'jobs/*',
             'cvs/*',
+            'password-reset-request',
+            'password-reset-submit',
             'districts',
             'cvs',
         ]]);
@@ -3562,6 +3565,196 @@ class ApiAuthController extends Controller
         return $this->success(null, 'Verification code sent successfully.');
     }
 
+
+    /**
+     * @OA\Post(
+     *     path="/password-reset-request",
+     *     summary="Request password reset",
+     *     description="Sends a password reset code to the user's email address.",
+     *     operationId="passwordResetRequest",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Password reset request data",
+     *         @OA\JsonContent(
+     *             required={"email"},
+     *             @OA\Property(
+     *                 property="email",
+     *                 type="string",
+     *                 format="email",
+     *                 example="user@example.com",
+     *                 description="The email address associated with the user's account"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password reset code sent successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Password reset code sent successfully."),
+     *             @OA\Property(property="data", type="null", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Email is required.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="User not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while sending the password reset code.")
+     *         )
+     *     )
+     * )
+     */
+    public function password_reset_request(Request $request)
+    {
+        $email = $request->email;
+        if ($email == null) {
+            return $this->error('Email is required.');
+        }
+        $email = trim($email);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->error('Invalid email address.');
+        }
+        $user = User::where('email', $email)->first();
+        if ($user == null) {
+            return $this->error('User not found.');
+        }
+        try {
+            $user->password_reset_request();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+        return $this->success(null, 'Password reset code sent successfully.');
+    }
+
+
+    /**
+     * @OA\Post(
+     *     path="/password-reset-submit",
+     *     summary="Submit password reset",
+     *     description="Allows a user to reset their password by providing the email, verification code, and new password.",
+     *     operationId="passwordResetSubmit",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Password reset submission data",
+     *         @OA\JsonContent(
+     *             required={"email", "code", "password"},
+     *             @OA\Property(
+     *                 property="email",
+     *                 type="string",
+     *                 format="email",
+     *                 example="user@example.com",
+     *                 description="The email address associated with the user's account"
+     *             ),
+     *             @OA\Property(
+     *                 property="code",
+     *                 type="string",
+     *                 example="123456",
+     *                 description="The verification code sent to the user's email"
+     *             ),
+     *             @OA\Property(
+     *                 property="password",
+     *                 type="string",
+     *                 format="password",
+     *                 example="NewSecurePassword123",
+     *                 description="The new password (must be at least 6 characters)"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password reset successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Password reset successfully. You can now login with your new password."),
+     *             @OA\Property(property="data", type="null", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request - Missing or invalid input",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Email, code, and password are required.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="User not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An error occurred while resetting the password.")
+     *         )
+     *     )
+     * )
+     */
+    public function password_reset_submit(Request $request)
+    {
+        $email = $request->email;
+        $code = $request->code;
+        $password = $request->password;
+
+        if (!$email || !$code || !$password) {
+            return $this->error('Email, code, and password are required.');
+        }
+
+        $email = trim($email);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->error('Invalid email address.');
+        }
+
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return $this->error('User not found.');
+        }
+
+        if ($user->code !== $code) {
+            return $this->error('Verification code is incorrect.');
+        }
+
+        if (strlen($password) < 6) {
+            return $this->error('Password must be at least 6 characters.');
+        }
+
+        $user->password = password_hash($password, PASSWORD_DEFAULT);
+        $user->code = null;
+        $user->code_sent_at = null;
+        $user->code_is_sent = null;
+
+        try {
+            $user->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        return $this->success(null, 'Password reset successfully. You can now login with your new password.');
+    }
 
     /**
      * @OA\Post(

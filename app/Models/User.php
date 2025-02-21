@@ -187,26 +187,71 @@ class User extends Authenticatable implements JWTSubject
     }
 
 
-
-    public function send_password_reset()
+    public function password_reset_request()
     {
-        $u = $this;
-        $u->stream_id = rand(100000, 999999);
-        $u->save();
-        $data['email'] = $u->email;
-        $data['name'] = $u->name;
-        $data['subject'] = env('APP_NAME') . " - Password Reset";
-        $data['body'] = "<br>Dear " . $u->name . ",<br>";
-        $data['body'] .= "<br>Please click the link below to reset your " . env('APP_NAME') . " System password.<br><br>";
-        $data['body'] .= url('reset-password') . "?token=" . $u->stream_id . "<br>";
-        $data['body'] .= "<br>Thank you.<br><br>";
-        $data['body'] .= "<br><small>This is an automated message, please do not reply.</small><br>";
-        $data['view'] = 'mail-1';
-        $data['data'] = $data['body'];
+        $user = $this;
+
+        // Check if a verification code was sent less than 3 minutes ago
+        if ($user->code_is_sent === "Yes" && $user->code_sent_at !== null) {
+            try {
+                $code_sent_at = Carbon::parse($user->code_sent_at);
+                if ($code_sent_at->diffInMinutes(Carbon::now()) < 3) {
+                    throw new Exception("Please wait for 3 minutes before requesting a new verification code.");
+                }
+            } catch (\Throwable $th) {
+                // Log the exception if needed, but don't prevent code generation
+            }
+        }
+
+        // Generate a new verification code and update the send timestamp and flag
+        $user->code = rand(100000, 999999);
+        $user->code_is_sent = "Yes";
+        $user->code_sent_at = Carbon::now();
+        $user->save();
+
+        // Check $user->email validity
+        if (!Utils::validateEmail($user->email)) {
+            throw new Exception("Invalid email address");
+        }
+
+        // Prepare email data
+        $data = [
+            'email' => $user->email,
+            'name' => $user->name,
+            'subject' => env('APP_NAME') . " - Password Reset Code",
+            'code' => $user->code,
+        ];
+
         try {
+            $body = <<<EOF
+            <div style="font-family: Arial, sans-serif;">
+                <div style="margin: 0 auto; background-color: #ffffff;"> 
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        Dear {$data['name']},
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        You have requested to reset your password. Please use the verification code below to proceed.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <strong style="font-size: 24px; color: #007bff; background-color: #e6f7ff; padding: 10px 20px; border-radius: 5px;">{$data['code']}</strong>
+                    </div>
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        This code will expire in 10 minutes. If you did not request a password reset, please ignore this email.
+                    </p>
+                    <hr style="border: 1px solid #e0e0e0; margin: 30px 0;">
+                    <p style="font-size: 14px; color: #999999; text-align: center;">
+                        This is an automated message, please do not reply.
+                    </p>
+                </div>
+            </div>
+            EOF;
+            $data['body'] = $body;
+            $data['view'] = 'mail-1'; // this is the view you are using for the email template.
+            $data['data'] = $data['body'];
+
             Utils::mail_sender($data);
         } catch (\Throwable $th) {
-            throw $th;
+            throw $th; // Re-throw the exception for handling elsewhere
         }
     }
 
