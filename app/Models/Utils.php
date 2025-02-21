@@ -315,7 +315,7 @@ class Utils extends Model
                 ],
                 function ($m) use ($data) {
                     $m->to($data['email'], $data['name'])
-                        ->subject($data['subject']);
+                        ->subject($data['subject'] . ' - ' . date('Y-m-d'));
                     $m->from(env('MAIL_FROM_ADDRESS'), $data['subject']);
                 }
             );

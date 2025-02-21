@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Encore\Admin\Form\Field\BelongsToMany;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Facades\Admin;
+use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 
@@ -207,6 +209,87 @@ class User extends Authenticatable implements JWTSubject
             throw $th;
         }
     }
+
+
+    public function send_mail_verification_code()
+    {
+        $user = $this;
+
+        // Check if a verification code was sent less than 3 minutes ago
+        if ($user->code_is_sent === "Yes" && $user->code_sent_at !== null) {
+            try {
+                $code_sent_at = Carbon::parse($user->code_sent_at);
+                if ($code_sent_at->diffInMinutes(Carbon::now()) < 3) {
+                    throw new Exception("Please wait for 3 minutes before requesting a new verification code.");
+                }
+            } catch (\Throwable $th) {
+                // Log the exception if needed, but don't prevent code generation
+            }
+        }
+
+        // Generate a new verification code and update the send timestamp and flag
+        $user->code = rand(100000, 999999);
+        $user->code_is_sent = "Yes";
+        $user->code_sent_at = Carbon::now();
+        $user->save();
+
+        // Check $user->email validity
+        if (!Utils::validateEmail($user->email)) {
+            throw new Exception("Invalid email address");
+        }
+
+        // Prepare email data
+        $data = [
+            'email' => $user->email,
+            'name' => $user->name,
+            'subject' => env('APP_NAME') . " - Email Verification Code",
+            'code' => $user->code,
+            'verification_url' => url('verify-email?code=' . $user->code),
+        ];
+
+        try {
+            $body = <<<EOF
+            <div style="font-family: Arial, sans-serif;  ">
+                <div style=" margin: 0 auto; background-color: #ffffff;  "> 
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        Dear {$data['name']},
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        Please use the verification code below to confirm your email address.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <strong style="font-size: 24px; color: #007bff; background-color: #e6f7ff; padding: 10px 20px; border-radius: 5px;">{$data['code']}</strong>
+                    </div>
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555; text-align: center;">
+                        Or, click the button below to verify your email:
+                    </p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="{$data['verification_url']}" style="background-color: #007bff; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Verify Email</a>
+                    </div>
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        If the button above doesn't work, copy and paste this URL into your browser:
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.6; color: #777777; word-wrap: break-word;">
+                        <a href="{$data['verification_url']}" style="color: #007bff; text-decoration: none;">{$data['verification_url']}</a>
+                    </p>
+                    <hr style="border: 1px solid #e0e0e0; margin: 30px 0;">
+                    <p style="font-size: 14px; color: #999999; text-align: center;">
+                        This is an automated message, please do not reply.
+                    </p>
+                </div>
+            </div>
+            EOF;
+            $data['body'] = $body;
+            $data['view'] = 'mail-1'; // this is the view you are using for the email template.
+            $data['data'] = $data['body'];
+
+            Utils::mail_sender($data);
+        } catch (\Throwable $th) {
+            throw $th; // Re-throw the exception for handling elsewhere
+        }
+    }
+
+
 
     public static function update_rating($id)
     {
@@ -435,6 +518,20 @@ class User extends Authenticatable implements JWTSubject
 
     public static function save_cv($u)
     {
+
+        //check most minimum fields
+        if ($u->first_name == null || strlen($u->first_name) < 2) {
+            return;
+        }
+        if ($u->last_name == null || strlen($u->last_name) < 2) {
+            return;
+        }
+        //if mail not verified
+        if ($u->verification != 'Yes') {
+            return;
+        }
+
+
         $old_path = $u->school_pay_account_id;
 
         if ($old_path != null && strlen($old_path) > 2) {

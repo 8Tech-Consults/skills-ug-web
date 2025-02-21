@@ -3267,10 +3267,17 @@ class ApiAuthController extends Controller
             return $this->error('Failed to create account. Please try again.');
         }
 
-        $new_user = Administrator::find($user->id);
+        $new_user = User::find($user->id);
         if ($new_user == null) {
             return $this->error('Account created successfully but failed to log you in.');
         }
+
+        try {
+            $new_user->send_mail_verification_code();
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
         Config::set('jwt.ttl', 60 * 24 * 30 * 365);
 
         $token = auth('api')->attempt([
@@ -3481,7 +3488,7 @@ class ApiAuthController extends Controller
         // Check the provided verification code against the user's stored code.
         // (Assumes the user has a "verification_code" field set when the code was sent.)
         if ($user->code !== $request->code) {
-            // return $this->error('Verification code is incorrect.');
+            return $this->error('Verification code is incorrect.');
         }
 
         // Mark the user as verified and clear the stored verification code.
@@ -3501,6 +3508,59 @@ class ApiAuthController extends Controller
         }
     }
 
+
+    /**
+     * @OA\Post(
+     *     path="/send-mail-verification-code",
+     *     summary="Send mail verification code",
+     *     description="Sends a mail verification code to the authenticated user's email address.",
+     *     operationId="sendMailVerificationCode",
+     *     tags={"Authentication"},
+     *     security={{ "apiAuth": {} }},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Verification code sent successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Verification code sent successfully."),
+     *             @OA\Property(property="data", type="null", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - User not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="User not found.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Failed to send verification code",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Verification code sending failed.")
+     *         )
+     *     )
+     * )
+     */
+    public function send_mail_verification_code(Request $request)
+    {
+        $user = auth('api')->user();
+        if (!$user) {
+            return $this->error('User not found.');
+        }
+        $user = User::find($user->id);
+        if (!$user) {
+            return $this->error('User not found.');
+        }
+        try {
+            $user->send_mail_verification_code();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+        return $this->success(null, 'Verification code sent successfully.');
+    }
 
 
     /**
