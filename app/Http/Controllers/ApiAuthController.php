@@ -2689,7 +2689,7 @@ class ApiAuthController extends Controller
         //Latest 50 jobs
         $TOP_JOBS = Job::where('status', 'Active')
             ->orderBy('id', 'DESC')
-            ->limit(50)
+            ->limit(16)
             ->get();
         $manifest = [
             'LIVE_JOBS' => number_format(Job::where('status', 'Active')->count()),
