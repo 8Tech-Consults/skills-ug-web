@@ -33,11 +33,7 @@ class EmployeesController extends AdminController
         $grid->actions(function ($actions) {
             $actions->disableDelete();
         });
-        $grid->model()
-            ->orderBy('id', 'Desc')
-            ->where([
-                'company_id' => Admin::user()->company_id,
-            ]);
+ 
         $grid->actions(function ($actions) {
             //$actions->disableView();
         });
