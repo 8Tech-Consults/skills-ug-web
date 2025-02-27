@@ -28,6 +28,12 @@ Route::get("verify-email", function (Request $r) {
     return redirect($url);
 });
 
+Route::get("auth/verify-email", function (Request $r) {
+    $code = $r->code;
+    $url = env('WEB_URL') . "/auth/verify-email?code=" . $code;
+    return redirect($url);
+});
+
 
 Route::get('get-cv', function (Request $request) {
 
