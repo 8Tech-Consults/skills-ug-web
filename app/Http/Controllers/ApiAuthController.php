@@ -66,9 +66,16 @@ class ApiAuthController extends Controller
             'password-reset-submit',
             'districts',
             'cvs',
+            'send-mail-verification-code', 
+            'password-reset-submit',
         ]]);
     }
+/* 
+Route::POST("", [ApiAuthController::class, 'send_mail_verification_code']);
+Route::POST("", [ApiAuthController::class, 'password_reset_request']);
+Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
+*/
 
     /**
      * @OA\Post(

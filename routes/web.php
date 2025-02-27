@@ -22,6 +22,12 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+Route::get("verify-email", function (Request $r) {
+    $code = $r->code;
+    $url = env('WEB_URL') . "/auth/verify-email?code=" . $code;
+    return redirect($url);
+});
+
 
 Route::get('get-cv', function (Request $request) {
 
@@ -239,8 +245,8 @@ Route::get('mail-test', function () {
 
 Route::get('mail-template-test', function (Request $request) {
 
-    $data['email'] = 'muhindo@8technologies.net'; 
-    $data['name'] = 'Mubaraka Muhindo'; 
+    $data['email'] = 'muhindo@8technologies.net';
+    $data['name'] = 'Mubaraka Muhindo';
     $data['subject'] = env('APP_NAME') . " - Mail Test";
     $data['body'] = "<br>Dear " .  $data['name'] . ",<br>";
     $data['body'] .= "<br>Please click the link below to reset your " . env('APP_NAME') . " System password.<br><br>";
