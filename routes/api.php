@@ -58,9 +58,9 @@ Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
 Route::POST("delete-account", [ApiAuthController::class, 'delete_profile']);
 Route::POST("password-change", [ApiAuthController::class, 'password_change']);
 Route::POST("email-verify", [ApiAuthController::class, 'email_verify']);
-Route::POST("send-mail-verification-code", [ApiAuthController::class, 'send_mail_verification_code']);
-Route::POST("password-reset-request", [ApiAuthController::class, 'password_reset_request']);
-Route::POST("password-reset-submit", [ApiAuthController::class, 'password_reset_submit']);
+Route::POST("send-mail-verification-code", [MainController::class, 'send_mail_verification_code']);
+Route::POST("password-reset-request", [MainController::class, 'password_reset_request']);
+Route::POST("password-reset-submit", [MainController::class, 'password_reset_submit']);
 
 
 Route::get('api/{model}', [ApiResurceController::class, 'index']);
