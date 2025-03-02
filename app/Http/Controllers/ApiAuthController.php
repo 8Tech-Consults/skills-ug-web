@@ -66,11 +66,11 @@ class ApiAuthController extends Controller
             'password-reset-submit',
             'districts',
             'cvs',
-            'send-mail-verification-code', 
+            'send-mail-verification-code',
             'password-reset-submit',
         ]]);
     }
-/* 
+    /* 
 Route::POST("", [ApiAuthController::class, 'send_mail_verification_code']);
 Route::POST("", [ApiAuthController::class, 'password_reset_request']);
 Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
@@ -1579,8 +1579,21 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
         // Filter by company (if your jobs table stores a company name)
         if ($request->filled('company')) {
-            $query->where('company', 'LIKE', "%{$request->input('company')}%");
+            $query->where(['posted_by_id' => $request->input('company')]);
         }
+
+
+        // Filter by posted_by_id  
+        if ($request->filled('posted_by_id')) {
+            $query->where(['posted_by_id' => $request->input('posted_by_id')]);
+        }
+
+
+        // Filter by posted_by_id  
+        if ($request->filled('company_id')) {
+            $query->where([]);
+        }
+
 
         // Filter by salary – for example, jobs whose minimum salary is at least a given value
         if ($request->filled('salary')) {
@@ -2491,6 +2504,11 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             $status = $request->input('status');
             $query->where('status', $status);
         }
+        //is_company 
+        if ($request->filled('is_company')) {
+            $is_company = $request->input('is_company');
+            $query->where('is_company', $is_company);
+        }
 
         // Order by newest (adjust as needed)
         $query->orderBy('id', 'DESC');
@@ -2823,6 +2841,8 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
         $manifest['job_applications'] = JobApplication::where(['applicant_id' => $u->id])->limit(10)->get();
         $manifest['upcoming_interviews'] = JobApplication::where(['applicant_id' => $u->id, 'status' => 'Interview'])->limit(10)->get();
         $manifest['saved_jobs'] = Job::where([])->limit(10)->get();
+        $manifest['job_applications_list'] = JobApplication::where(['applicant_id' => $u->id])->limit(100)->get();
+        $manifest['company_follows'] = CompanyFollow::where(['user_id' => $u->id])->limit(100)->get();
 
         return $this->success($manifest, 'Success');
     }

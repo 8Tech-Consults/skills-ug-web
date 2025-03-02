@@ -117,4 +117,20 @@ class Job extends Model
     {
         return $query->where('required_video_cv', true);
     }
+
+    //appeds district_text
+    public function getDistrictTextAttribute()
+    {
+        if ($this->district == null) return '';
+        return $this->district->name;
+    }
+
+    //appeds category_text
+    public function getCategoryTextAttribute()
+    {
+        if ($this->category == null) return '';
+        return $this->category->name;
+    }
+
+    protected $appends = ['district_text', 'category_text'];
 }
