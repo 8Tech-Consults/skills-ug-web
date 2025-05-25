@@ -170,10 +170,21 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
         // return $this->error('Applicant not found.', $jobAppication);
         $attachments = [];
-        /* if (!empty($_FILES['attachments'])) {
-            $attachments = Utils::upload_files($_FILES['attachments'], 'attachments');
-        } */
-        $jobAppication->attachments = json_encode($attachments);
+        if (!empty($_FILES)) {
+            try {
+                if (!empty($_FILES)) {
+                    $attachments = Utils::upload_images_2($_FILES, false);
+                }
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+        }
+
+        //if $attachments not empty, save as json
+        if (!empty($attachments)) {
+            $jobAppication->attachments = json_encode($attachments);
+        }
+
         $jobAppication->applicant_id = $user->id;
         try {
             $jobAppication->save();

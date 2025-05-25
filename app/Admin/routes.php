@@ -11,7 +11,10 @@ Route::group([
     'as'            => config('admin.route.prefix') . '.',
 ], function (Router $router) {
 
+    $router->resource('districts', DistrictController::class);
+
     $router->resource('laundry-order-item-types', LaundryOrderItemTypeController::class);
+    $router->resource('job-categories', JobCategoryController::class);
 
     $router->get('/', 'HomeController@index')->name('home');
     $router->resource('meetings', MeetingController::class);
@@ -51,9 +54,8 @@ Route::group([
     $router->resource('progress-monitoring', ProgressMonitoringController::class);
     $router->resource('cards', CardsController::class);
     $router->resource('card-records', CardRecordController::class);
-    $router->resource('flutter-wave-logs', FlutterWaveLogController::class); 
-    $router->resource('doses', DoseController::class); 
+    $router->resource('flutter-wave-logs', FlutterWaveLogController::class);
+    $router->resource('doses', DoseController::class);
     $router->resource('dose-item-records', DoseItemRecordController::class);
     $router->resource('system-users', SystemUsersController::class);
-
 });

@@ -2,9 +2,10 @@ php artisan migrate
 
 php artisan make:migration create_courses_table
 
-php artisan make:migration add_code_to_admin_users --table=admin_users
+php artisan make:migration add_cats_to_db_job_categories --table=job_categories
 change these to snake case, make all of them text and nullable, first chech if field eixst in table before add, they are nullable
  
 php artisan admin:make SystemUsersController --model=App\Models\User
+php artisan admin:make JobCategoryController --model=App\\Models\\JobCategory
  
 php artisan make:model ViewRecord  -m
