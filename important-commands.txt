@@ -8,4 +8,4 @@ change these to snake case, make all of them text and nullable, first chech if f
 php artisan admin:make SystemUsersController --model=App\Models\User
 php artisan admin:make JobCategoryController --model=App\\Models\\JobCategory
  
-php artisan make:model ViewRecord  -m
+php artisan make:model Service -m
