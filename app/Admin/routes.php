@@ -15,6 +15,7 @@ Route::group([
 
     $router->resource('laundry-order-item-types', LaundryOrderItemTypeController::class);
     $router->resource('job-categories', JobCategoryController::class);
+    $router->resource('services', ServiceController::class);
 
     $router->get('/', 'HomeController@index')->name('home');
     $router->resource('meetings', MeetingController::class);

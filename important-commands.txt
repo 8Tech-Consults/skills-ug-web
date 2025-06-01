@@ -6,6 +6,6 @@ php artisan make:migration add_cats_to_db_job_categories --table=job_categories
 change these to snake case, make all of them text and nullable, first chech if field eixst in table before add, they are nullable
  
 php artisan admin:make SystemUsersController --model=App\Models\User
-php artisan admin:make JobCategoryController --model=App\\Models\\JobCategory
+php artisan admin:make ServiceController --model=App\\Models\\Service
  
 php artisan make:model Service -m

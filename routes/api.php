@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([EnsureTokenIsValid::class])->group(function () {});
 
 Route::POST("profile", [ApiAuthController::class, "profile_update"]);
+Route::POST("service-create", [ApiAuthController::class, "service_create"]);
 Route::POST("company-profile-update", [ApiAuthController::class, "company_profile_update"]);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
 Route::POST("users/register", [ApiAuthController::class, "register"]);

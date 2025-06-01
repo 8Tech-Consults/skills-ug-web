@@ -70,6 +70,130 @@ class ApiAuthController extends Controller
             'password-reset-submit',
         ]]);
     }
+
+
+    /**
+     * Create or update a service.
+     *
+     * Endpoint: POST /api/service-create
+     */
+    public function service_create(Request $r)
+    {
+        // 1. Authenticate provider
+        $user = auth('api')->user();
+        if ($user === null) {
+            return $this->error('Account not found.');
+        }
+
+        // 2. Determine if editing or creating
+        $serviceId = $r->input('id');
+        if (!empty($serviceId)) {
+            $service = Service::find((int)$serviceId);
+            if ($service === null) {
+                return $this->error('Service not found.');
+            }
+            // Ensure the authenticated user owns this service
+            if ((string)$service->provider_id !== (string)$user->id) {
+                return $this->error('Unauthorized to edit this service.');
+            }
+        } else {
+            $service = new Service();
+        }
+
+        // 3. Populate service fields, excluding file fields and protected columns
+        $except = [
+            'id',
+            'provider_id',
+            'cover_image',
+            'gallery',
+        ];
+
+        try {
+            $service = Utils::fetch_post($service, $except, $r->all());
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        // 4. Assign provider_id for new services (or preserve existing for updates)
+        $service->provider_id = $user->id;
+
+        // 5. Handle file uploads
+        $uploadedCover = [];
+        $uploadedGallery = [];
+
+        if (!empty($_FILES)) {
+            try {
+                // If a cover_image was sent, process it
+                if (isset($_FILES['cover_image'])) {
+                    $uploadedCover = Utils::upload_images_2(['cover_image' => $_FILES['cover_image']], false);
+                    if (!empty($uploadedCover)) {
+                        // Assume upload_images_2 returns array of filenames/paths
+                        $service->cover_image = 'images/' . $uploadedCover[0];
+                    }
+                }
+
+                // If gallery images were sent (as gallery[0], gallery[1], …), process them all
+                $galleryFiles = [];
+                foreach ($_FILES as $key => $fileInfo) {
+                    if (strpos($key, 'gallery') === 0) {
+                        $galleryFiles[$key] = $fileInfo;
+                    }
+                }
+                if (!empty($galleryFiles)) {
+                    $uploadedGallery = Utils::upload_images_2($galleryFiles, false);
+                    if (!empty($uploadedGallery)) {
+                        // Save as JSON array of saved paths
+                        $galleryPaths = array_map(fn($fname) => 'images/' . $fname, $uploadedGallery);
+                        $service->gallery = json_encode($galleryPaths);
+                    }
+                }
+            } catch (\Throwable $th) {
+                // If upload fails, continue—fields remain as-is or empty
+            }
+        }
+
+        // 6. Save to database
+        try {
+            $service->save();
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage());
+        }
+
+        // 7. Fetch fresh instance to return
+        $fresh = Service::find($service->id);
+        if ($fresh === null) {
+            return $this->error('Failed to retrieve saved service.');
+        }
+
+        // 8. Return success response
+        return $this->success($fresh, $serviceId ? 'Service updated successfully.' : 'Service created successfully.');
+    }
+
+    /**
+     * Standardized error response
+     */
+    protected function error(string $message, $data = null)
+    {
+        return response()->json([
+            'code'    => 0,
+            'message' => $message,
+            'data'    => $data,
+        ], 400);
+    }
+
+    /**
+     * Standardized success response
+     */
+    protected function success($data = null, string $message = '')
+    {
+        return response()->json([
+            'code'    => 1,
+            'message' => $message,
+            'data'    => $data,
+        ]);
+    }
+
+
     /* 
 Route::POST("", [ApiAuthController::class, 'send_mail_verification_code']);
 Route::POST("", [ApiAuthController::class, 'password_reset_request']);
