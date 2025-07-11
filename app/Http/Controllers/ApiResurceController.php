@@ -67,9 +67,9 @@ class ApiResurceController extends Controller
                 return $this->error('is_not_private_by parameter is required when is_not_private is 1. '.json_encode($_GET)); 
             }
             $is_not_private_by = $_GET['is_not_private_by'];
-            $conditions[$is_not_private_by] = $u->id;
+            // $conditions[$is_not_private_by] = $u->id;
         } else {
-            $conditions['administrator_id'] = $u->id; 
+            // $conditions['administrator_id'] = $u->id; 
         }
 
         $items = [];

@@ -67,6 +67,95 @@ Route::POST("password-reset-submit", [MainController::class, 'password_reset_sub
 Route::get('api/{model}', [ApiResurceController::class, 'index']);
 Route::post('api/{model}', [ApiResurceController::class, 'update']);
 
+// Eight Learning Test Routes (No Auth Required)
+Route::get('test/course-categories', function() {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseCategory::all()
+    ]);
+});
+
+Route::get('test/courses', function() {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\Course::with('category')->get()
+    ]);
+});
+
+Route::get('test/course-units/{course_id}', function($course_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseUnit::where('course_id', $course_id)->get()
+    ]);
+});
+
+Route::get('test/course-materials/{unit_id}', function($unit_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseMaterial::where('unit_id', $unit_id)->get()
+    ]);
+});
+
+Route::get('test/course-quizzes/{unit_id}', function($unit_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseQuiz::where('unit_id', $unit_id)->get()
+    ]);
+});
+
+Route::get('test/course-subscriptions/{user_id}', function($user_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseSubscription::where('user_id', $user_id)->get()
+    ]);
+});
+
+Route::get('test/course-progress/{user_id}', function($user_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseProgress::where('user_id', $user_id)->get()
+    ]);
+});
+
+Route::get('test/course-reviews/{course_id}', function($course_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseReview::where('course_id', $course_id)->get()
+    ]);
+});
+
+Route::get('test/course-notifications/{user_id}', function($user_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseNotification::where('user_id', $user_id)->get()
+    ]);
+});
+
+Route::get('test/payment-receipts/{user_id}', function($user_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\PaymentReceipt::where('user_id', $user_id)->get()
+    ]);
+});
+
+Route::get('test/course-certificates/{user_id}', function($user_id) {
+    return response()->json([
+        'code' => 1,
+        'message' => 'Success',
+        'data' => \App\Models\CourseCertificate::where('user_id', $user_id)->get()
+    ]);
+});
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -226,4 +315,78 @@ Route::get('ajax-cards', function (Request $r) {
     return [
         'data' => $data
     ];
+});
+
+// Service Review Routes
+use App\Http\Controllers\Api\ServiceReviewController;
+use App\Http\Controllers\Api\ServiceBookmarkController;
+use App\Http\Controllers\Api\ChatController;
+
+Route::prefix('services/{service_id}/reviews')->group(function () {
+    Route::get('/', [ServiceReviewController::class, 'index']);
+    Route::post('/', [ServiceReviewController::class, 'store']);
+    Route::put('/{review_id}', [ServiceReviewController::class, 'update']);
+    Route::delete('/{review_id}', [ServiceReviewController::class, 'destroy']);
+    Route::get('/user', [ServiceReviewController::class, 'getUserReview']);
+});
+
+// Service Bookmark Routes
+Route::prefix('services/{service_id}/bookmark')->group(function () {
+    Route::post('/toggle', [ServiceBookmarkController::class, 'toggle']);
+    Route::get('/check', [ServiceBookmarkController::class, 'check']);
+});
+
+Route::prefix('bookmarks')->group(function () {
+    Route::get('/', [ServiceBookmarkController::class, 'index']);
+    Route::delete('/clear', [ServiceBookmarkController::class, 'clear']);
+});
+
+// Legacy Chat Routes (for mobile app compatibility)
+Route::get('chat-messages', [ChatController::class, 'getChatMessages']);
+Route::post('send-message', [ChatController::class, 'sendMessageLegacy']);
+Route::get('my-chats', [ChatController::class, 'getMyChats']);
+
+// Chat Routes
+Route::prefix('chats')->group(function () {
+    // Get user's chats
+    Route::get('/', [ChatController::class, 'getChats']);
+    
+    // Get or create chat between users
+    Route::post('/create', [ChatController::class, 'getOrCreateChat']);
+    
+    // Upload media for chat
+    Route::post('/upload-media', [ChatController::class, 'uploadMedia']);
+    
+    // Chat-specific routes
+    Route::prefix('{chat_id}')->group(function () {
+        // Get messages
+        Route::get('/messages', [ChatController::class, 'getMessages']);
+        
+        // Send message
+        Route::post('/messages', [ChatController::class, 'sendMessage']);
+        
+        // Search messages
+        Route::get('/search', [ChatController::class, 'searchMessages']);
+        
+        // Archive/unarchive chat
+        Route::post('/archive', [ChatController::class, 'toggleArchive']);
+        
+        // Mute/unmute chat
+        Route::post('/mute', [ChatController::class, 'toggleMute']);
+    });
+    
+    // Message-specific routes
+    Route::prefix('messages/{message_id}')->group(function () {
+        // Edit message
+        Route::put('/', [ChatController::class, 'editMessage']);
+        
+        // Delete message
+        Route::delete('/', [ChatController::class, 'deleteMessage']);
+        
+        // Add reaction
+        Route::post('/reaction', [ChatController::class, 'addReaction']);
+        
+        // Remove reaction
+        Route::delete('/reaction', [ChatController::class, 'removeReaction']);
+    });
 });
