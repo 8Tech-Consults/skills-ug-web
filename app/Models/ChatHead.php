@@ -14,37 +14,39 @@ class ChatHead extends Model
     protected $table = 'chat_heads_2';
 
     protected $fillable = [
-        'chat_id',
-        'user1_id',
-        'user2_id',
-        'service_id',
+        'user_1_id',
+        'user_2_id',
+        'user_1_name',
+        'user_2_name',
+        'user_1_photo',
+        'user_2_photo',
+        'user_1_last_seen',
+        'user_2_last_seen',
+        'last_message_sent_by_user_id',
+        'last_message_body',
+        'last_message_time',
+        'last_message_status',
+        'last_message_type',
+        'last_message_sender_id',
+        'last_message_receiver_id',
+        'user_1_unread_count',
+        'user_2_unread_count',
+        'chat_status',
         'chat_type',
-        'title',
-        'last_message',
-        'last_message_user_id',
-        'last_message_at',
-        'unread_count_user1',
-        'unread_count_user2',
-        'is_archived_user1',
-        'is_archived_user2',
-        'is_muted_user1',
-        'is_muted_user2',
-        'is_active',
-        'metadata',
+        'related_service_id',
+        'chat_subject',
+        'user_1_notification_preference',
+        'user_2_notification_preference',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'last_message_at' => 'datetime',
-        'unread_count_user1' => 'integer',
-        'unread_count_user2' => 'integer',
-        'is_archived_user1' => 'boolean',
-        'is_archived_user2' => 'boolean',
-        'is_muted_user1' => 'boolean',
-        'is_muted_user2' => 'boolean',
-        'is_active' => 'boolean',
-        'metadata' => 'array',
+        'last_message_time' => 'datetime',
+        'user_1_last_seen' => 'datetime',
+        'user_2_last_seen' => 'datetime',
+        'user_1_unread_count' => 'integer',
+        'user_2_unread_count' => 'integer',
     ];
 
     /**
@@ -60,11 +62,11 @@ class ChatHead extends Model
                 $chatHead->chat_id = 'chat_' . Str::uuid();
             }
             
-            // Ensure user1_id is always smaller than user2_id for consistency
-            if ($chatHead->user1_id > $chatHead->user2_id) {
-                $temp = $chatHead->user1_id;
-                $chatHead->user1_id = $chatHead->user2_id;
-                $chatHead->user2_id = $temp;
+            // Ensure user_1_id is always smaller than user_2_id for consistency
+            if ($chatHead->user_1_id > $chatHead->user_2_id) {
+                $temp = $chatHead->user_1_id;
+                $chatHead->user_1_id = $chatHead->user_2_id;
+                $chatHead->user_2_id = $temp;
             }
         });
     }
@@ -81,18 +83,17 @@ class ChatHead extends Model
             $user2Id = $temp;
         }
 
-        $chatHead = self::where('user1_id', $user1Id)
-            ->where('user2_id', $user2Id)
+        $chatHead = self::where('user_1_id', $user1Id)
+            ->where('user_2_id', $user2Id)
             ->first();
 
         if (!$chatHead) {
             $chatHead = self::create([
-                'user1_id' => $user1Id,
-                'user2_id' => $user2Id,
-                'service_id' => $serviceId,
+                'user_1_id' => $user1Id,
+                'user_2_id' => $user2Id,
+                'related_service_id' => $serviceId,
                 'chat_type' => $serviceId ? 'service' : 'direct',
-                'title' => $title,
-                'is_active' => true,
+                'chat_subject' => $title,
             ]);
         }
 
@@ -105,16 +106,16 @@ class ChatHead extends Model
     public function updateWithLatestMessage(ChatMessage $message)
     {
         $this->update([
-            'last_message' => $this->getMessagePreview($message),
-            'last_message_user_id' => $message->sender_id,
-            'last_message_at' => $message->created_at,
+            'last_message_body' => $this->getMessagePreview($message),
+            'last_message_sender_id' => $message->sender_id,
+            'last_message_time' => $message->created_at,
         ]);
 
         // Update unread count for receiver
-        if ($message->receiver_id == $this->user1_id) {
-            $this->increment('unread_count_user1');
+        if ($message->receiver_id == $this->user_1_id) {
+            $this->increment('user_1_unread_count');
         } else {
-            $this->increment('unread_count_user2');
+            $this->increment('user_2_unread_count');
         }
     }
 
@@ -123,11 +124,11 @@ class ChatHead extends Model
      */
     private function getMessagePreview(ChatMessage $message)
     {
-        switch ($message->message_type) {
+        switch ($message->type) {
             case 'text':
-                return strlen($message->message_content) > 50 ? 
-                    substr($message->message_content, 0, 50) . '...' : 
-                    $message->message_content;
+                return strlen($message->body) > 50 ? 
+                    substr($message->body, 0, 50) . '...' : 
+                    $message->body;
             case 'image':
                 return '📷 Photo';
             case 'video':
@@ -135,7 +136,7 @@ class ChatHead extends Model
             case 'voice':
                 return '🎵 Voice';
             case 'file':
-                return '� File';
+                return '📄 File';
             default:
                 return 'Message';
         }
@@ -146,18 +147,17 @@ class ChatHead extends Model
      */
     public function markAsRead($userId)
     {
-        if ($userId == $this->user1_id) {
-            $this->update(['unread_count_user1' => 0]);
-        } elseif ($userId == $this->user2_id) {
-            $this->update(['unread_count_user2' => 0]);
+        if ($userId == $this->user_1_id) {
+            $this->update(['user_1_unread_count' => 0]);
+        } elseif ($userId == $this->user_2_id) {
+            $this->update(['user_2_unread_count' => 0]);
         }
 
         // Update message status to read
-        ChatMessage::where('chat_id', $this->chat_id)
+        ChatMessage::where('chat_head_id', $this->id)
             ->where('receiver_id', $userId)
-            ->where('is_read', false)
+            ->whereNull('read_at')
             ->update([
-                'is_read' => true,
                 'read_at' => now(),
             ]);
     }
@@ -167,7 +167,7 @@ class ChatHead extends Model
      */
     public function getChatPartner($userId)
     {
-        $partnerId = ($userId == $this->user1_id) ? $this->user2_id : $this->user1_id;
+        $partnerId = ($userId == $this->user_1_id) ? $this->user_2_id : $this->user_1_id;
         
         // Get partner details from User model
         $partner = User::find($partnerId);
@@ -185,38 +185,12 @@ class ChatHead extends Model
      */
     public function getUnreadCount($userId)
     {
-        if ($userId == $this->user1_id) {
-            return $this->unread_count_user1;
-        } elseif ($userId == $this->user2_id) {
-            return $this->unread_count_user2;
+        if ($userId == $this->user_1_id) {
+            return $this->user_1_unread_count;
+        } elseif ($userId == $this->user_2_id) {
+            return $this->user_2_unread_count;
         }
         return 0;
-    }
-
-    /**
-     * Check if chat is archived for a user
-     */
-    public function isArchivedFor($userId)
-    {
-        if ($userId == $this->user1_id) {
-            return $this->is_archived_user1;
-        } elseif ($userId == $this->user2_id) {
-            return $this->is_archived_user2;
-        }
-        return false;
-    }
-
-    /**
-     * Check if chat is muted for a user
-     */
-    public function isMutedFor($userId)
-    {
-        if ($userId == $this->user1_id) {
-            return $this->is_muted_user1;
-        } elseif ($userId == $this->user2_id) {
-            return $this->is_muted_user2;
-        }
-        return false;
     }
 
     /**
@@ -225,19 +199,12 @@ class ChatHead extends Model
     public static function getUserChats($userId, $includeArchived = false)
     {
         $query = self::where(function ($query) use ($userId) {
-                $query->where('user1_id', $userId)
-                      ->orWhere('user2_id', $userId);
+                $query->where('user_1_id', $userId)
+                      ->orWhere('user_2_id', $userId);
             })
-            ->where('is_active', true);
+            ->where('chat_status', 'active');
 
-        if (!$includeArchived) {
-            $query->where(function ($query) use ($userId) {
-                $query->where('user1_id', $userId)->where('is_archived_user1', false)
-                      ->orWhere('user2_id', $userId)->where('is_archived_user2', false);
-            });
-        }
-
-        return $query->orderBy('last_message_at', 'desc')->get();
+        return $query->orderBy('last_message_time', 'desc')->get();
     }
 
     /**

@@ -43,6 +43,7 @@ Route::get("my-company-follows", [ApiAuthController::class, "my_company_follows"
 Route::get("company-job-offers", [ApiAuthController::class, "company_job_offers"]);
 Route::put('job-offers/{id}', [ApiAuthController::class, 'update_job_offer']);
 Route::get("company-job-applications", [ApiAuthController::class, "company_job_applications"]);
+Route::get("company-recent-activities", [ApiAuthController::class, "company_recent_activities"]);
 Route::get('users/me', [ApiAuthController::class, 'me']);
 Route::get('users', [ApiAuthController::class, 'users']);
 Route::get('jobs', [ApiAuthController::class, 'jobs']);
@@ -63,12 +64,42 @@ Route::POST("send-mail-verification-code", [MainController::class, 'send_mail_ve
 Route::POST("password-reset-request", [MainController::class, 'password_reset_request']);
 Route::POST("password-reset-submit", [MainController::class, 'password_reset_submit']);
 
+// Eight Learning Course API Routes
+Route::get('course-categories', [ApiAuthController::class, 'course_categories']);
+Route::get('courses', [ApiAuthController::class, 'courses']);
+Route::get('courses/{id}', [ApiAuthController::class, 'course_single']);
+Route::POST('course-subscribe', [ApiAuthController::class, 'course_subscribe']);
+Route::POST('course-subscriptions/subscribe', [ApiAuthController::class, 'course_subscribe']);
+Route::get('my-course-subscriptions', [ApiAuthController::class, 'my_course_subscriptions']);
+
+// Enhanced Learning System API Routes
+use App\Http\Controllers\Api\LearningController;
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Learning Dashboard
+    Route::get('learning/dashboard', [LearningController::class, 'getLearningDashboard']);
+    
+    // Course Learning
+    Route::get('learning/courses/{courseId}', [LearningController::class, 'getCourseForLearning']);
+    Route::get('learning/materials/{materialId}', [LearningController::class, 'getMaterialContent']);
+    Route::post('learning/progress', [LearningController::class, 'updateMaterialProgress']);
+    
+    // Certificates
+    Route::get('learning/certificates', [LearningController::class, 'getCertificates']);
+    
+    // Reviews
+    Route::post('learning/reviews', [LearningController::class, 'submitCourseReview']);
+    
+    // Notifications
+    Route::put('learning/notifications/{notificationId}/read', [LearningController::class, 'markNotificationAsRead']);
+});
+
 
 Route::get('api/{model}', [ApiResurceController::class, 'index']);
 Route::post('api/{model}', [ApiResurceController::class, 'update']);
 
 // Eight Learning Test Routes (No Auth Required)
-Route::get('test/course-categories', function() {
+Route::get('test/course-categories', function () {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -76,7 +107,7 @@ Route::get('test/course-categories', function() {
     ]);
 });
 
-Route::get('test/courses', function() {
+Route::get('test/courses', function () {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -84,7 +115,7 @@ Route::get('test/courses', function() {
     ]);
 });
 
-Route::get('test/course-units/{course_id}', function($course_id) {
+Route::get('test/course-units/{course_id}', function ($course_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -92,7 +123,7 @@ Route::get('test/course-units/{course_id}', function($course_id) {
     ]);
 });
 
-Route::get('test/course-materials/{unit_id}', function($unit_id) {
+Route::get('test/course-materials/{unit_id}', function ($unit_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -100,7 +131,7 @@ Route::get('test/course-materials/{unit_id}', function($unit_id) {
     ]);
 });
 
-Route::get('test/course-quizzes/{unit_id}', function($unit_id) {
+Route::get('test/course-quizzes/{unit_id}', function ($unit_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -108,7 +139,7 @@ Route::get('test/course-quizzes/{unit_id}', function($unit_id) {
     ]);
 });
 
-Route::get('test/course-subscriptions/{user_id}', function($user_id) {
+Route::get('test/course-subscriptions/{user_id}', function ($user_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -116,7 +147,7 @@ Route::get('test/course-subscriptions/{user_id}', function($user_id) {
     ]);
 });
 
-Route::get('test/course-progress/{user_id}', function($user_id) {
+Route::get('test/course-progress/{user_id}', function ($user_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -124,7 +155,31 @@ Route::get('test/course-progress/{user_id}', function($user_id) {
     ]);
 });
 
-Route::get('test/course-reviews/{course_id}', function($course_id) {
+// Course Progress Tracking API Routes
+Route::middleware('auth:sanctum')->prefix('course-progress')->group(function () {
+    // Track material progress
+    Route::post('track-material', [App\Http\Controllers\Api\LearningController::class, 'trackMaterialProgress']);
+    
+    // Mark material as completed
+    Route::post('complete-material', [App\Http\Controllers\Api\LearningController::class, 'markMaterialCompleted']);
+    
+    // Get material progress
+    Route::get('material-progress', [App\Http\Controllers\Api\LearningController::class, 'getMaterialProgress']);
+    
+    // Get unit progress
+    Route::get('unit-progress', [App\Http\Controllers\Api\LearningController::class, 'getUnitProgress']);
+    
+    // Get course progress
+    Route::get('course-progress', [App\Http\Controllers\Api\LearningController::class, 'getCourseProgress']);
+    
+    // Update time tracking
+    Route::post('update-time', [App\Http\Controllers\Api\LearningController::class, 'updateTimeTracking']);
+    
+    // Batch update progress
+    Route::post('batch-update', [App\Http\Controllers\Api\LearningController::class, 'batchUpdateProgress']);
+});
+
+Route::get('test/course-reviews/{course_id}', function ($course_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -132,7 +187,7 @@ Route::get('test/course-reviews/{course_id}', function($course_id) {
     ]);
 });
 
-Route::get('test/course-notifications/{user_id}', function($user_id) {
+Route::get('test/course-notifications/{user_id}', function ($user_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -140,7 +195,7 @@ Route::get('test/course-notifications/{user_id}', function($user_id) {
     ]);
 });
 
-Route::get('test/payment-receipts/{user_id}', function($user_id) {
+Route::get('test/payment-receipts/{user_id}', function ($user_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -148,7 +203,7 @@ Route::get('test/payment-receipts/{user_id}', function($user_id) {
     ]);
 });
 
-Route::get('test/course-certificates/{user_id}', function($user_id) {
+Route::get('test/course-certificates/{user_id}', function ($user_id) {
     return response()->json([
         'code' => 1,
         'message' => 'Success',
@@ -181,6 +236,14 @@ Route::get('ajax', function (Request $r) {
     $model = "App\Models\\" . $_model;
     $search_by_1 = trim($r->get('search_by_1'));
     $search_by_2 = trim($r->get('search_by_2'));
+
+    // Validate search fields
+    if (empty($search_by_1)) {
+        return [
+            'error' => 'search_by_1 parameter is required',
+            'data' => []
+        ];
+    }
 
     $q = trim($r->get('q'));
 
@@ -350,42 +413,42 @@ Route::get('my-chats', [ChatController::class, 'getMyChats']);
 Route::prefix('chats')->group(function () {
     // Get user's chats
     Route::get('/', [ChatController::class, 'getChats']);
-    
+
     // Get or create chat between users
     Route::post('/create', [ChatController::class, 'getOrCreateChat']);
-    
+
     // Upload media for chat
     Route::post('/upload-media', [ChatController::class, 'uploadMedia']);
-    
+
     // Chat-specific routes
     Route::prefix('{chat_id}')->group(function () {
         // Get messages
         Route::get('/messages', [ChatController::class, 'getMessages']);
-        
+
         // Send message
         Route::post('/messages', [ChatController::class, 'sendMessage']);
-        
+
         // Search messages
         Route::get('/search', [ChatController::class, 'searchMessages']);
-        
+
         // Archive/unarchive chat
         Route::post('/archive', [ChatController::class, 'toggleArchive']);
-        
+
         // Mute/unmute chat
         Route::post('/mute', [ChatController::class, 'toggleMute']);
     });
-    
+
     // Message-specific routes
     Route::prefix('messages/{message_id}')->group(function () {
         // Edit message
         Route::put('/', [ChatController::class, 'editMessage']);
-        
+
         // Delete message
         Route::delete('/', [ChatController::class, 'deleteMessage']);
-        
+
         // Add reaction
         Route::post('/reaction', [ChatController::class, 'addReaction']);
-        
+
         // Remove reaction
         Route::delete('/reaction', [ChatController::class, 'removeReaction']);
     });

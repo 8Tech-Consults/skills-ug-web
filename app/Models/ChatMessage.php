@@ -14,28 +14,36 @@ class ChatMessage extends Model
     protected $table = 'chat_messages_2';
 
     protected $fillable = [
-        'message_id',
-        'chat_id',
+        'chat_head_id',
         'sender_id',
         'receiver_id',
-        'message_type',
-        'message_content',
-        'media_url',
-        'media_type',
-        'media_size',
-        'thumbnail_url',
-        'is_read',
-        'read_at',
-        'is_delivered',
+        'user_1_id',
+        'user_2_id',
+        'type',
+        'body',
+        'status',
+        'audio_url',
+        'video_url',
+        'image_url',
+        'document_url',
+        'document_name',
+        'document_size',
+        'address',
+        'gps_latitude',
+        'gps_longitude',
+        'gps_location',
+        'reply_to_message_id',
+        'reply_preview',
         'delivered_at',
+        'read_at',
+        'message_priority',
+        'metadata',
+        'encryption_key',
         'is_edited',
         'edited_at',
         'is_deleted',
         'deleted_at',
-        'reply_to_message_id',
         'reactions',
-        'metadata',
-        'is_system_message',
     ];
 
     protected $casts = [
@@ -45,11 +53,12 @@ class ChatMessage extends Model
         'delivered_at' => 'datetime',
         'edited_at' => 'datetime',
         'deleted_at' => 'datetime',
-        'is_read' => 'boolean',
-        'is_delivered' => 'boolean',
         'is_edited' => 'boolean',
         'is_deleted' => 'boolean',
-        'is_system_message' => 'boolean',
+        'gps_latitude' => 'decimal:8',
+        'gps_longitude' => 'decimal:8',
+        'document_size' => 'integer',
+        'message_priority' => 'integer',
         'reactions' => 'array',
         'metadata' => 'array',
     ];
@@ -70,7 +79,7 @@ class ChatMessage extends Model
 
         static::created(function ($message) {
             // Update chat head with latest message
-            $chatHead = ChatHead::where('chat_id', $message->chat_id)->first();
+            $chatHead = ChatHead::find($message->chat_head_id);
             if ($chatHead) {
                 $chatHead->updateWithLatestMessage($message);
             }
@@ -80,15 +89,17 @@ class ChatMessage extends Model
     /**
      * Create a new message
      */
-    public static function createMessage($chatId, $senderId, $receiverId, $content, $type = 'text', $mediaData = [])
+    public static function createMessage($chatHeadId, $senderId, $receiverId, $content, $type = 'text', $mediaData = [])
     {
         $messageData = [
-            'chat_id' => $chatId,
+            'chat_head_id' => $chatHeadId,
             'sender_id' => $senderId,
             'receiver_id' => $receiverId,
-            'message_type' => $type,
-            'message_content' => $content,
-            'is_delivered' => true,
+            'user_1_id' => min($senderId, $receiverId),
+            'user_2_id' => max($senderId, $receiverId),
+            'type' => $type,
+            'body' => $content,
+            'status' => 'sent',
             'delivered_at' => now(),
         ];
 
@@ -105,9 +116,8 @@ class ChatMessage extends Model
      */
     public function markAsRead()
     {
-        if (!$this->is_read) {
+        if (!$this->read_at) {
             $this->update([
-                'is_read' => true,
                 'read_at' => now(),
             ]);
         }
@@ -119,7 +129,7 @@ class ChatMessage extends Model
     public function editContent($newContent)
     {
         $this->update([
-            'message_content' => $newContent,
+            'body' => $newContent,
             'is_edited' => true,
             'edited_at' => now(),
         ]);

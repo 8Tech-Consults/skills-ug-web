@@ -153,10 +153,10 @@ class ChatController extends Controller
             $userId = Auth::id();
             
             // Verify user has access to this chat
-            $chatHead = ChatHead::where('chat_id', $chatId)
+            $chatHead = ChatHead::where('id', $chatId)
                 ->where(function ($query) use ($userId) {
-                    $query->where('user1_id', $userId)
-                          ->orWhere('user2_id', $userId);
+                    $query->where('user_1_id', $userId)
+                          ->orWhere('user_2_id', $userId);
                 })->first();
 
             if (!$chatHead) {
@@ -178,11 +178,10 @@ class ChatController extends Controller
             });
 
             // Mark messages as read if they're for this user
-            ChatMessage::where('chat_id', $chatId)
+            ChatMessage::where('chat_head_id', $chatId)
                 ->where('receiver_id', $userId)
-                ->where('is_read', false)
+                ->whereNull('read_at')
                 ->update([
-                    'is_read' => true,
                     'read_at' => now(),
                 ]);
 
@@ -676,13 +675,8 @@ class ChatController extends Controller
                 ], 400);
             }
 
-            // Try to find chat head by ID first
+            // Find chat head by ID
             $chatHead = ChatHead::find($chatHeadId);
-            
-            // If not found by ID, try to find by chat_id (for backward compatibility)
-            if (!$chatHead) {
-                $chatHead = ChatHead::where('chat_id', $chatHeadId)->first();
-            }
             
             if (!$chatHead) {
                 return response()->json([
@@ -693,7 +687,7 @@ class ChatController extends Controller
             }
 
             // Verify user has access to this chat
-            if ($chatHead->user1_id != $userId && $chatHead->user2_id != $userId) {
+            if ($chatHead->user_1_id != $userId && $chatHead->user_2_id != $userId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Access denied to this chat',
@@ -702,7 +696,7 @@ class ChatController extends Controller
             }
 
             // Get messages for this chat
-            $messages = ChatMessage::where('chat_id', $chatHead->chat_id)
+            $messages = ChatMessage::where('chat_head_id', $chatHead->id)
                 ->where('is_deleted', false)
                 ->orderBy('created_at', 'asc')
                 ->get();
@@ -711,12 +705,12 @@ class ChatController extends Controller
             $formattedMessages = $messages->map(function ($message) use ($userId) {
                 return [
                     'id' => $message->id,
-                    'chat_head_id' => $message->chat_id,
+                    'chat_head_id' => $message->chat_head_id,
                     'sender_id' => $message->sender_id,
                     'receiver_id' => $message->receiver_id,
-                    'message' => $message->message_content ?? '',
-                    'message_type' => $message->message_type ?? 'text',
-                    'attachment_url' => $message->media_url ?? '',
+                    'message' => $message->body ?? '',
+                    'message_type' => $message->type ?? 'text',
+                    'attachment_url' => $message->image_url ?? $message->video_url ?? $message->audio_url ?? $message->document_url ?? '',
                     'message_status' => $this->getMessageStatus($message),
                     'created_at' => $message->created_at->toISOString(),
                     'updated_at' => $message->updated_at->toISOString(),
@@ -725,11 +719,10 @@ class ChatController extends Controller
             });
 
             // Mark messages as read for this user
-            ChatMessage::where('chat_id', $chatHead->chat_id)
+            ChatMessage::where('chat_head_id', $chatHead->id)
                 ->where('receiver_id', $userId)
-                ->where('is_read', false)
+                ->whereNull('read_at')
                 ->update([
-                    'is_read' => true,
                     'read_at' => now(),
                 ]);
 
@@ -780,15 +773,29 @@ class ChatController extends Controller
 
             // Create message
             $messageData = [
-                'chat_id' => $chatHead->chat_id,
+                'chat_head_id' => $chatHead->id,
                 'sender_id' => $senderId,
                 'receiver_id' => $receiverId,
-                'message_type' => $messageType,
-                'message_content' => $messageText,
-                'media_url' => $attachmentUrl,
-                'is_delivered' => true,
+                'user_1_id' => min($senderId, $receiverId),
+                'user_2_id' => max($senderId, $receiverId),
+                'type' => $messageType,
+                'body' => $messageText,
+                'status' => 'sent',
                 'delivered_at' => now(),
             ];
+
+            // Add attachment URLs based on type
+            if ($attachmentUrl) {
+                if ($messageType === 'image') {
+                    $messageData['image_url'] = $attachmentUrl;
+                } elseif ($messageType === 'video') {
+                    $messageData['video_url'] = $attachmentUrl;
+                } elseif ($messageType === 'audio') {
+                    $messageData['audio_url'] = $attachmentUrl;
+                } elseif ($messageType === 'file') {
+                    $messageData['document_url'] = $attachmentUrl;
+                }
+            }
 
             $message = ChatMessage::create($messageData);
 
@@ -798,9 +805,9 @@ class ChatController extends Controller
                 'chat_head_id' => $chatHead->id,
                 'sender_id' => $message->sender_id,
                 'receiver_id' => $message->receiver_id,
-                'message' => $message->message_content,
-                'message_type' => $message->message_type,
-                'attachment_url' => $message->media_url ?? '',
+                'message' => $message->body,
+                'message_type' => $message->type,
+                'attachment_url' => $message->image_url ?? $message->video_url ?? $message->audio_url ?? $message->document_url ?? '',
                 'message_status' => $this->getMessageStatus($message),
                 'created_at' => $message->created_at->toISOString(),
                 'updated_at' => $message->updated_at->toISOString(),
@@ -848,14 +855,14 @@ class ChatController extends Controller
                     'id' => $chat->id,
                     'sender_id' => $userId, // Current user is always sender in this context
                     'receiver_id' => $partner ? $partner['id'] : null,
-                    'last_message' => $chat->last_message ?? '',
-                    'last_message_time' => $chat->last_message_at ? $chat->last_message_at->toISOString() : '',
+                    'last_message' => $chat->last_message_body ?? '',
+                    'last_message_time' => $chat->last_message_time ? $chat->last_message_time->toISOString() : '',
                     'unread_count' => $chat->getUnreadCount($userId),
                     'receiver_name' => $partner ? $partner['name'] : 'Unknown User',
                     'receiver_avatar' => $partner ? $partner['avatar'] : '',
                     'receiver_phone' => '', // Not available in current schema
                     'last_seen' => '', // Not available in current schema
-                    'chat_status' => $chat->is_active ? 'active' : 'inactive',
+                    'chat_status' => $chat->chat_status ?? 'active',
                     'created_at' => $chat->created_at->toISOString(),
                     'updated_at' => $chat->updated_at->toISOString(),
                 ];
@@ -877,9 +884,9 @@ class ChatController extends Controller
      */
     private function getMessageStatus($message)
     {
-        if ($message->is_read) {
+        if ($message->read_at) {
             return 'read';
-        } elseif ($message->is_delivered) {
+        } elseif ($message->delivered_at) {
             return 'delivered';
         } else {
             return 'sent';

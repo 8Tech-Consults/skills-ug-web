@@ -17,6 +17,19 @@ Route::group([
     $router->resource('job-categories', JobCategoryController::class);
     $router->resource('services', ServiceController::class);
 
+    // Course Management Routes
+    $router->resource('course-categories', CourseCategoryController::class);
+    $router->resource('courses', CourseController::class);
+    $router->resource('course-units', CourseUnitController::class);
+    $router->resource('course-materials', CourseMaterialController::class);
+    $router->resource('course-subscriptions', CourseSubscriptionController::class);
+    $router->resource('course-reviews', CourseReviewController::class);
+    $router->resource('course-quizzes', CourseQuizController::class);
+    $router->resource('course-quiz-answers', CourseQuizAnswerController::class);
+    $router->resource('course-progress', CourseProgressController::class);
+    $router->resource('course-certificates', CourseCertificateController::class);
+    $router->resource('course-notifications', CourseNotificationController::class);
+
     $router->get('/', 'HomeController@index')->name('home');
     $router->resource('meetings', MeetingController::class);
     $router->resource('companies', CompanyController::class);

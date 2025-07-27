@@ -26,6 +26,9 @@ class CourseSubscription extends Model
         'payment_status',
         'payment_amount',
         'payment_currency',
+        'payment_method',
+        'payment_date',
+        'currency',
     ];
 
     protected $casts = [

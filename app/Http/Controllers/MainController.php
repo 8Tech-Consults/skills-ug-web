@@ -174,8 +174,8 @@ class MainController extends BaseController
       return $this->error('Verification code is incorrect.');
     }
 
-    if (strlen($password) < 6) {
-      return $this->error('Password must be at least 6 characters.');
+    if (strlen($password) < 4) {
+      return $this->error('Password must be at least 4 characters.');
     }
 
     $user->password = password_hash($password, PASSWORD_DEFAULT);

@@ -29,6 +29,13 @@ class CourseCategory extends Model
     ];
 
     /**
+     * Attributes to append to JSON output
+     */
+    protected $appends = [
+        'course_count'
+    ];
+
+    /**
      * Get courses in this category
      */
     public function courses()
