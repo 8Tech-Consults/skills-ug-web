@@ -77,12 +77,12 @@ Route::prefix('gdpr')->group(function () {
     // Consent Management
     Route::get('consents', [\App\Http\Controllers\Api\GdprController::class, 'getConsents']);
     Route::post('consents', [\App\Http\Controllers\Api\GdprController::class, 'updateConsent']);
-    
+
     // GDPR Requests
     Route::get('requests', [\App\Http\Controllers\Api\GdprController::class, 'getRequests']);
     Route::post('requests', [\App\Http\Controllers\Api\GdprController::class, 'createRequest']);
     Route::delete('requests/{requestId}', [\App\Http\Controllers\Api\GdprController::class, 'cancelRequest']);
-    
+
     // Data Summary
     Route::get('data-summary', [\App\Http\Controllers\Api\GdprController::class, 'getDataSummary']);
 });
@@ -94,18 +94,18 @@ use App\Http\Controllers\Api\GdprController;
 Route::middleware('auth:sanctum')->group(function () {
     // Learning Dashboard
     Route::get('learning/dashboard', [LearningController::class, 'getLearningDashboard']);
-    
+
     // Course Learning
     Route::get('learning/courses/{courseId}', [LearningController::class, 'getCourseForLearning']);
     Route::get('learning/materials/{materialId}', [LearningController::class, 'getMaterialContent']);
     Route::post('learning/progress', [LearningController::class, 'updateMaterialProgress']);
-    
+
     // Certificates
     Route::get('learning/certificates', [LearningController::class, 'getCertificates']);
-    
+
     // Reviews
     Route::post('learning/reviews', [LearningController::class, 'submitCourseReview']);
-    
+
     // Notifications
     Route::put('learning/notifications/{notificationId}/read', [LearningController::class, 'markNotificationAsRead']);
 });
@@ -115,6 +115,15 @@ Route::get('api/{model}', [ApiResurceController::class, 'index']);
 Route::post('api/{model}', [ApiResurceController::class, 'update']);
 
 // Eight Learning Test Routes (No Auth Required)
+Route::get('migrate', function () {
+    $a = \Artisan::call('migrate', ['--force' => true]);
+    $artisanOutput = \Artisan::output();
+    return response()->json([
+        'code' => 1,
+        'message' => 'Migration completed',
+        'output' => $artisanOutput
+    ]);
+});
 Route::get('test/course-categories', function () {
     return response()->json([
         'code' => 1,
@@ -175,22 +184,22 @@ Route::get('test/course-progress/{user_id}', function ($user_id) {
 Route::middleware('auth:sanctum')->prefix('course-progress')->group(function () {
     // Track material progress
     Route::post('track-material', [App\Http\Controllers\Api\LearningController::class, 'trackMaterialProgress']);
-    
+
     // Mark material as completed
     Route::post('complete-material', [App\Http\Controllers\Api\LearningController::class, 'markMaterialCompleted']);
-    
+
     // Get material progress
     Route::get('material-progress', [App\Http\Controllers\Api\LearningController::class, 'getMaterialProgress']);
-    
+
     // Get unit progress
     Route::get('unit-progress', [App\Http\Controllers\Api\LearningController::class, 'getUnitProgress']);
-    
+
     // Get course progress
     Route::get('course-progress', [App\Http\Controllers\Api\LearningController::class, 'getCourseProgress']);
-    
+
     // Update time tracking
     Route::post('update-time', [App\Http\Controllers\Api\LearningController::class, 'updateTimeTracking']);
-    
+
     // Batch update progress
     Route::post('batch-update', [App\Http\Controllers\Api\LearningController::class, 'batchUpdateProgress']);
 });
