@@ -72,8 +72,24 @@ Route::POST('course-subscribe', [ApiAuthController::class, 'course_subscribe']);
 Route::POST('course-subscriptions/subscribe', [ApiAuthController::class, 'course_subscribe']);
 Route::get('my-course-subscriptions', [ApiAuthController::class, 'my_course_subscriptions']);
 
+// GDPR Compliance Routes
+Route::prefix('gdpr')->group(function () {
+    // Consent Management
+    Route::get('consents', [\App\Http\Controllers\Api\GdprController::class, 'getConsents']);
+    Route::post('consents', [\App\Http\Controllers\Api\GdprController::class, 'updateConsent']);
+    
+    // GDPR Requests
+    Route::get('requests', [\App\Http\Controllers\Api\GdprController::class, 'getRequests']);
+    Route::post('requests', [\App\Http\Controllers\Api\GdprController::class, 'createRequest']);
+    Route::delete('requests/{requestId}', [\App\Http\Controllers\Api\GdprController::class, 'cancelRequest']);
+    
+    // Data Summary
+    Route::get('data-summary', [\App\Http\Controllers\Api\GdprController::class, 'getDataSummary']);
+});
+
 // Enhanced Learning System API Routes
 use App\Http\Controllers\Api\LearningController;
+use App\Http\Controllers\Api\GdprController;
 
 Route::middleware('auth:sanctum')->group(function () {
     // Learning Dashboard
