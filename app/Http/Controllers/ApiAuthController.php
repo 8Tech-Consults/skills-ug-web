@@ -69,6 +69,7 @@ class ApiAuthController extends Controller
             'password-reset-submit',
             'districts',
             'cvs',
+            'email-verify',
             'send-mail-verification-code',
             'password-reset-submit',
         ]]);
