@@ -2577,13 +2577,19 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
             $rules = [
                 'current_password' => 'required',
-                'password' => 'required|min:6|confirmed'
+                'password' => 'required|min:4'
             ];
+
 
             $validator = Validator::make($request->all(), $rules);
 
             if ($validator->fails()) {
-                return $this->error('Validation failed', $validator->errors());
+                return $this->error($validator->errors());
+            }
+
+            //check if password not same as current password
+            if (password_verify($request->password, $user->password)) {
+                return $this->error('New password cannot be the same as current password');
             }
 
             // Check current password
@@ -2621,7 +2627,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             $validator = Validator::make($request->all(), $rules);
 
             if ($validator->fails()) {
-                return $this->error('Validation failed', $validator->errors());
+                return $this->error($validator->errors());
             }
 
             $user = User::where('email', $request->email)->first();
@@ -2673,7 +2679,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             $validator = Validator::make($request->all(), $rules);
 
             if ($validator->fails()) {
-                return $this->error('Validation failed', $validator->errors());
+                return $this->error($validator->errors());
             }
 
             // Verify password
@@ -2857,7 +2863,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             $validator = Validator::make($request->all(), $rules);
 
             if ($validator->fails()) {
-                return $this->error('Validation failed', $validator->errors());
+                return $this->error($validator->errors());
             }
 
             $viewRecord = ViewRecord::create([
@@ -3085,10 +3091,10 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
             if ($r->has('search') && !empty($r->search)) {
                 $search = $r->search;
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhere('instructor_name', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('instructor_name', 'like', "%{$search}%");
                 });
             }
 
@@ -3103,7 +3109,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             // Sorting
             $sort = $r->get('sort', 'created_at');
             $order = $r->get('order', 'desc');
-            
+
             if ($sort === 'popular') {
                 $query->orderBy('enrollment_count', 'desc');
             } elseif ($sort === 'rating') {
@@ -3140,10 +3146,10 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
             // Get course units count
             $course->units_count = \App\Models\CourseUnit::where('course_id', $course->id)->count();
-            
+
             // Get total materials count
             $course->materials_count = \App\Models\CourseMaterial::whereIn(
-                'unit_id', 
+                'unit_id',
                 \App\Models\CourseUnit::where('course_id', $course->id)->pluck('id')
             )->count();
 
@@ -3157,13 +3163,13 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             $user = auth('api')->user();
             $course->is_subscribed = false;
             $course->subscription_status = '';
-            
+
             if ($user) {
                 $subscription = \App\Models\CourseSubscription::where([
                     'user_id' => $user->id,
                     'course_id' => $course->id
                 ])->first();
-                
+
                 if ($subscription) {
                     $course->is_subscribed = true;
                     $course->subscription_status = $subscription->status;
@@ -3224,7 +3230,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             $subscription->payment_amount = $r->payment_amount;
             $subscription->currency = $course->currency;
             $subscription->subscribed_at = now();
-            
+
             if ($course->price == 0) {
                 $subscription->payment_status = 'completed';
                 $subscription->payment_date = now();
@@ -3246,7 +3252,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
             return $this->success(
                 $subscription,
-                $course->price > 0 
+                $course->price > 0
                     ? 'Course subscription submitted for approval. You will be notified once approved.'
                     : 'Successfully enrolled in the course!'
             );
@@ -3287,14 +3293,14 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
     private function formatDuration($minutes)
     {
         if (!$minutes) return '0 min';
-        
+
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
-        
+
         if ($hours > 0) {
             return $hours . 'h' . ($mins > 0 ? ' ' . $mins . 'm' : '');
         }
-        
+
         return $mins . 'm';
     }
 }

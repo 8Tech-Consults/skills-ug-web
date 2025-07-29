@@ -16,6 +16,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -271,6 +272,400 @@ class MainController extends BaseController
       return $this->error($th->getMessage());
     }
     return $this->success(null, 'Password reset code sent successfully.');
+  }
+
+  /**
+   * @OA\Post(
+   *     path="/account-deletion-request",
+   *     summary="Request account deletion code",
+   *     description="Sends a verification code to the user's email for account deletion confirmation.",
+   *     operationId="accountDeletionRequest",
+   *     tags={"User Authentication"},
+   *     security={{"bearerAuth": {}}},
+   *     @OA\Response(
+   *         response=200,
+   *         description="Account deletion code sent successfully",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Account deletion code sent to your email.")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=401,
+   *         description="Unauthorized",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Unauthorized access.")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=429,
+   *         description="Too many requests",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Please wait before requesting another code.")
+   *         )
+   *     )
+   * )
+   */
+  public function account_deletion_request(Request $request)
+  {
+    $user = auth('api')->user();
+    if (!$user) {
+      return $this->error('Unauthorized access.');
+    }
+
+    try {
+      $user->account_deletion_request();
+    } catch (\Throwable $th) {
+      return $this->error($th->getMessage());
+    }
+    
+    return $this->success(null, 'Account deletion code sent to your email.');
+  }
+
+  /**
+   * @OA\Post(
+   *     path="/account-deletion-confirm",
+   *     summary="Confirm account deletion",
+   *     description="Confirms account deletion using verification code and password.",
+   *     operationId="accountDeletionConfirm",
+   *     tags={"User Authentication"},
+   *     security={{"bearerAuth": {}}},
+   *     @OA\RequestBody(
+   *         required=true,
+   *         @OA\JsonContent(
+   *             type="object",
+   *             required={"verification_code", "password", "confirmation_text"},
+   *             @OA\Property(property="verification_code", type="string", example="123456", description="6-digit verification code"),
+   *             @OA\Property(property="password", type="string", example="currentpassword", description="Current user password"),
+   *             @OA\Property(property="confirmation_text", type="string", example="DELETE MY ACCOUNT", description="Confirmation text")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=200,
+   *         description="Account deleted successfully",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Account deleted successfully.")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=400,
+   *         description="Invalid input",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Invalid verification code or password.")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=401,
+   *         description="Unauthorized",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Unauthorized access.")
+   *         )
+   *     )
+   * )
+   */
+  public function account_deletion_confirm(Request $request)
+  {
+    $user = auth('api')->user();
+    if (!$user) {
+      return $this->error('Unauthorized access.');
+    }
+
+    $verification_code = $request->verification_code;
+    $password = $request->password;
+    $confirmation_text = $request->confirmation_text;
+
+    // Validate required fields
+    if (empty($verification_code)) {
+      return $this->error('Verification code is required.');
+    }
+    if (empty($password)) {
+      return $this->error('Password is required.');
+    }
+    if (empty($confirmation_text)) {
+      return $this->error('Confirmation text is required.');
+    }
+
+    // Validate confirmation text
+    if (trim($confirmation_text) !== 'DELETE MY ACCOUNT') {
+      return $this->error('Invalid confirmation text. Please type exactly: DELETE MY ACCOUNT');
+    }
+
+    // Validate verification code
+    if ($user->code != $verification_code) {
+      return $this->error('Invalid verification code.');
+    }
+
+    // Check code expiry (10 minutes)
+    if ($user->code_sent_at && Carbon::parse($user->code_sent_at)->addMinutes(10) < Carbon::now()) {
+      return $this->error('Verification code has expired. Please request a new one.');
+    }
+
+    // Validate password
+    if (!Hash::check($password, $user->password)) {
+      return $this->error('Invalid password.');
+    }
+
+    try {
+      // Delete user account and related data
+      $user->delete_account();
+    } catch (\Throwable $th) {
+      return $this->error('Failed to delete account: ' . $th->getMessage());
+    }
+
+    return $this->success(null, 'Account deleted successfully.');
+  }
+
+  /**
+   * @OA\Post(
+   *     path="/contact-form-submit",
+   *     summary="Submit contact form",
+   *     description="Submit a contact form with user inquiry details.",
+   *     operationId="contactFormSubmit",
+   *     tags={"Contact"},
+   *     @OA\RequestBody(
+   *         required=true,
+   *         @OA\JsonContent(
+   *             type="object",
+   *             required={"name", "email", "subject", "message", "inquiry_type"},
+   *             @OA\Property(property="name", type="string", example="John Doe", description="Full name of the person"),
+   *             @OA\Property(property="email", type="string", example="john@example.com", description="Email address"),
+   *             @OA\Property(property="phone", type="string", example="+256700000000", description="Phone number (optional)"),
+   *             @OA\Property(property="subject", type="string", example="Job Application Help", description="Subject of the inquiry"),
+   *             @OA\Property(property="message", type="string", example="I need help with my job application", description="Detailed message"),
+   *             @OA\Property(property="inquiry_type", type="string", example="General Inquiry", description="Type of inquiry"),
+   *             @OA\Property(property="company", type="string", example="Tech Company", description="Company name (optional)")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=200,
+   *         description="Contact form submitted successfully",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Contact form submitted successfully. We will respond within 24 hours.")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=400,
+   *         description="Invalid input",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Please provide all required fields.")
+   *         )
+   *     ),
+   *     @OA\Response(
+   *         response=429,
+   *         description="Too many requests",
+   *         @OA\JsonContent(
+   *             type="object",
+   *             @OA\Property(property="message", type="string", example="Please wait before submitting another message.")
+   *         )
+   *     )
+   * )
+   */
+  public function contact_form_submit(Request $request)
+  {
+    $name = trim($request->name);
+    $email = trim($request->email);
+    $phone = trim($request->phone);
+    $subject = trim($request->subject);
+    $message = trim($request->message);
+    $inquiry_type = trim($request->inquiry_type);
+    $company = trim($request->company);
+
+    // Validate required fields
+    if (empty($name)) {
+      return $this->error('Name is required.');
+    }
+    if (empty($email)) {
+      return $this->error('Email is required.');
+    }
+    if (empty($subject)) {
+      return $this->error('Subject is required.');
+    }
+    if (empty($message)) {
+      return $this->error('Message is required.');
+    }
+    if (empty($inquiry_type)) {
+      return $this->error('Inquiry type is required.');
+    }
+
+    // Validate email format
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      return $this->error('Invalid email address.');
+    }
+
+    // Rate limiting: Check if same email submitted in the last 5 minutes
+    $recent_submission = DB::table('contact_submissions')
+      ->where('email', $email)
+      ->where('created_at', '>', Carbon::now()->subMinutes(5))
+      ->first();
+
+    if ($recent_submission) {
+      return $this->error('Please wait 5 minutes before submitting another message.');
+    }
+
+    try {
+      // Store the contact submission in database
+      $submission_id = DB::table('contact_submissions')->insertGetId([
+        'name' => $name,
+        'email' => $email,
+        'phone' => $phone,
+        'subject' => $subject,
+        'message' => $message,
+        'inquiry_type' => $inquiry_type,
+        'company' => $company,
+        'ip_address' => $request->ip(),
+        'user_agent' => $request->userAgent(),
+        'status' => 'pending',
+        'created_at' => Carbon::now(),
+        'updated_at' => Carbon::now(),
+      ]);
+
+      // Send notification email to support team
+      $this->send_contact_form_notification($submission_id, [
+        'name' => $name,
+        'email' => $email,
+        'phone' => $phone,
+        'subject' => $subject,
+        'message' => $message,
+        'inquiry_type' => $inquiry_type,
+        'company' => $company,
+      ]);
+
+      // Send confirmation email to user
+      $this->send_contact_form_confirmation($email, $name, $subject);
+
+    } catch (\Throwable $th) {
+      return $this->error('Failed to submit contact form: ' . $th->getMessage());
+    }
+
+    return $this->success(null, 'Contact form submitted successfully. We will respond within 24 hours.');
+  }
+
+  private function send_contact_form_notification($submission_id, $data)
+  {
+    try {
+      $support_email = env('SUPPORT_EMAIL', 'support@skillsug.com');
+      
+      $email_data = [
+        'email' => $support_email,
+        'name' => 'Support Team',
+        'subject' => 'New Contact Form Submission: ' . $data['subject'],
+      ];
+
+      $body = <<<EOF
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #114786; border-bottom: 2px solid #114786; padding-bottom: 10px;">
+          New Contact Form Submission
+        </h2>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 5px;">
+          <h3 style="margin-top: 0; color: #333;">Submission Details</h3>
+          <p><strong>Submission ID:</strong> #{$submission_id}</p>
+          <p><strong>Date:</strong> {date('Y-m-d H:i:s')}</p>
+          <p><strong>Inquiry Type:</strong> {$data['inquiry_type']}</p>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h3 style="margin-top: 0; color: #333;">Contact Information</h3>
+          <p><strong>Name:</strong> {$data['name']}</p>
+          <p><strong>Email:</strong> {$data['email']}</p>
+          <p><strong>Phone:</strong> {$data['phone']}</p>
+          <p><strong>Company:</strong> {$data['company']}</p>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 20px; border: 1px solid #ddd; border-radius: 5px; margin-top: 20px;">
+          <h3 style="margin-top: 0; color: #333;">Subject</h3>
+          <p style="font-weight: bold; color: #114786;">{$data['subject']}</p>
+          
+          <h3 style="color: #333;">Message</h3>
+          <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #114786; white-space: pre-wrap;">{$data['message']}</div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background-color: #e6f7ff; border-radius: 5px;">
+          <p style="margin: 0; color: #666; font-size: 14px;">
+            Please respond to this inquiry within 24 hours. You can reply directly to the customer at: {$data['email']}
+          </p>
+        </div>
+      </div>
+      EOF;
+
+      $email_data['body'] = $body;
+      $email_data['view'] = 'mail-1';
+      $email_data['data'] = $body;
+
+      Utils::mail_sender($email_data);
+    } catch (\Throwable $th) {
+      // Log error but don't fail the main request
+      error_log('Failed to send contact form notification: ' . $th->getMessage());
+    }
+  }
+
+  private function send_contact_form_confirmation($email, $name, $subject)
+  {
+    try {
+      $email_data = [
+        'email' => $email,
+        'name' => $name,
+        'subject' => env('APP_NAME') . ' - Contact Form Received: ' . $subject,
+      ];
+
+      $body = <<<EOF
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #114786; border-bottom: 2px solid #114786; padding-bottom: 10px;">
+          Thank You for Contacting Us
+        </h2>
+        
+        <p style="font-size: 16px; line-height: 1.6; color: #555;">
+          Dear {$name},
+        </p>
+        
+        <p style="font-size: 16px; line-height: 1.6; color: #555;">
+          Thank you for reaching out to us through our contact form. We have successfully received your message regarding "<strong>{$subject}</strong>".
+        </p>
+
+        <div style="background-color: #e6f7ff; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #114786;">
+          <h3 style="margin-top: 0; color: #114786;">What happens next?</h3>
+          <ul style="color: #555; line-height: 1.6;">
+            <li>Our support team will review your message within 2-4 hours</li>
+            <li>You will receive a detailed response within 24 hours</li>
+            <li>For urgent matters, you can call us directly at +256 700 000 000</li>
+          </ul>
+        </div>
+
+        <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 5px;">
+          <h3 style="margin-top: 0; color: #333;">Need immediate assistance?</h3>
+          <p style="color: #555; margin-bottom: 10px;">You can also reach us through:</p>
+          <p style="color: #555; margin: 5px 0;"><strong>Email:</strong> support@skillsug.com</p>
+          <p style="color: #555; margin: 5px 0;"><strong>Phone:</strong> +256 700 000 000</p>
+          <p style="color: #555; margin: 5px 0;"><strong>WhatsApp:</strong> +256 700 000 000</p>
+        </div>
+
+        <p style="font-size: 16px; line-height: 1.6; color: #555;">
+          Thank you for choosing Skills UG!
+        </p>
+
+        <hr style="border: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="font-size: 14px; color: #999; text-align: center;">
+          This is an automated confirmation. Please do not reply to this email.
+        </p>
+      </div>
+      EOF;
+
+      $email_data['body'] = $body;
+      $email_data['view'] = 'mail-1';
+      $email_data['data'] = $body;
+
+      Utils::mail_sender($email_data);
+    } catch (\Throwable $th) {
+      // Log error but don't fail the main request
+      error_log('Failed to send contact form confirmation: ' . $th->getMessage());
+    }
   }
 
 
@@ -2740,5 +3135,242 @@ EOT;
     }
 
     $companies = [];
+  }
+
+  // ===================================
+  // BLOG API ENDPOINTS
+  // ===================================
+
+  /**
+   * Get blog posts with pagination and filtering
+   * 
+   * @param Request $request
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function blog_posts(Request $request)
+  {
+    try {
+      // Start building query
+      $query = \App\Models\BlogPost::published();
+
+      // Apply search filter
+      if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->search($search);
+      }
+
+      // Apply category filter
+      if ($request->filled('category')) {
+        $category = $request->input('category');
+        $query->byCategory($category);
+      }
+
+      // Apply tag filter
+      if ($request->filled('tag')) {
+        $tag = $request->input('tag');
+        $query->byTag($tag);
+      }
+
+      // Apply featured filter
+      if ($request->filled('featured') && $request->boolean('featured')) {
+        $query->featured();
+      }
+
+      // Sorting
+      $sortBy = $request->input('sort_by', 'published_at');
+      $sortOrder = $request->input('sort_order', 'desc');
+      
+      if (in_array($sortBy, ['published_at', 'views_count', 'likes_count', 'title'])) {
+        $query->orderBy($sortBy, $sortOrder);
+      } else {
+        $query->orderBy('published_at', 'desc');
+      }
+
+      // Paginate results
+      $perPage = $request->input('per_page', 20);
+      $perPage = min(50, max(1, (int)$perPage)); // Limit between 1-50
+      
+      $posts = $query->paginate($perPage);
+
+      // Transform posts to include computed fields
+      $posts->getCollection()->transform(function ($post) {
+        return [
+          'id' => $post->id,
+          'title' => $post->title,
+          'slug' => $post->slug,
+          'excerpt' => $post->excerpt,
+          'content' => $post->content,
+          'featured_image' => $post->featured_image,
+          'featured_image_url' => $post->featured_image_url,
+          'author_name' => $post->author_name,
+          'author_email' => $post->author_email,
+          'status' => $post->status,
+          'category' => $post->category,
+          'tags' => $post->tags,
+          'views_count' => $post->views_count,
+          'likes_count' => $post->likes_count,
+          'featured' => $post->featured,
+          'published_at' => $post->published_at,
+          'formatted_published_at' => $post->formatted_published_at,
+          'reading_time_minutes' => $post->reading_time_minutes,
+          'reading_time_text' => $post->reading_time_text,
+          'url' => $post->getUrl(),
+          'created_at' => $post->created_at,
+          'updated_at' => $post->updated_at,
+        ];
+      });
+
+      return $this->success($posts, 'Blog posts retrieved successfully');
+
+    } catch (\Exception $e) {
+      \Log::error('Blog posts fetch error: ' . $e->getMessage());
+      return $this->error('Failed to fetch blog posts');
+    }
+  }
+
+  /**
+   * Get single blog post by slug
+   * 
+   * @param Request $request
+   * @param string $slug
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function blog_post_single(Request $request, $slug)
+  {
+    try {
+      $post = \App\Models\BlogPost::published()
+        ->where('slug', $slug)
+        ->first();
+
+      if (!$post) {
+        return $this->error('Blog post not found', 404);
+      }
+
+      // Format response
+      $postData = [
+        'id' => $post->id,
+        'title' => $post->title,
+        'slug' => $post->slug,
+        'excerpt' => $post->excerpt,
+        'content' => $post->content,
+        'featured_image' => $post->featured_image,
+        'featured_image_url' => $post->featured_image_url,
+        'author_name' => $post->author_name,
+        'author_email' => $post->author_email,
+        'status' => $post->status,
+        'category' => $post->category,
+        'tags' => $post->tags,
+        'views_count' => $post->views_count,
+        'likes_count' => $post->likes_count,
+        'featured' => $post->featured,
+        'published_at' => $post->published_at,
+        'formatted_published_at' => $post->formatted_published_at,
+        'reading_time_minutes' => $post->reading_time_minutes,
+        'reading_time_text' => $post->reading_time_text,
+        'meta_description' => $post->meta_description,
+        'meta_keywords' => $post->meta_keywords,
+        'url' => $post->getUrl(),
+        'created_at' => $post->created_at,
+        'updated_at' => $post->updated_at,
+      ];
+
+      return $this->success($postData, 'Blog post retrieved successfully');
+
+    } catch (\Exception $e) {
+      \Log::error('Blog post fetch error: ' . $e->getMessage());
+      return $this->error('Failed to fetch blog post');
+    }
+  }
+
+  /**
+   * Get blog categories
+   * 
+   * @param Request $request
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function blog_categories(Request $request)
+  {
+    try {
+      $categories = \App\Models\BlogPost::getCategories();
+      return $this->success($categories, 'Blog categories retrieved successfully');
+    } catch (\Exception $e) {
+      \Log::error('Blog categories fetch error: ' . $e->getMessage());
+      return $this->error('Failed to fetch blog categories');
+    }
+  }
+
+  /**
+   * Get blog tags
+   * 
+   * @param Request $request
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function blog_tags(Request $request)
+  {
+    try {
+      $tags = \App\Models\BlogPost::getAllTags();
+      return $this->success($tags, 'Blog tags retrieved successfully');
+    } catch (\Exception $e) {
+      \Log::error('Blog tags fetch error: ' . $e->getMessage());
+      return $this->error('Failed to fetch blog tags');
+    }
+  }
+
+  /**
+   * Record blog post view
+   * 
+   * @param Request $request
+   * @param int $id
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function blog_post_view(Request $request, $id)
+  {
+    try {
+      $post = \App\Models\BlogPost::find($id);
+      
+      if (!$post) {
+        return $this->error('Blog post not found', 404);
+      }
+
+      $post->incrementViews();
+
+      return $this->success([
+        'views_count' => $post->views_count,
+        'message' => 'View recorded successfully'
+      ]);
+
+    } catch (\Exception $e) {
+      \Log::error('Blog post view recording error: ' . $e->getMessage());
+      return $this->error('Failed to record view');
+    }
+  }
+
+  /**
+   * Like blog post
+   * 
+   * @param Request $request
+   * @param int $id
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function blog_post_like(Request $request, $id)
+  {
+    try {
+      $post = \App\Models\BlogPost::find($id);
+      
+      if (!$post) {
+        return $this->error('Blog post not found', 404);
+      }
+
+      $post->incrementLikes();
+
+      return $this->success([
+        'likes_count' => $post->likes_count,
+        'message' => 'Like recorded successfully'
+      ]);
+
+    } catch (\Exception $e) {
+      \Log::error('Blog post like recording error: ' . $e->getMessage());
+      return $this->error('Failed to record like');
+    }
   }
 }

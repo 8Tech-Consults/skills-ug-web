@@ -63,6 +63,17 @@ Route::POST("email-verify", [ApiAuthController::class, 'email_verify']);
 Route::POST("send-mail-verification-code", [MainController::class, 'send_mail_verification_code']);
 Route::POST("password-reset-request", [MainController::class, 'password_reset_request']);
 Route::POST("password-reset-submit", [MainController::class, 'password_reset_submit']);
+Route::POST("account-deletion-request", [MainController::class, 'account_deletion_request']);
+Route::POST("account-deletion-confirm", [MainController::class, 'account_deletion_confirm']);
+Route::POST("contact-form-submit", [MainController::class, 'contact_form_submit']);
+
+// Blog API Routes
+Route::get('blog-posts', [MainController::class, 'blog_posts']);
+Route::get('blog-posts/{slug}', [MainController::class, 'blog_post_single']);
+Route::get('blog-categories', [MainController::class, 'blog_categories']);
+Route::get('blog-tags', [MainController::class, 'blog_tags']);
+Route::POST('blog-posts/{id}/like', [MainController::class, 'blog_post_like']);
+Route::POST('blog-posts/{id}/view', [MainController::class, 'blog_post_view']);
 
 // Eight Learning Course API Routes
 Route::get('course-categories', [ApiAuthController::class, 'course_categories']);

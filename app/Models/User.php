@@ -344,6 +344,118 @@ class User extends Authenticatable implements JWTSubject
         }
     }
 
+    public function account_deletion_request()
+    {
+        $user = $this;
+
+        // Check if a verification code was sent less than 3 minutes ago
+        if ($user->code_is_sent === "Yes" && $user->code_sent_at !== null) {
+            try {
+                $code_sent_at = Carbon::parse($user->code_sent_at);
+                if ($code_sent_at->diffInMinutes(Carbon::now()) < 3) {
+                    throw new Exception("Please wait for 3 minutes before requesting a new verification code.");
+                }
+            } catch (\Throwable $th) {
+                // Log the exception if needed, but don't prevent code generation
+            }
+        }
+
+        // Generate a new verification code and update the send timestamp and flag
+        $user->code = rand(100000, 999999);
+        $user->code_is_sent = "Yes";
+        $user->code_sent_at = Carbon::now();
+        $user->save();
+
+        // Check $user->email validity
+        if (!Utils::validateEmail($user->email)) {
+            throw new Exception("Invalid email address");
+        }
+
+        // Prepare email data
+        $data = [
+            'email' => $user->email,
+            'name' => $user->name,
+            'subject' => env('APP_NAME') . " - Account Deletion Verification Code",
+            'code' => $user->code,
+        ];
+
+        try {
+            $body = <<<EOF
+            <div style="font-family: Arial, sans-serif;">
+                <div style="margin: 0 auto; background-color: #ffffff;"> 
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        Dear {$data['name']},
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.6; color: #d32f2f;">
+                        <strong>IMPORTANT:</strong> You have requested to permanently delete your account. This action cannot be undone.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        Please use the verification code below to confirm account deletion:
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <strong style="font-size: 24px; color: #d32f2f; background-color: #ffebee; padding: 10px 20px; border-radius: 5px; border: 2px solid #d32f2f;">{$data['code']}</strong>
+                    </div>
+                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                        This code will expire in 10 minutes. Deleting your account will:
+                    </p>
+                    <ul style="font-size: 14px; color: #666666; line-height: 1.6;">
+                        <li>Permanently delete your profile and personal information</li>
+                        <li>Remove all your job applications and saved jobs</li>
+                        <li>Delete your CV and portfolio data</li>
+                        <li>Cancel any active subscriptions</li>
+                        <li>Remove access to all app features</li>
+                    </ul>
+                    <p style="font-size: 16px; line-height: 1.6; color: #d32f2f;">
+                        <strong>If you did not request account deletion, please ignore this email and consider changing your password.</strong>
+                    </p>
+                    <hr style="border: 1px solid #e0e0e0; margin: 30px 0;">
+                    <p style="font-size: 14px; color: #999999; text-align: center;">
+                        This is an automated message, please do not reply.
+                    </p>
+                </div>
+            </div>
+            EOF;
+            $data['body'] = $body;
+            $data['view'] = 'mail-1'; // this is the view you are using for the email template.
+            $data['data'] = $data['body'];
+
+            Utils::mail_sender($data);
+        } catch (\Throwable $th) {
+            throw $th; // Re-throw the exception for handling elsewhere
+        }
+    }
+
+    public function delete_account()
+    {
+        $user = $this;
+        
+        try {
+            // Start a database transaction
+            DB::beginTransaction();
+
+            // Delete related data first (to avoid foreign key constraints)
+            // You can add more related table deletions here as needed
+            
+            // Example deletions - adjust based on your database schema:
+            // DB::table('job_applications')->where('user_id', $user->id)->delete();
+            // DB::table('saved_jobs')->where('user_id', $user->id)->delete();
+            // DB::table('user_subscriptions')->where('user_id', $user->id)->delete();
+            // DB::table('user_cvs')->where('user_id', $user->id)->delete();
+            // DB::table('user_portfolios')->where('user_id', $user->id)->delete();
+
+            // Delete the user account
+            $user->delete();
+
+            // Commit the transaction
+            DB::commit();
+
+        } catch (\Throwable $th) {
+            // Rollback the transaction on error
+            DB::rollback();
+            throw new Exception("Failed to delete account: " . $th->getMessage());
+        }
+    }
+
 
 
     public static function update_rating($id)
