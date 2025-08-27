@@ -21,12 +21,12 @@ class CreateServiceBookmarksTable extends Migration
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             
             // Indexes for better performance
-            $table->index(['user_id', 'service_id']);
-            $table->unique(['user_id', 'service_id'], 'unique_user_service_bookmark');
+            // $table->index(['user_id', 'service_id']);
+            // $table->unique(['user_id', 'service_id'], 'unique_user_service_bookmark');
             
             // Foreign key constraints
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('service_id')->references('id')->on('services_2')->onDelete('cascade');
+            // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // $table->foreign('service_id')->references('id')->on('services_2')->onDelete('cascade');
         });
     }
 
