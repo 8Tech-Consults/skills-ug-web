@@ -2185,6 +2185,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
         }
 
         JWTAuth::factory()->setTTL(60 * 24 * 30 * 365);
+        config(['jwt.ttl' => 60 * 24 * 30 * 365]);
 
         $token = auth('api')->attempt([
             'id' => $u->id,
@@ -2328,6 +2329,8 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
         }
 
         Config::set('jwt.ttl', 60 * 24 * 30 * 365);
+        JWTAuth::factory()->setTTL(60 * 24 * 30 * 365);
+        config(['jwt.ttl' => 60 * 24 * 30 * 365]);
 
         $token = auth('api')->attempt([
             'id' => $new_user->id,

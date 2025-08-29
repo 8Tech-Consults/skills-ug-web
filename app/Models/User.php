@@ -23,11 +23,20 @@ class User extends Authenticatable implements JWTSubject
     use Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'account_type', 'phone', 'address', 'city', 'country', 'email_verified_at'
+        'name',
+        'email',
+        'password',
+        'account_type',
+        'phone',
+        'address',
+        'city',
+        'country',
+        'email_verified_at'
     ];
 
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
@@ -41,7 +50,7 @@ class User extends Authenticatable implements JWTSubject
         //created 
         self::created(function ($m) {
             try {
-                User::save_cv($m);
+                // User::save_cv($m);
             } catch (\Throwable $th) {
                 // throw new \Exception($th->getMessage());
             }
@@ -268,6 +277,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function send_mail_verification_code()
     {
+        set_time_limit(0);
         $user = $this;
 
         // Check if a verification code was sent less than 3 minutes ago
@@ -428,14 +438,14 @@ class User extends Authenticatable implements JWTSubject
     public function delete_account()
     {
         $user = $this;
-        
+
         try {
             // Start a database transaction
             DB::beginTransaction();
 
             // Delete related data first (to avoid foreign key constraints)
             // You can add more related table deletions here as needed
-            
+
             // Example deletions - adjust based on your database schema:
             // DB::table('job_applications')->where('user_id', $user->id)->delete();
             // DB::table('saved_jobs')->where('user_id', $user->id)->delete();
@@ -448,7 +458,6 @@ class User extends Authenticatable implements JWTSubject
 
             // Commit the transaction
             DB::commit();
-
         } catch (\Throwable $th) {
             // Rollback the transaction on error
             DB::rollback();

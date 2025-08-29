@@ -24,7 +24,7 @@ class ChatController extends Controller
             
             if (!$userId) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Authentication required',
                     'data' => null
                 ], 401);
@@ -62,7 +62,7 @@ class ChatController extends Controller
             });
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Chats retrieved successfully',
                 'data' => [
                     'chats' => $formattedChats,
@@ -72,7 +72,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error retrieving chats: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -93,7 +93,7 @@ class ChatController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 400);
@@ -106,7 +106,7 @@ class ChatController extends Controller
 
             if ($userId == $partnerId) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Cannot create chat with yourself',
                     'data' => null
                 ], 400);
@@ -116,7 +116,7 @@ class ChatController extends Controller
             $partner = $chatHead->getChatPartner($userId);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Chat retrieved/created successfully',
                 'data' => [
                     'chat_id' => $chatHead->chat_id,
@@ -137,7 +137,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error creating/retrieving chat: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -161,7 +161,7 @@ class ChatController extends Controller
 
             if (!$chatHead) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Chat not found or access denied',
                     'data' => null
                 ], 404);
@@ -190,7 +190,7 @@ class ChatController extends Controller
             $chatHead->markAsRead($userId);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Messages retrieved successfully',
                 'data' => [
                     'messages' => $formattedMessages,
@@ -209,7 +209,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error retrieving messages: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -230,7 +230,7 @@ class ChatController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 400);
@@ -247,7 +247,7 @@ class ChatController extends Controller
 
             if (!$chatHead) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Chat not found or access denied',
                     'data' => null
                 ], 404);
@@ -268,7 +268,7 @@ class ChatController extends Controller
             $message = ChatMessage::create($messageData);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Message sent successfully',
                 'data' => [
                     'message' => $message->getFormattedMessage()
@@ -277,7 +277,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error sending message: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -296,7 +296,7 @@ class ChatController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 400);
@@ -307,7 +307,7 @@ class ChatController extends Controller
 
             if (!$message) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Message not found',
                     'data' => null
                 ], 404);
@@ -315,7 +315,7 @@ class ChatController extends Controller
 
             if (!$message->canBeEdited($userId)) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Cannot edit this message',
                     'data' => null
                 ], 403);
@@ -324,7 +324,7 @@ class ChatController extends Controller
             $message->editContent($request->content);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Message edited successfully',
                 'data' => [
                     'message' => $message->getFormattedMessage()
@@ -333,7 +333,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error editing message: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -351,7 +351,7 @@ class ChatController extends Controller
 
             if (!$message) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Message not found',
                     'data' => null
                 ], 404);
@@ -359,7 +359,7 @@ class ChatController extends Controller
 
             if (!$message->canBeDeleted($userId)) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Cannot delete this message',
                     'data' => null
                 ], 403);
@@ -368,14 +368,14 @@ class ChatController extends Controller
             $message->softDelete();
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Message deleted successfully',
                 'data' => null
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error deleting message: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -394,7 +394,7 @@ class ChatController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 400);
@@ -405,7 +405,7 @@ class ChatController extends Controller
 
             if (!$message) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Message not found',
                     'data' => null
                 ], 404);
@@ -414,7 +414,7 @@ class ChatController extends Controller
             $message->addReaction($userId, $request->emoji);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Reaction added successfully',
                 'data' => [
                     'message' => $message->getFormattedMessage()
@@ -423,7 +423,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error adding reaction: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -441,7 +441,7 @@ class ChatController extends Controller
 
             if (!$message) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Message not found',
                     'data' => null
                 ], 404);
@@ -450,7 +450,7 @@ class ChatController extends Controller
             $message->removeReaction($userId);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Reaction removed successfully',
                 'data' => [
                     'message' => $message->getFormattedMessage()
@@ -459,7 +459,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error removing reaction: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -482,7 +482,7 @@ class ChatController extends Controller
 
             if (!$chatHead) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Chat not found or access denied',
                     'data' => null
                 ], 404);
@@ -491,7 +491,7 @@ class ChatController extends Controller
             $chatHead->toggleArchive($userId);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Chat archive status updated successfully',
                 'data' => [
                     'is_archived' => $chatHead->isArchivedFor($userId)
@@ -500,7 +500,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error updating archive status: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -523,7 +523,7 @@ class ChatController extends Controller
 
             if (!$chatHead) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Chat not found or access denied',
                     'data' => null
                 ], 404);
@@ -532,7 +532,7 @@ class ChatController extends Controller
             $chatHead->toggleMute($userId);
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Chat mute status updated successfully',
                 'data' => [
                     'is_muted' => $chatHead->isMutedFor($userId)
@@ -541,7 +541,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error updating mute status: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -560,7 +560,7 @@ class ChatController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 400);
@@ -577,7 +577,7 @@ class ChatController extends Controller
 
             if (!$chatHead) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Chat not found or access denied',
                     'data' => null
                 ], 404);
@@ -590,7 +590,7 @@ class ChatController extends Controller
             });
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Search completed successfully',
                 'data' => [
                     'messages' => $formattedMessages,
@@ -601,7 +601,7 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error searching messages: ' . $e->getMessage(),
                 'data' => null
             ], 500);
@@ -621,7 +621,7 @@ class ChatController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
+                    'code' => 0,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 400);
@@ -645,14 +645,14 @@ class ChatController extends Controller
             ];
 
             return response()->json([
-                'success' => true,
+                'code' => 1,
                 'message' => 'Media uploaded successfully',
                 'data' => $mediaData
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'code' => 0,
                 'message' => 'Error uploading media: ' . $e->getMessage(),
                 'data' => null
             ], 500);

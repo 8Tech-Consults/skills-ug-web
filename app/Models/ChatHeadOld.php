@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
-use App\Models\User;
 
 class ChatHead extends Model
 {
@@ -96,12 +95,12 @@ class ChatHead extends Model
      */
     public static function getOrCreateChatHead($user1Id, $user2Id, $serviceId = null, $title = null)
     {
-        // Get user details from users table
+        // Get user details
         $user1 = User::find($user1Id);
         $user2 = User::find($user2Id);
         
         if (!$user1 || !$user2) {
-            throw new \Exception('One or both users not found. user 1: ' . $user1Id . ', user 2: ' . $user2Id);
+            throw new \Exception('One or both users not found');
         }
         
         // Ensure consistent ordering
@@ -119,22 +118,19 @@ class ChatHead extends Model
             ->first();
 
         if (!$chatHead) {
-            $chatId = 'chat_' . Str::uuid();
-            
             $chatHead = self::create([
                 'user_1_id' => $user1Id,
                 'user_2_id' => $user2Id,
-                'user_1_name' => $user1->name ?? 'User',
-                'user_2_name' => $user2->name ?? 'User', 
-                'user_1_photo' => '', // User model doesn't have avatar field
-                'user_2_photo' => '', // User model doesn't have avatar field
+                'user_1_name' => $user1->name,
+                'user_2_name' => $user2->name,
+                'user_1_photo' => $user1->avatar ?? '',
+                'user_2_photo' => $user2->avatar ?? '',
                 'related_service_id' => $serviceId,
                 'chat_type' => $serviceId ? 'service' : 'direct',
                 'chat_subject' => $title,
                 'chat_status' => 'active',
                 'user_1_unread_count' => 0,
                 'user_2_unread_count' => 0,
-                'chat_id' => $chatId,
             ]);
         }
 
@@ -147,20 +143,16 @@ class ChatHead extends Model
     public function updateWithLatestMessage(ChatMessage $message)
     {
         $this->update([
-            'last_message_body' => $this->getMessagePreview($message),
-            'last_message_sent_by_user_id' => $message->sender_id,
-            'last_message_sender_id' => $message->sender_id,
-            'last_message_receiver_id' => $message->receiver_id,
-            'last_message_time' => $message->created_at,
-            'last_message_type' => $message->message_type ?? 'text',
-            'last_message_status' => 'sent',
+            'last_message' => $this->getMessagePreview($message),
+            'last_message_user_id' => $message->sender_id,
+            'last_message_at' => $message->created_at,
         ]);
 
         // Update unread count for receiver
-        if ($message->receiver_id == $this->user_1_id) {
-            $this->increment('user_1_unread_count');
-        } elseif ($message->receiver_id == $this->user_2_id) {
-            $this->increment('user_2_unread_count');
+        if ($message->receiver_id == $this->user1_id) {
+            $this->increment('unread_count_user1');
+        } else {
+            $this->increment('unread_count_user2');
         }
     }
 
@@ -169,13 +161,11 @@ class ChatHead extends Model
      */
     private function getMessagePreview(ChatMessage $message)
     {
-        $content = $message->message_content ?? $message->body ?? '';
-        
-        switch ($message->message_type ?? 'text') {
+        switch ($message->message_type) {
             case 'text':
-                return strlen($content) > 50 ? 
-                    substr($content, 0, 50) . '...' : 
-                    $content;
+                return strlen($message->message_content) > 50 ? 
+                    substr($message->message_content, 0, 50) . '...' : 
+                    $message->message_content;
             case 'image':
                 return '📷 Photo';
             case 'video':
@@ -194,18 +184,18 @@ class ChatHead extends Model
      */
     public function markAsRead($userId)
     {
-        if ($userId == $this->user_1_id) {
-            $this->update(['user_1_unread_count' => 0]);
-        } elseif ($userId == $this->user_2_id) {
-            $this->update(['user_2_unread_count' => 0]);
+        if ($userId == $this->user1_id) {
+            $this->update(['unread_count_user1' => 0]);
+        } elseif ($userId == $this->user2_id) {
+            $this->update(['unread_count_user2' => 0]);
         }
 
         // Update message status to read
         ChatMessage::where('chat_id', $this->chat_id)
             ->where('receiver_id', $userId)
-            ->where('status', '!=', 'read')
+            ->whereNull('read_at')
             ->update([
-                'status' => 'read',
+                'is_read' => true,
                 'read_at' => now(),
             ]);
     }
@@ -215,25 +205,17 @@ class ChatHead extends Model
      */
     public function getChatPartner($userId)
     {
-        if ($userId == $this->user_1_id) {
-            // Return user 2 details
-            return [
-                'id' => $this->user_2_id,
-                'name' => $this->user_2_name,
-                'email' => '', // Not stored in chat_heads
-                'avatar' => $this->user_2_photo ?? '',
-            ];
-        } elseif ($userId == $this->user_2_id) {
-            // Return user 1 details
-            return [
-                'id' => $this->user_1_id,
-                'name' => $this->user_1_name,
-                'email' => '', // Not stored in chat_heads
-                'avatar' => $this->user_1_photo ?? '',
-            ];
-        }
+        $partnerId = ($userId == $this->user1_id) ? $this->user2_id : $this->user1_id;
         
-        return null;
+        // Get partner details from User model
+        $partner = User::find($partnerId);
+        
+        return $partner ? [
+            'id' => $partner->id,
+            'name' => $partner->name,
+            'email' => $partner->email,
+            'avatar' => $partner->avatar ?? '',
+        ] : null;
     }
 
     /**
@@ -241,10 +223,10 @@ class ChatHead extends Model
      */
     public function getUnreadCount($userId)
     {
-        if ($userId == $this->user_1_id) {
-            return $this->user_1_unread_count ?? 0;
-        } elseif ($userId == $this->user_2_id) {
-            return $this->user_2_unread_count ?? 0;
+        if ($userId == $this->user1_id) {
+            return $this->unread_count_user1;
+        } elseif ($userId == $this->user2_id) {
+            return $this->unread_count_user2;
         }
         return 0;
     }
@@ -255,30 +237,50 @@ class ChatHead extends Model
     public static function getUserChats($userId, $includeArchived = false)
     {
         $query = self::where(function ($query) use ($userId) {
-                $query->where('user_1_id', $userId)
-                      ->orWhere('user_2_id', $userId);
+                $query->where('user1_id', $userId)
+                      ->orWhere('user2_id', $userId);
             })
-            ->where('chat_status', 'active');
+            ->where('is_active', true);
 
-        return $query->orderBy('last_message_time', 'desc')->get();
+        if (!$includeArchived) {
+            $query->where(function ($query) use ($userId) {
+                $query->where(function ($subQuery) use ($userId) {
+                    // For user1: not archived
+                    $subQuery->where('user1_id', $userId)
+                            ->where('is_archived_user1', false);
+                })->orWhere(function ($subQuery) use ($userId) {
+                    // For user2: not archived
+                    $subQuery->where('user2_id', $userId)
+                            ->where('is_archived_user2', false);
+                });
+            });
+        }
+
+        return $query->orderBy('last_message_at', 'desc')->get();
     }
 
     /**
-     * Archive/unarchive chat for a user (not supported in current schema)
+     * Archive/unarchive chat for a user
      */
     public function toggleArchive($userId)
     {
-        // Current schema doesn't support per-user archive
-        // Could be added as JSON in notification preferences or separate table
-        return false;
+        if ($userId == $this->user1_id) {
+            $this->update(['is_archived_user1' => !$this->is_archived_user1]);
+        } elseif ($userId == $this->user2_id) {
+            $this->update(['is_archived_user2' => !$this->is_archived_user2]);
+        }
     }
 
     /**
-     * Check if chat is archived for a user (not supported in current schema)
+     * Check if chat is archived for a user
      */
     public function isArchivedFor($userId)
     {
-        // Current schema doesn't support per-user archive
+        if ($userId == $this->user1_id) {
+            return $this->is_archived_user1;
+        } elseif ($userId == $this->user2_id) {
+            return $this->is_archived_user2;
+        }
         return false;
     }
 
@@ -287,12 +289,10 @@ class ChatHead extends Model
      */
     public function toggleMute($userId)
     {
-        if ($userId == $this->user_1_id) {
-            $current = $this->user_1_notification_preference ?? 'enabled';
-            $this->update(['user_1_notification_preference' => $current === 'muted' ? 'enabled' : 'muted']);
-        } elseif ($userId == $this->user_2_id) {
-            $current = $this->user_2_notification_preference ?? 'enabled';
-            $this->update(['user_2_notification_preference' => $current === 'muted' ? 'enabled' : 'muted']);
+        if ($userId == $this->user1_id) {
+            $this->update(['is_muted_user1' => !$this->is_muted_user1]);
+        } elseif ($userId == $this->user2_id) {
+            $this->update(['is_muted_user2' => !$this->is_muted_user2]);
         }
     }
 
@@ -301,10 +301,10 @@ class ChatHead extends Model
      */
     public function isMutedFor($userId)
     {
-        if ($userId == $this->user_1_id) {
-            return $this->user_1_notification_preference === 'muted';
-        } elseif ($userId == $this->user_2_id) {
-            return $this->user_2_notification_preference === 'muted';
+        if ($userId == $this->user1_id) {
+            return $this->is_muted_user1;
+        } elseif ($userId == $this->user2_id) {
+            return $this->is_muted_user2;
         }
         return false;
     }
@@ -314,7 +314,7 @@ class ChatHead extends Model
      */
     public function service()
     {
-        return $this->belongsTo(Service::class, 'related_service_id');
+        return $this->belongsTo(Service::class, 'service_id');
     }
 
     /**
@@ -344,11 +344,11 @@ class ChatHead extends Model
      */
     public function user1()
     {
-        return $this->belongsTo(User::class, 'user_1_id');
+        return $this->belongsTo(User::class, 'user1_id');
     }
 
     public function user2()
     {
-        return $this->belongsTo(User::class, 'user_2_id');
+        return $this->belongsTo(User::class, 'user2_id');
     }
 }

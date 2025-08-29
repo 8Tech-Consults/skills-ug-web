@@ -444,6 +444,8 @@ Route::prefix('bookmarks')->group(function () {
 Route::get('chat-messages', [ChatController::class, 'getChatMessages']);
 Route::post('send-message', [ChatController::class, 'sendMessageLegacy']);
 Route::get('my-chats', [ChatController::class, 'getMyChats']);
+Route::get('chat-heads', [ChatController::class, 'getMyChats']); // Alternative endpoint name
+Route::post('create-chat-head', [ChatController::class, 'createOrGetChatHead']);
 
 // Chat Routes
 Route::prefix('chats')->group(function () {

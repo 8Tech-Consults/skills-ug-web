@@ -22,6 +22,17 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+Route::get("do-register", function (Request $r) {
+    $data = [
+        'body' => '<p>This is a test email body.</p>',
+        'subject' => 'Test Subject',
+        'email' => 'mubs0x@gmail.com',
+        'name' => 'Test User',
+        // 'use_empty_template' => true, // Uncomment to use mails.mail-2
+    ];
+    Utils::mail_sender($data);
+    die("done");
+});
 Route::get("verify-email", function (Request $r) {
     $code = $r->code;
     $url = env('WEB_URL') . "/auth/verify-email?code=" . $code;

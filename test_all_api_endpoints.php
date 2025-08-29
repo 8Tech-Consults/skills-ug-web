@@ -719,7 +719,7 @@ class ApiTester
         
         if ($error) {
             return [
-                'success' => false,
+                'code' => 0,
                 'error' => $error,
                 'http_code' => $httpCode,
                 'data' => null

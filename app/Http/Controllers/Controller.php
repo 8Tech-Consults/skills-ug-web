@@ -19,7 +19,7 @@ use Illuminate\Routing\Controller as BaseController;
  *      description="Local server"
  * )
  * @OA\Server(
- *      url="https://skills-api.comfarnet.org/api",
+ *      url="https://skills-ug-api.8technologies.net/api",
  *      description="Production server"
  * )
  */

@@ -17,9 +17,11 @@ use App\Models\Person;
 use App\Models\Product;
 use App\Models\Sacco;
 use App\Models\ServiceProvider;
+use App\Models\User;
 use App\Models\Utils;
 use App\Traits\ApiResponser;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Encore\Admin\Auth\Database\Administrator;
 use Exception;
 use Illuminate\Http\Request;
@@ -35,7 +37,11 @@ class ApiResurceController extends Controller
 
     public function index(Request $r, $model)
     {
-        $u = Auth::user();
+        $query = auth('api')->user();
+        if ($query == null) {
+            return $this->error('User not found.');
+        }
+        $u = User::find($query->id);
         if ($u == null) {
             return $this->error('User not found.');
         }
@@ -55,7 +61,7 @@ class ApiResurceController extends Controller
             if (substr($k, 0, 2) == 'q_') {
                 $conditions[substr($k, 2, strlen($k))] = trim($v);
             }
-        }  
+        }
 
         //is_not_private
         if (!isset($_GET['is_not_private'])) {
@@ -64,7 +70,7 @@ class ApiResurceController extends Controller
 
         if ($_GET['is_not_private'] == '1') {
             if (!isset($_GET['is_not_private_by'])) {
-                return $this->error('is_not_private_by parameter is required when is_not_private is 1. '.json_encode($_GET)); 
+                return $this->error('is_not_private_by parameter is required when is_not_private is 1. ' . json_encode($_GET));
             }
             $is_not_private_by = $_GET['is_not_private_by'];
             // $conditions[$is_not_private_by] = $u->id;
@@ -165,15 +171,16 @@ class ApiResurceController extends Controller
 
 
         $className = "App\Models\\" . $model;
-        $id = ((int)($r->online_id));
+
+        $id = null;
+        if (isset($r->online_id)) {
+            $id = ((int)($r->online_id));
+        }
         $obj = $className::find($id);
 
 
         if ($obj == null) {
-            return Utils::response([
-                'status' => 0,
-                'message' => "Item not found.",
-            ]);
+            $obj = new $className();
         }
 
 
@@ -182,16 +189,29 @@ class ApiResurceController extends Controller
             unset($_POST['online_id']);
         }
 
-        foreach ($_POST as $key => $value) {
+
+        $table_name = $obj->getTable();
+        $columns = Schema::getColumnListing($table_name);
+        $except = ['id', 'created_at', 'updated_at', 'password', 'remember_token', 'company_id', 'status', 'deleted_at'];
+        $data = $r->all();
+
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $columns)) {
+                continue;
+            }
+            if (in_array($key, $except)) {
+                continue;
+            }
             $obj->$key = $value;
         }
+
 
 
         $success = false;
         $msg = "";
         try {
             $obj->save();
-            $msg = "Updated successfully.";
+            $msg = "Submitted successfully.";
             $success = true;
         } catch (Exception $e) {
             $success = false;

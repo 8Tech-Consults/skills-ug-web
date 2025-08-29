@@ -16,53 +16,43 @@ class ChatMessage extends Model
     protected $fillable = [
         'message_id',
         'chat_id',
-        'chat_head_id',
         'sender_id',
         'receiver_id',
-        'user_1_id',
-        'user_2_id',
-        'type',
-        'body',
-        'status',
-        'audio_url',
-        'video_url',
-        'image_url',
-        'document_url',
-        'document_name',
-        'document_size',
-        'address',
-        'gps_latitude',
-        'gps_longitude',
-        'gps_location',
-        'reply_to_message_id',
-        'reply_preview',
-        'delivered_at',
+        'message_type',
+        'message_content',
+        'media_url',
+        'media_type',
+        'media_size',
+        'thumbnail_url',
+        'is_read',
         'read_at',
-        'message_priority',
-        'metadata',
-        'encryption_key',
+        'is_delivered',
+        'delivered_at',
         'is_edited',
         'edited_at',
         'is_deleted',
         'deleted_at',
+        'reply_to_message_id',
         'reactions',
+        'metadata',
+        'is_system_message',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'delivered_at' => 'datetime',
         'read_at' => 'datetime',
+        'delivered_at' => 'datetime',
         'edited_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'is_read' => 'boolean',
+        'is_delivered' => 'boolean',
         'is_edited' => 'boolean',
         'is_deleted' => 'boolean',
-        'chat_head_id' => 'integer',
-        'sender_id' => 'integer',
-        'receiver_id' => 'integer',
-        'user_1_id' => 'integer',
-        'user_2_id' => 'integer',
-        'reply_to_message_id' => 'integer',
+        'is_system_message' => 'boolean',
+        'media_size' => 'integer',
+        'reactions' => 'array',
+        'metadata' => 'array',
     ];
 
     /**
@@ -77,23 +67,11 @@ class ChatMessage extends Model
             if (!$message->message_id) {
                 $message->message_id = 'msg_' . Str::uuid();
             }
-            
-            // Set defaults
-            $message->status = $message->status ?? 'sent';
-            $message->type = $message->type ?? 'text';
-            $message->message_priority = $message->message_priority ?? 'normal';
-            $message->is_edited = $message->is_edited ?? false;
-            $message->is_deleted = $message->is_deleted ?? false;
         });
 
         static::created(function ($message) {
             // Update chat head with latest message
             $chatHead = ChatHead::where('chat_id', $message->chat_id)->first();
-            if (!$chatHead && $message->chat_head_id) {
-                // Try to find by chat_head_id if chat_id didn't work
-                $chatHead = ChatHead::find($message->chat_head_id);
-            }
-            
             if ($chatHead) {
                 $chatHead->updateWithLatestMessage($message);
             }
@@ -105,32 +83,13 @@ class ChatMessage extends Model
      */
     public static function createMessage($chatId, $senderId, $receiverId, $content, $type = 'text', $mediaData = [])
     {
-        // Find chat head by chat_id or create it
-        $chatHead = ChatHead::where('chat_id', $chatId)->first();
-        
-        if (!$chatHead) {
-            // If no chat_id match, try to find by users
-            $chatHead = ChatHead::where(function($query) use ($senderId, $receiverId) {
-                $query->where('user_1_id', $senderId)->where('user_2_id', $receiverId);
-            })->orWhere(function($query) use ($senderId, $receiverId) {
-                $query->where('user_1_id', $receiverId)->where('user_2_id', $senderId);
-            })->first();
-        }
-        
-        if (!$chatHead) {
-            $chatHead = ChatHead::getOrCreateChatHead($senderId, $receiverId);
-        }
-
         $messageData = [
-            'chat_id' => $chatHead->chat_id,
-            'chat_head_id' => $chatHead->id,
+            'chat_id' => $chatId,
             'sender_id' => $senderId,
             'receiver_id' => $receiverId,
-            'user_1_id' => $chatHead->user_1_id,
-            'user_2_id' => $chatHead->user_2_id,
-            'type' => $type,
-            'body' => $content,
-            'status' => 'sent',
+            'message_type' => $type,
+            'message_content' => $content,
+            'is_delivered' => true,
             'delivered_at' => now(),
         ];
 
@@ -147,9 +106,9 @@ class ChatMessage extends Model
      */
     public function markAsRead()
     {
-        if (!$this->read_at) {
+        if (!$this->is_read) {
             $this->update([
-                'status' => 'read',
+                'is_read' => true,
                 'read_at' => now(),
             ]);
         }
@@ -161,7 +120,7 @@ class ChatMessage extends Model
     public function editContent($newContent)
     {
         $this->update([
-            'body' => $newContent,
+            'message_content' => $newContent,
             'is_edited' => true,
             'edited_at' => now(),
         ]);
@@ -183,7 +142,7 @@ class ChatMessage extends Model
      */
     public function addReaction($userId, $emoji)
     {
-        $reactions = $this->reactions ? json_decode($this->reactions, true) : [];
+        $reactions = $this->reactions ?: [];
         
         // Remove existing reaction from this user
         $reactions = array_filter($reactions, function ($reaction) use ($userId) {
@@ -197,7 +156,7 @@ class ChatMessage extends Model
             'created_at' => now()->toISOString(),
         ];
 
-        $this->update(['reactions' => json_encode($reactions)]);
+        $this->update(['reactions' => $reactions]);
     }
 
     /**
@@ -205,13 +164,82 @@ class ChatMessage extends Model
      */
     public function removeReaction($userId)
     {
-        $reactions = $this->reactions ? json_decode($this->reactions, true) : [];
+        $reactions = $this->reactions ?: [];
         
         $reactions = array_filter($reactions, function ($reaction) use ($userId) {
             return $reaction['user_id'] !== $userId;
         });
 
-        $this->update(['reactions' => json_encode(array_values($reactions))]);
+        $this->update(['reactions' => array_values($reactions)]);
+    }
+
+    /**
+     * Get reply preview for quoted messages
+     */
+    public function getReplyPreview()
+    {
+        if (!$this->reply_to_message_id) {
+            return null;
+        }
+
+        $originalMessage = self::where('message_id', $this->reply_to_message_id)->first();
+        
+        if (!$originalMessage) {
+            return null;
+        }
+
+        $preview = '';
+        switch ($originalMessage->message_type) {
+            case 'text':
+                $preview = strlen($originalMessage->message_content) > 30 ? 
+                    substr($originalMessage->message_content, 0, 30) . '...' : 
+                    $originalMessage->message_content;
+                break;
+            case 'image':
+                $preview = '📷 Photo';
+                break;
+            case 'video':
+                $preview = '🎥 Video';
+                break;
+            case 'voice':
+                $preview = '🎵 Voice message';
+                break;
+            case 'file':
+                $preview = '📄 File';
+                break;
+            default:
+                $preview = 'Message';
+        }
+
+        return [
+            'message_id' => $originalMessage->message_id,
+            'sender_id' => $originalMessage->sender_id,
+            'content' => $preview,
+            'type' => $originalMessage->message_type,
+        ];
+    }
+
+    /**
+     * Check if message can be edited
+     */
+    public function canBeEdited($userId)
+    {
+        // Only sender can edit, and only text messages within 24 hours
+        return $this->sender_id == $userId && 
+               $this->message_type == 'text' && 
+               !$this->is_deleted &&
+               $this->created_at->diffInHours(now()) < 24;
+    }
+
+    /**
+     * Check if message can be deleted
+     */
+    public function canBeDeleted($userId)
+    {
+        // Only sender can delete, within reasonable time frame
+        return $this->sender_id == $userId && 
+               !$this->is_deleted &&
+               $this->created_at->diffInHours(now()) < 48;
     }
 
     /**
@@ -233,43 +261,28 @@ class ChatMessage extends Model
             'chat_id' => $this->chat_id,
             'sender_id' => $this->sender_id,
             'receiver_id' => $this->receiver_id,
-            'type' => $this->type,
-            'content' => $this->body,
-            'is_read' => $this->status === 'read',
-            'is_delivered' => $this->status !== 'pending',
+            'type' => $this->message_type,
+            'content' => $this->message_content,
+            'is_read' => $this->is_read,
+            'is_delivered' => $this->is_delivered,
             'is_edited' => $this->is_edited,
-            'reactions' => $this->reactions ? json_decode($this->reactions, true) : [],
+            'reactions' => $this->reactions ?: [],
             'created_at' => $this->created_at->toISOString(),
             'read_at' => $this->read_at?->toISOString(),
             'edited_at' => $this->edited_at?->toISOString(),
         ];
 
-        // Add media URLs based on type
-        switch ($this->type) {
-            case 'image':
-                $data['media_url'] = $this->image_url;
-                break;
-            case 'video':
-                $data['media_url'] = $this->video_url;
-                break;
-            case 'audio':
-            case 'voice':
-                $data['media_url'] = $this->audio_url;
-                break;
-            case 'document':
-            case 'file':
-                $data['media_url'] = $this->document_url;
-                $data['document_name'] = $this->document_name;
-                $data['document_size'] = $this->document_size;
-                break;
+        // Add media data if present
+        if ($this->media_url) {
+            $data['media_url'] = $this->media_url;
+            $data['media_type'] = $this->media_type;
+            $data['media_size'] = $this->media_size;
+            $data['thumbnail_url'] = $this->thumbnail_url;
         }
 
         // Add reply data if present
         if ($this->reply_to_message_id) {
-            $data['reply_to'] = [
-                'message_id' => $this->reply_to_message_id,
-                'preview' => $this->reply_preview,
-            ];
+            $data['reply_to'] = $this->getReplyPreview();
         }
 
         return $data;
@@ -280,7 +293,7 @@ class ChatMessage extends Model
      */
     public function chatHead()
     {
-        return $this->belongsTo(ChatHead::class, 'chat_head_id');
+        return $this->belongsTo(ChatHead::class, 'chat_id', 'chat_id');
     }
 
     /**
@@ -288,7 +301,7 @@ class ChatMessage extends Model
      */
     public function sender()
     {
-        return $this->belongsTo(Client::class, 'sender_id');
+        return $this->belongsTo(User::class, 'sender_id');
     }
 
     /**
@@ -296,7 +309,7 @@ class ChatMessage extends Model
      */
     public function receiver()
     {
-        return $this->belongsTo(Client::class, 'receiver_id');
+        return $this->belongsTo(User::class, 'receiver_id');
     }
 
     /**
@@ -324,31 +337,10 @@ class ChatMessage extends Model
     public static function searchInChat($chatId, $searchTerm)
     {
         return self::where('chat_id', $chatId)
-            ->where('type', 'text')
-            ->where('body', 'LIKE', '%' . $searchTerm . '%')
+            ->where('message_type', 'text')
+            ->where('message_content', 'LIKE', '%' . $searchTerm . '%')
             ->where('is_deleted', false)
             ->orderBy('created_at', 'desc')
             ->get();
-    }
-
-    // Accessors for backward compatibility
-    public function getMessageContentAttribute()
-    {
-        return $this->body;
-    }
-    
-    public function getMessageTypeAttribute()
-    {
-        return $this->type;
-    }
-    
-    public function getIsReadAttribute()
-    {
-        return $this->status === 'read';
-    }
-    
-    public function getIsDeliveredAttribute()
-    {
-        return $this->status !== 'pending';
     }
 }

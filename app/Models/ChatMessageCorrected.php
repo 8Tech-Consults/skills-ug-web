@@ -288,7 +288,7 @@ class ChatMessage extends Model
      */
     public function sender()
     {
-        return $this->belongsTo(Client::class, 'sender_id');
+        return $this->belongsTo(User::class, 'sender_id');
     }
 
     /**
@@ -296,7 +296,7 @@ class ChatMessage extends Model
      */
     public function receiver()
     {
-        return $this->belongsTo(Client::class, 'receiver_id');
+        return $this->belongsTo(User::class, 'receiver_id');
     }
 
     /**
