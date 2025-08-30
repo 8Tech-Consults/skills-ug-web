@@ -2226,18 +2226,36 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
      */
     public function register(Request $r)
     {
-        if ($r->phone_number_1 == null) {
-            return $this->error('Phone number is required.');
-        }
-
-        $phone_number = Utils::prepare_phone_number(trim($r->phone_number));
-
-
-        if (!Utils::phone_number_is_valid($phone_number)) {
-            return $this->error('Invalid phone number. -=>' . $phone_number);
-        }
-
-        if ($r->password == null) {
+        // Phone number is now optional to comply with Apple App Store guidelines
+        $phone_number = null;
+        $phone_input = $r->phone_number_1 ?: $r->phone_number;
+        
+        // Only process phone number if it's actually provided and not empty
+        if (!empty($phone_input) && trim($phone_input) !== '') {
+            $phone_number = Utils::prepare_phone_number(trim($phone_input));
+            
+            if (!Utils::phone_number_is_valid($phone_number)) {
+                return $this->error('Invalid phone number. -=>' . $phone_number);
+            }
+            
+            // Check if phone number already exists (only check for non-null phone numbers)
+            $u = Administrator::where('phone_number_1', $phone_number)
+                ->whereNotNull('phone_number_1')
+                ->where('phone_number_1', '!=', '')
+                ->first();
+            if ($u != null) {
+                return $this->error('User with same phone number already exists.');
+            }
+            
+            // Also check username (in case phone is used as username)
+            $u2 = Administrator::where('username', $phone_number)
+                ->whereNotNull('username')
+                ->where('username', '!=', '')
+                ->first();
+            if ($u2 != null) {
+                return $this->error('User with same phone number already exists.');
+            }
+        }        if ($r->password == null) {
             return $this->error('Password is required.');
         }
 
@@ -2250,9 +2268,13 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             return $this->error('Name is required.');
         }
 
+        // Email is now required if phone number is not provided
         $email = trim($r->email);
-        if ($email != null) {
-            $email = trim($email);
+        if ($email == null || $email == '') {
+            if ($phone_number == null) {
+                return $this->error('Either email or phone number is required.');
+            }
+        } else {
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return $this->error('Invalid email address.');
             }
@@ -2290,26 +2312,22 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
         }
 
         //user with same email
-        $u = Administrator::where('email', $email)->first();
-        if ($u != null) {
-            return $this->error('User with same email already exists.');
-        }
+        if ($email != null) {
+            $u = Administrator::where('email', $email)->first();
+            if ($u != null) {
+                return $this->error('User with same email already exists.');
+            }
 
-        // same username
-        $u = Administrator::where('username', $phone_number)->first();
-        if ($u != null) {
-            return $this->error('User with same phone number already exists.');
+            //same user name as email
+            $u = Administrator::where('username', $email)->first();
+            if ($u != null) {
+                return $this->error('User with same email already exists.');
+            }
         }
-
-        //same user name as email
-        $u = Administrator::where('username', $email)->first();
-        if ($u != null) {
-            return $this->error('User with same email already exists.');
-        }
-
 
         $user->phone_number_1 = $phone_number;
-        $user->username = $phone_number;
+        // Use email as username if available, otherwise use phone number
+        $user->username = $email != null ? $email : $phone_number;
         $user->email = $email;
         $user->name = $name;
         $user->password = password_hash(trim($r->password), PASSWORD_DEFAULT);
@@ -2700,6 +2718,86 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
 
             return $this->success(null, 'Account deleted successfully');
         } catch (Exception $e) {
+            return $this->error('Account deletion failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete user account and related data robustly (no PIN, just confirmation)
+     */
+    public function delete_account_api(Request $request)
+    {
+        try {
+            $user = auth('api')->user();
+            if (!$user) {
+                return $this->error('User not authenticated');
+            }
+            if ($user->id == 1) {
+                return $this->error('Super admin account cannot be deleted.');
+            }
+
+            // Try to delete related data, ignore errors
+            $userId = $user->id;
+            $errors = [];
+            // Chat heads
+            try {
+                \App\Models\ChatHead::where('user_1_id', $userId)->orWhere('user_2_id', $userId)->delete();
+            } catch (\Throwable $e) {
+                $errors[] = 'chat_heads';
+            }
+            // Chat messages
+            try {
+                \App\Models\ChatMessage::where('sender_id', $userId)->orWhere('receiver_id', $userId)->delete();
+            } catch (\Throwable $e) {
+                $errors[] = 'chat_messages';
+            }
+            // Job applications
+            try {
+                \App\Models\JobApplication::where('applicant_id', $userId)->delete();
+            } catch (\Throwable $e) {
+                $errors[] = 'job_applications';
+            }
+            // Jobs
+            try {
+                \App\Models\Job::where('posted_by_id', $userId)->delete();
+            } catch (\Throwable $e) {
+                $errors[] = 'jobs';
+            }
+            // Services
+            try {
+                \App\Models\Service::where('provider_id', $userId)->delete();
+            } catch (\Throwable $e) {
+                $errors[] = 'services';
+            }
+            // Company follows
+            try {
+                \App\Models\CompanyFollow::where('user_id', $userId)->orWhere('company_id', $userId)->delete();
+            } catch (\Throwable $e) {
+                $errors[] = 'company_follows';
+            }
+            // View records
+            try {
+                \App\Models\ViewRecord::where('viewer_id', $userId)->orWhere('item_id', $userId)->delete();
+            } catch (\Throwable $e) {
+                $errors[] = 'view_records';
+            }
+            // Add more related deletions as needed
+
+            // Finally, delete the user
+            try {
+                $user->delete();
+            } catch (\Throwable $e) {
+                return $this->error('Failed to delete user account.');
+            }
+
+            // Logout user (invalidate token)
+            try {
+                JWTAuth::invalidate(JWTAuth::getToken());
+            } catch (\Throwable $e) {
+            }
+
+            return $this->success(null, 'Account and related data deleted successfully.');
+        } catch (\Throwable $e) {
             return $this->error('Account deletion failed: ' . $e->getMessage());
         }
     }
@@ -3218,7 +3316,7 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
             ])->first();
 
             if ($existingSubscription) {
-                return $this->error('You are already subscribed to this course.');
+                return $this->error('You are already subscribed to this course. user id: ' . $user->id . " course id: " . $r->course_id);
             }
 
             // Get course details

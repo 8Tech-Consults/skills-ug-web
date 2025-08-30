@@ -19,7 +19,9 @@ class CourseMaterial extends Model
         'unit_id',
         'title',
         'type',
+        'content_source',
         'content_url',
+        'external_url',
         'content_text',
         'duration_seconds',
         'file_size',
@@ -141,5 +143,101 @@ class CourseMaterial extends Model
             default:
                 return '📄';
         }
+    }
+
+    /**
+     * Get effective content URL based on source type
+     */
+    public function getEffectiveContentUrlAttribute()
+    {
+        if ($this->content_source === 'external' && !empty($this->external_url)) {
+            return $this->external_url;
+        }
+        
+        return $this->content_url ?? '';
+    }
+
+    /**
+     * Check if material is external source
+     */
+    public function getIsExternalSourceAttribute()
+    {
+        return strtolower($this->content_source) === 'external';
+    }
+
+    /**
+     * Check if material is file source
+     */
+    public function getIsFileSourceAttribute()
+    {
+        return strtolower($this->content_source) === 'file';
+    }
+
+    /**
+     * Detect content type based on URL and extension
+     */
+    public function getDetectedContentTypeAttribute()
+    {
+        if ($this->type === 'quiz') {
+            return 'quiz';
+        }
+
+        $url = strtolower($this->effective_content_url);
+        
+        // YouTube detection
+        if (strpos($url, 'youtube.com') !== false || 
+            strpos($url, 'youtu.be') !== false ||
+            strpos($url, 'vimeo.com') !== false) {
+            return 'video';
+        }
+
+        // Video extensions
+        $videoExts = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v', '.3gp', '.ts', '.m3u8'];
+        foreach ($videoExts as $ext) {
+            if (str_ends_with($url, $ext)) {
+                return 'video';
+            }
+        }
+
+        // Audio extensions
+        $audioExts = ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a'];
+        foreach ($audioExts as $ext) {
+            if (str_ends_with($url, $ext)) {
+                return 'audio';
+            }
+        }
+
+        // PDF
+        if (str_ends_with($url, '.pdf')) {
+            return 'pdf';
+        }
+
+        // Image extensions
+        $imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'];
+        foreach ($imageExts as $ext) {
+            if (str_ends_with($url, $ext)) {
+                return 'image';
+            }
+        }
+
+        // Document extensions
+        $docExts = ['.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.rtf'];
+        foreach ($docExts as $ext) {
+            if (str_ends_with($url, $ext)) {
+                return 'document';
+            }
+        }
+
+        // External link without specific extension
+        if ($this->is_external_source) {
+            return 'external_link';
+        }
+
+        // Default for text content
+        if (!empty($this->content_text)) {
+            return 'text';
+        }
+
+        return 'document';
     }
 }

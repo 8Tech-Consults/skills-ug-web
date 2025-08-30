@@ -260,10 +260,7 @@ class CourseCertificateController extends AdminController
                 ->rules('required')
                 ->default('active');
                 
-            $form->datetime('issued_at', __('Issue Date'))
-                ->default(date('Y-m-d H:i:s'))
-                ->rules('required')
-                ->help('When the certificate was issued');
+      
                 
             $form->datetime('expires_at', __('Expiry Date'))
                 ->help('Leave empty for no expiration');

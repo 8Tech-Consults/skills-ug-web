@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureTokenIsValid;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,7 +58,7 @@ Route::get('jobs/{id}', [MainController::class, 'job_single']);
 Route::get('cvs/{id}', [MainController::class, 'cv_single']);
 Route::POST("post-media-upload", [ApiAuthController::class, 'upload_media']);
 Route::get('my-roles', [ApiAuthController::class, 'my_roles']);
-Route::POST("delete-account", [ApiAuthController::class, 'delete_profile']);
+Route::POST("delete-account", [ApiAuthController::class, 'delete_account_api']);
 Route::POST("password-change", [ApiAuthController::class, 'password_change']);
 Route::POST("email-verify", [ApiAuthController::class, 'email_verify']);
 Route::POST("send-mail-verification-code", [MainController::class, 'send_mail_verification_code']);
@@ -75,7 +76,7 @@ Route::get('blog-tags', [MainController::class, 'blog_tags']);
 Route::POST('blog-posts/{id}/like', [MainController::class, 'blog_post_like']);
 Route::POST('blog-posts/{id}/view', [MainController::class, 'blog_post_view']);
 
-// Eight Learning Course API Routes
+// Eight Learning Course API Routes (Professional)
 Route::get('course-categories', [ApiAuthController::class, 'course_categories']);
 Route::get('courses', [ApiAuthController::class, 'courses']);
 Route::get('courses/{id}', [ApiAuthController::class, 'course_single']);
@@ -98,26 +99,46 @@ Route::prefix('gdpr')->group(function () {
     Route::get('data-summary', [\App\Http\Controllers\Api\GdprController::class, 'getDataSummary']);
 });
 
-// Enhanced Learning System API Routes
+// Enhanced Learning System API Routes (Professional)
 use App\Http\Controllers\Api\LearningController;
 use App\Http\Controllers\Api\GdprController;
 
 Route::middleware('auth:sanctum')->group(function () {
-    // Learning Dashboard
+    // Course Structure & Content
+    Route::get('learning/course-units/{courseId}', [LearningController::class, 'getCourseUnits']);
+    Route::get('learning/course-materials/{unitId}', [LearningController::class, 'getUnitMaterials']);
+    Route::get('learning/course-quizzes/{unitId}', [LearningController::class, 'getUnitQuizzes']);
+    
+    // Learning Dashboard & Progress
     Route::get('learning/dashboard', [LearningController::class, 'getLearningDashboard']);
-
-    // Course Learning
     Route::get('learning/courses/{courseId}', [LearningController::class, 'getCourseForLearning']);
     Route::get('learning/materials/{materialId}', [LearningController::class, 'getMaterialContent']);
+    
+    // Progress Tracking
     Route::post('learning/progress', [LearningController::class, 'updateMaterialProgress']);
-
-    // Certificates
+    Route::get('learning/course-progress/{courseId}', [LearningController::class, 'getCourseProgress']);
+    Route::get('learning/material-progress/{materialId}', [LearningController::class, 'getMaterialProgress']);
+    Route::post('learning/track-progress', [LearningController::class, 'trackMaterialProgress']);
+    Route::post('learning/mark-completed', [LearningController::class, 'markMaterialCompleted']);
+    Route::post('learning/update-time', [LearningController::class, 'updateTimeTracking']);
+    Route::post('learning/batch-progress', [LearningController::class, 'batchUpdateProgress']);
+    
+    // User Learning Data
+    Route::get('learning/subscriptions', [LearningController::class, 'getMySubscriptions']);
+    Route::get('learning/my-subscriptions', [LearningController::class, 'getMySubscriptions']);
+    Route::get('learning/my-progress', [LearningController::class, 'getMyProgress']);
+    
+    // Reviews & Certificates
     Route::get('learning/certificates', [LearningController::class, 'getCertificates']);
-
-    // Reviews
     Route::post('learning/reviews', [LearningController::class, 'submitCourseReview']);
-
+    Route::get('learning/reviews/{courseId}', [LearningController::class, 'getCourseReviews']);
+    
+    // Quiz Management
+    Route::post('learning/quiz-answers', [LearningController::class, 'submitQuizAnswer']);
+    Route::get('learning/quiz-answers/{quizId}', [LearningController::class, 'getQuizAnswers']);
+    
     // Notifications
+    Route::get('learning/notifications', [LearningController::class, 'getNotifications']);
     Route::put('learning/notifications/{notificationId}/read', [LearningController::class, 'markNotificationAsRead']);
 });
 
@@ -125,70 +146,22 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('api/{model}', [ApiResurceController::class, 'index']);
 Route::post('api/{model}', [ApiResurceController::class, 'update']);
 
-// Eight Learning Test Routes (No Auth Required)
+// Development Helper Routes (Remove in production)
 Route::get('migrate', function () {
-    $a = \Artisan::call('migrate', ['--force' => true]);
-    $artisanOutput = \Artisan::output();
-    return response()->json([
-        'code' => 1,
-        'message' => 'Migration completed',
-        'output' => $artisanOutput
-    ]);
-});
-Route::get('test/course-categories', function () {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseCategory::all()
-    ]);
-});
-
-Route::get('test/courses', function () {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\Course::with('category')->get()
-    ]);
-});
-
-Route::get('test/course-units/{course_id}', function ($course_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseUnit::where('course_id', $course_id)->get()
-    ]);
-});
-
-Route::get('test/course-materials/{unit_id}', function ($unit_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseMaterial::where('unit_id', $unit_id)->get()
-    ]);
-});
-
-Route::get('test/course-quizzes/{unit_id}', function ($unit_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseQuiz::where('unit_id', $unit_id)->get()
-    ]);
-});
-
-Route::get('test/course-subscriptions/{user_id}', function ($user_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseSubscription::where('user_id', $user_id)->get()
-    ]);
-});
-
-Route::get('test/course-progress/{user_id}', function ($user_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseProgress::where('user_id', $user_id)->get()
-    ]);
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        return response()->json([
+            'code' => 1,
+            'message' => 'Migration completed successfully',
+            'output' => Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'code' => 0,
+            'message' => 'Migration failed',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 });
 
 // Course Progress Tracking API Routes
@@ -213,38 +186,6 @@ Route::middleware('auth:sanctum')->prefix('course-progress')->group(function () 
 
     // Batch update progress
     Route::post('batch-update', [App\Http\Controllers\Api\LearningController::class, 'batchUpdateProgress']);
-});
-
-Route::get('test/course-reviews/{course_id}', function ($course_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseReview::where('course_id', $course_id)->get()
-    ]);
-});
-
-Route::get('test/course-notifications/{user_id}', function ($user_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseNotification::where('user_id', $user_id)->get()
-    ]);
-});
-
-Route::get('test/payment-receipts/{user_id}', function ($user_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\PaymentReceipt::where('user_id', $user_id)->get()
-    ]);
-});
-
-Route::get('test/course-certificates/{user_id}', function ($user_id) {
-    return response()->json([
-        'code' => 1,
-        'message' => 'Success',
-        'data' => \App\Models\CourseCertificate::where('user_id', $user_id)->get()
-    ]);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
