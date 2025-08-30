@@ -1283,41 +1283,151 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
      */
     public function company_profile_update(Request $r)
     {
-        $u = auth('api')->user();
-        if ($u == null) {
-            return $this->error('Account not found.');
-        }
-        $u = User::find($u->id);
-        if ($u == null) {
-            return $this->error('User Account not found.');
-        }
-        $except = ['password', 'password_confirmation', 'avatar',];
         try {
-            $u = Utils::fetch_post($u, $except, $r->all());
+            $authUser = auth('api')->user();
+            if (!$authUser) {
+                return $this->error('Account not found.');
+            }
+
+            $user = User::find($authUser->id);
+            if (!$user) {
+                return $this->error('User Account not found.');
+            }
+
+            // Get all allowed company fields for update - matching database schema
+            $allowedFields = [
+                // Basic company info
+                'name', 'description', 'industry', 'mission', 'vision', 'values',
+                
+                // Database company fields (from migration)
+                'company_name', 'company_year_of_establishment', 'company_employees_range',
+                'company_country', 'company_address', 'company_district_id', 'company_sub_county_id',
+                'company_main_category_id', 'company_sub_category_id', 'company_phone_number',
+                'company_description', 'company_trade_license_no', 'company_website_url',
+                'company__email', 'company__phone', 'company_has_accessibility', 
+                'company_has_disability_inclusion_policy', 'company_tax_id',
+                'company_facebook_url', 'company_linkedin_url', 'company_operating_hours',
+                'company_certifications', 'company_ownership_type', 'company_status',
+                
+                // Direct mapping fields (for backward compatibility)
+                'website', 'email', 'phone', 'address', 'city', 'country', 'founded_year',
+                'linkedin_url', 'facebook_url', 'twitter_url', 'instagram_url',
+                'employee_count', 'has_accessibility', 'has_disability_inclusion', 'company_size'
+            ];
+
+            $updateData = $r->only($allowedFields);
+            
+            // Map mobile app fields to database fields for consistency
+            $fieldMappings = [
+                'name' => 'company_name',
+                'description' => 'company_description', 
+                'website' => 'company_website_url',
+                'phone' => 'company_phone_number',
+                'email' => 'company__email',
+                'address' => 'company_address',
+                'country' => 'company_country',
+                'founded_year' => 'company_year_of_establishment',
+                'employee_count' => 'company_employees_range',
+                'company_size' => 'company_employees_range',
+                'linkedin_url' => 'company_linkedin_url',
+                'facebook_url' => 'company_facebook_url',
+            ];
+
+            // Apply field mappings
+            foreach ($fieldMappings as $mobileField => $dbField) {
+                if (isset($updateData[$mobileField])) {
+                    $updateData[$dbField] = $updateData[$mobileField];
+                    unset($updateData[$mobileField]); // Remove original field
+                }
+            }
+            
+            // Handle company logo upload - consistent with profile avatar
+            $logoUploaded = false;
+            
+            // Method 1: Laravel file upload (React.js)
+            if ($r->hasFile('company_logo')) {
+                $logo = $r->file('company_logo');
+                $ext = $logo->getClientOriginalExtension();
+                $fileName = time() . '-' . rand(100000, 1000000) . '.' . $ext;
+                
+                // Store directly in public/storage/images/
+                $destinationPath = public_path('storage/images');
+                if (!is_dir($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                
+                $logo->move($destinationPath, $fileName);
+                $updateData['company_logo'] = 'images/' . $fileName;
+                $logoUploaded = true;
+            }
+            
+            // Method 2: Raw $_FILES upload (Mobile app)
+            if (!$logoUploaded && !empty($_FILES) && isset($_FILES['company_logo'])) {
+                try {
+                    $file = $_FILES['company_logo'];
+                    if ($file['error'] === UPLOAD_ERR_OK) {
+                        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                        $fileName = time() . '-' . rand(100000, 1000000) . '.' . $ext;
+                        
+                        // Store directly in public/storage/images/
+                        $destinationPath = public_path('storage/images');
+                        if (!is_dir($destinationPath)) {
+                            mkdir($destinationPath, 0755, true);
+                        }
+                        
+                        $destination = $destinationPath . '/' . $fileName;
+                        if (move_uploaded_file($file['tmp_name'], $destination)) {
+                            $updateData['company_logo'] = 'images/' . $fileName;
+                            $logoUploaded = true;
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    Log::error('Company logo upload failed: ' . $th->getMessage());
+                }
+            }
+
+            // Handle company banner upload (similar to logo)
+            if ($r->hasFile('company_banner')) {
+                $banner = $r->file('company_banner');
+                $ext = $banner->getClientOriginalExtension();
+                $fileName = time() . '-' . rand(100000, 1000000) . '.' . $ext;
+                
+                $destinationPath = public_path('storage/images');
+                if (!is_dir($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                
+                $banner->move($destinationPath, $fileName);
+                $updateData['company_banner'] = 'images/' . $fileName;
+            }
+
+            // Set company flag
+            $updateData['is_company'] = 'Yes';
+
+            // Remove null and empty values, but keep boolean false values
+            $updateData = array_filter($updateData, function ($value) {
+                return $value !== null && $value !== '';
+            });
+
+            // Update user with company data
+            try {
+                $user = Utils::fetch_post($user, [], $updateData);
+                $user->save();
+            } catch (\Throwable $th) {
+                return $this->error('Failed to update company profile: ' . $th->getMessage());
+            }
+
+            // Refresh user data
+            $user = User::find($user->id);
+            if (!$user) {
+                return $this->error('Account not found after update.');
+            }
+
+            return $this->success($user, "Company profile updated successfully.");
+
         } catch (\Throwable $th) {
-            return $this->error($th->getMessage());
+            return $this->error('An error occurred: ' . $th->getMessage());
         }
-
-
-        $images = [];
-        if (!empty($_FILES)) {
-            $images = Utils::upload_images_2($_FILES, false);
-        }
-        if (!empty($images)) {
-            $u->company_logo = 'images/' . $images[0];
-        }
-        $u->is_company = 'Yes';
-        try {
-            $u->save();
-        } catch (\Throwable $th) {
-            return $this->error($th->getMessage());
-        }
-
-        $u = User::find($u->id);
-        if ($u == null) {
-            return $this->error('Account not found.');
-        }
-        return $this->success($u,  "Profile updated successfully.");
     }
 
 
@@ -2392,50 +2502,184 @@ Route::POST("", [ApiAuthController::class, 'password_reset_submit']);
     public function profile_update(Request $request)
     {
         try {
-            $user = auth('api')->user();
+            $authUser = auth('api')->user();
 
-            if (!$user) {
+            if (!$authUser) {
                 return $this->error('User not authenticated');
             }
 
-            $updateData = $request->only([
-                'name',
-                'email',
-                'intro',
-                'career_summary',
-                'objective',
-                'education_background',
-                'skills',
-                'experience',
-                'district_id',
-                'avatar'
-            ]);
+            // Get the actual User model
+            $user = User::find($authUser->id);
+            if (!$user) {
+                return $this->error('User not found');
+            }
 
-            // Map phone to phone_number_1 for database compatibility
+            // Get all allowed fields for update - comprehensive list based on user model
+            $allowedFields = [
+                // Basic info
+                'username', 'name', 'first_name', 'last_name', 'email',
+                'phone_number_1', 'phone_number_2', 'avatar',
+                
+                // Personal details
+                'title', 'date_of_birth', 'place_of_birth', 'sex', 'marital_status',
+                'nationality', 'religion', 'blood_group', 'height', 'weight',
+                
+                // Address info
+                'home_address', 'current_address', 'district_id',
+                
+                // Contact info
+                'emergency_person_name', 'emergency_person_phone',
+                'spouse_name', 'spouse_phone', 'father_name', 'father_phone',
+                'mother_name', 'mother_phone', 'languages',
+                
+                // ID info
+                'national_id_number', 'passport_number', 'tin', 'nssf_number',
+                
+                // Banking info
+                'bank_name', 'bank_account_number',
+                
+                // Education info
+                'primary_school_name', 'primary_school_year_graduated',
+                'seconday_school_name', 'seconday_school_year_graduated',
+                'high_school_name', 'high_school_year_graduated',
+                'degree_university_name', 'degree_university_year_graduated',
+                'masters_university_name', 'masters_university_year_graduated',
+                'phd_university_name', 'phd_university_year_graduated',
+                'diploma_school_name', 'diploma_year_graduated',
+                'certificate_school_name', 'certificate_year_graduated',
+                
+                // Career info
+                'intro', 'career_summary', 'objective', 'special_qualification',
+                'present_salary', 'expected_salary', 'expected_job_level',
+                'expected_job_nature', 'preferred_job_location',
+                'preferred_job_category', 'preferred_job_category_other',
+                'preferred_job_districts', 'preferred_job_abroad', 'preferred_job_countries',
+                
+                // Disability info
+                'has_disability', 'is_registered_on_disability', 'disability_type',
+                'dificulty_to_see', 'dificulty_to_hear', 'dificulty_to_walk',
+                'dificulty_to_speak', 'dificulty_display_on_cv'
+            ];
+
+            $updateData = $request->only($allowedFields);
+
+            // Handle field mappings for backward compatibility
             if ($request->has('phone')) {
                 $updateData['phone_number_1'] = $request->input('phone');
             }
-
-            // Map bio to intro for database compatibility  
             if ($request->has('bio')) {
                 $updateData['intro'] = $request->input('bio');
             }
-
-            // Map location to current_address for database compatibility
             if ($request->has('location')) {
                 $updateData['current_address'] = $request->input('location');
             }
 
-            // Remove null values
+            // Handle file uploads (avatar) - Ensure consistent path: public/storage/images/
+            $avatarUploaded = false;
+            
+            // Method 1: Laravel file upload (React.js)
+            if ($request->hasFile('avatar')) {
+                $avatar = $request->file('avatar');
+                $ext = $avatar->getClientOriginalExtension();
+                $fileName = time() . '-' . rand(100000, 1000000) . '.' . $ext;
+                
+                // Store directly in public/storage/images/
+                $destinationPath = public_path('storage/images');
+                if (!is_dir($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                
+                $avatar->move($destinationPath, $fileName);
+                $updateData['avatar'] = 'images/' . $fileName;
+                $avatarUploaded = true;
+            }
+            
+            // Method 2: Raw $_FILES upload (Mobile app)
+            if (!$avatarUploaded && !empty($_FILES) && isset($_FILES['avatar'])) {
+                try {
+                    $file = $_FILES['avatar'];
+                    if ($file['error'] === UPLOAD_ERR_OK) {
+                        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                        $fileName = time() . '-' . rand(100000, 1000000) . '.' . $ext;
+                        
+                        // Store directly in public/storage/images/
+                        $destinationPath = public_path('storage/images');
+                        if (!is_dir($destinationPath)) {
+                            mkdir($destinationPath, 0755, true);
+                        }
+                        
+                        $destination = $destinationPath . '/' . $fileName;
+                        if (move_uploaded_file($file['tmp_name'], $destination)) {
+                            $updateData['avatar'] = 'images/' . $fileName;
+                            $avatarUploaded = true;
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    // Continue without error - avatar upload failed but other fields can still update
+                    Log::error('Avatar upload failed: ' . $th->getMessage());
+                }
+            }
+
+            // Remove null and empty values, but keep boolean false values
             $updateData = array_filter($updateData, function ($value) {
-                return $value !== null;
+                return $value !== null && $value !== '';
             });
 
-            $user->update($updateData);
+            // Use Utils to update user
+            try {
+                $user = Utils::fetch_post($user, [], $updateData);
+                $user->save();
+            } catch (\Throwable $th) {
+                return $this->error('Profile update failed: ' . $th->getMessage());
+            }
 
-            return $this->success($user->fresh(), 'Profile updated successfully');
+            return $this->success($user, 'Profile updated successfully');
         } catch (Exception $e) {
             return $this->error('Profile update failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/download-cv/{id}",
+     *     summary="Download user CV",
+     *     description="Downloads the CV for a specific user (public access)",
+     *     operationId="downloadCv",
+     *     tags={"User"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="User ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="CV file download or redirect",
+     *         @OA\MediaType(
+     *             mediaType="application/pdf",
+     *             @OA\Schema(type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found"
+     *     )
+     * )
+     */
+    public function download_cv($id)
+    {
+        try {
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            // Fallback: redirect to the web route for CV generation (public)
+            return redirect('/get-cv?id=' . $id);
+
+        } catch (Exception $e) {
+            return response()->json(['message' => 'CV download failed: ' . $e->getMessage()], 500);
         }
     }
 

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Artisan;
 Route::middleware([EnsureTokenIsValid::class])->group(function () {});
 
 Route::POST("profile", [ApiAuthController::class, "profile_update"]);
+Route::GET("download-cv/{id}", [ApiAuthController::class, "download_cv"]);
 Route::POST("service-create", [ApiAuthController::class, "service_create"]);
 Route::POST("company-profile-update", [ApiAuthController::class, "company_profile_update"]);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
