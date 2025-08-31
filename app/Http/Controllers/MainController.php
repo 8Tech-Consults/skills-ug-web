@@ -647,7 +647,7 @@ class MainController extends BaseController
         </div>
 
         <p style="font-size: 16px; line-height: 1.6; color: #555;">
-          Thank you for choosing Skills UG!
+          Thank you for choosing 8Jobspot!
         </p>
 
         <hr style="border: 1px solid #e0e0e0; margin: 30px 0;">

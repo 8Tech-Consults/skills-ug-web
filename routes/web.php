@@ -22,6 +22,21 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+// Root route - redirect to admin dashboard or API documentation
+Route::get('/', function () {
+    return response()->json([
+        'message' => '8Jobspot API is running',
+        'version' => '1.0.0',
+        'endpoints' => [
+            'admin' => url('/'),
+            'api_documentation' => url('/api/documentation'),
+            'mobile_app_download' => url('/app'),
+        ],
+        'status' => 'active',
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
 Route::get("do-register", function (Request $r) {
     $data = [
         'body' => '<p>This is a test email body.</p>',

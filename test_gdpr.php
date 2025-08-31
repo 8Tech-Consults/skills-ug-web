@@ -27,7 +27,7 @@ $consentData = [
     'logged_in_user_id' => $userId,
     'consent_type' => 'marketing',
     'consented' => true,
-    'consent_text' => 'I agree to receive marketing communications from Skills UG.',
+    'consent_text' => 'I agree to receive marketing communications from 8Jobspot.',
     'version' => '1.0'
 ];
 $response = makeRequest('POST', "$baseUrl/gdpr/consents", $consentData);

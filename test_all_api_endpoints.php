@@ -4,7 +4,7 @@
 /**
  * COMPREHENSIVE API ENDPOINT TESTING SCRIPT
  * 
- * Tests ALL API endpoints found in the Skills Uganda Laravel application
+ * Tests ALL API endpoints found in the 8Jobspotanda Laravel application
  * to ensure they work correctly and handle all response scenarios.
  * 
  * ENDPOINTS TESTED:

@@ -361,7 +361,15 @@ Route::get('ajax-cards', function (Request $r) {
 // Service Review Routes
 use App\Http\Controllers\Api\ServiceReviewController;
 use App\Http\Controllers\Api\ServiceBookmarkController;
+use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ChatController;
+
+// Main Service Routes
+Route::get('services', [ServiceController::class, 'index']);
+Route::get('services/{id}', [ServiceController::class, 'show']);
+Route::get('service-categories', [ServiceController::class, 'getCategories']);
+Route::get('services-featured', [ServiceController::class, 'featured']);
+Route::get('services-search', [ServiceController::class, 'search']);
 
 Route::prefix('services/{service_id}/reviews')->group(function () {
     Route::get('/', [ServiceReviewController::class, 'index']);

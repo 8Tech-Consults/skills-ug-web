@@ -1,4 +1,4 @@
-# Skills UG Mobile App - Advanced Job Filters
+# 8Jobspot Mobile App - Advanced Job Filters
 
 This React Native mobile application provides advanced job search functionality with comprehensive filtering options.
 

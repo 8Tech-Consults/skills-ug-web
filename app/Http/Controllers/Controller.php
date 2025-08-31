@@ -11,8 +11,8 @@ use Illuminate\Routing\Controller as BaseController;
 /**
  * @OA\Info(
  *      version="1.0.0",
- *      title="Skills UG API Documentation",
- *      description="API documentation for Skills UG."
+ *      title="8Jobspot API Documentation",
+ *      description="API documentation for 8Jobspot."
  * )
  * @OA\Server(
  *      url="http://localhost/skills-ug-web/api",
