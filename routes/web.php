@@ -22,7 +22,10 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Root route - redirect to admin dashboard or API documentation
+// this is meant to handle web crawling requests by fetching the latest job postings
+Route::get('crawler', function () {
+    Utils::fetch_pages();
+});
 Route::get('/', function () {
     return response()->json([
         'message' => '8Jobspot API is running',

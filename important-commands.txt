@@ -4,8 +4,8 @@ php artisan make:migration create_courses_table
 
 php artisan make:migration add_external_url_to_course_materials --table=course_materials
 change these to snake case, make all of them text and nullable, first chech if field eixst in table before add, they are nullable
+
+php artisan admin:make JobWebSiteController --model=App\Models\JobWebSite
+php artisan admin:make JobWebSiteController --model=App\\Models\\JobWebSite
  
-php artisan admin:make BlogPostController --model=App\Models\BlogPost
-php artisan admin:make BlogPostController --model=App\\Models\\BlogPost
- 
-php artisan make:model Service -m
+php artisan make:model JobWebSite -m

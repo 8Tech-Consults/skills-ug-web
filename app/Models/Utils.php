@@ -1371,4 +1371,10 @@ class Utils extends Model
         };
         return $data;
     }
+    
+
+
+    static function fetch_pages(){
+        die("not yet implemented");
+    }
 }
