@@ -75,4 +75,7 @@ Route::group([
 
     $router->resource('blog-posts', BlogPostController::class);
     $router->resource('job-web-sites', JobWebSiteController::class);
+    $router->resource('job-web-site-pages', JobWebSitePageController::class);
+
+    $router->resource('jobs', JobController::class);
 });

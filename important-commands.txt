@@ -1,11 +1,11 @@
 php artisan migrate
 
-php artisan make:migration create_courses_table
+php artisan make:migration job_web_site_pages
 
-php artisan make:migration add_external_url_to_course_materials --table=course_materials
+php artisan make:migration add_max_page_to_job_web_site_pages --table=job_web_site_pages
 change these to snake case, make all of them text and nullable, first chech if field eixst in table before add, they are nullable
 
 php artisan admin:make JobWebSiteController --model=App\Models\JobWebSite
-php artisan admin:make JobWebSiteController --model=App\\Models\\JobWebSite
+php artisan admin:make JobController --model=App\\Models\\Job
  
-php artisan make:model JobWebSite -m
+php artisan make:model JobWebSitePage -m

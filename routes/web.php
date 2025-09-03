@@ -8,6 +8,8 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Models\Company;
 use App\Models\Consultation;
 use App\Models\Gen;
+use App\Models\Job;
+use App\Models\JobWebSitePage;
 use App\Models\LaundryOrder;
 use App\Models\Meeting;
 use App\Models\Project;
@@ -24,7 +26,22 @@ use Illuminate\Support\Facades\Route;
 
 // this is meant to handle web crawling requests by fetching the latest job postings
 Route::get('crawler', function () {
+    $last_job = Job::latest()->first();
+    dd($last_job);
+
+
+    //set unlimited time
+    set_time_limit(0);
+    //set unlimited memory
+    ini_set('memory_limit', -1);
     Utils::fetch_pages();
+    Utils::fetch_pages_content();
+    die("done");
+    dd($last_page->page_content);
+    $last_page->process_page_content();
+    echo($last_page->responsibilities);
+
+    die("done");
 });
 Route::get('/', function () {
     return response()->json([

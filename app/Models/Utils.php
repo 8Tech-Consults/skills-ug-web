@@ -32,6 +32,46 @@ class Utils extends Model
         return $obj;
     }
 
+    public static function get_url($url)
+    {
+        $html = null;
+        try {
+            // Create a cookie jar with the required cookies (use domain without scheme)
+            $cookieJar = \GuzzleHttp\Cookie\CookieJar::fromArray([
+                'laravel_session' => 'eyJpdiI6ImZsdTRXdi9NZ0FHV09TUzVJMmpEbVE9PSIsInZhbHVlIjoiRDg2UVFSUTI1bklXQnNFK3VaZU1uM2NDSkVzZFFTQnpYendicjdobjhQaStWTHBvMGxXTytEMGoxS1psS3BDekRyeWtwYjFtS280L0lWV1N2bjcxTXpnd1dsOHRGTXVTMkV1MGpCR3FCK0VZRjdmRGlodExrRXlvbVRsci9Cd1giLCJtYWMiOiJkNWI0YjVjMzUxNTU0MGE5ZjI3ZjYxNTNlYWRiMjhmMTI0ODJhZTMyNDcyMGIwMGI3ODU1OTViNjNhNjAyMGEzIiwidGFnIjoiIn0%3D',
+                'XSRF-TOKEN'     => 'eyJpdiI6IkJMelllbDkrQWJrYVBtamN5ZUJ6SGc9PSIsInZhbHVlIjoiSFVlc3pHZTBjWk5Ib0l6b0FFYnpiRWFuWDc1Mm1WdkFJYmNUdFp1M0pVSWRNRVJZR3dMVE4zTjM2TEZLSHVXN05zQkVHNHl4cy9yeGZMNWxkS21Pb05SK0kzajJUTUdueThzM2ZXSnVDVnllRUFxb1lXV3A4bU1uRHNFZEVZN20iLCJtYWMiOiI0ODMyNWY1YmE3OTA4YTEzYWQ0MmFlYmE2ZTFmYzliNmMyODVhMzNlMzVlMDEzNmQzODkxYjAyOGYzODIyYzM2IiwidGFnIjoiIn0%3D'
+            ], 'ugaflix.com');
+
+            // Create the Guzzle client with options similar to the original cURL setup.
+            $client = new \GuzzleHttp\Client([
+                'allow_redirects' => true,
+                'verify'          => false,
+                'timeout'         => 30,
+                'connect_timeout' => 30,
+                'headers'         => [
+                    'User-Agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+                    'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.5',
+                    'Cache-Control'   => 'no-cache',
+                    'Pragma'          => 'no-cache',
+                    'Accept-Encoding' => 'gzip, deflate',
+                ],
+            ]);
+
+            // Make the GET request with the cookie jar
+            $response = $client->get($url, [
+                'cookies' => $cookieJar,
+            ]);
+
+            // Get the full response body as a string
+            $html = (string) $response->getBody();
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+        return $html;
+    }
+
     public static function http_post($url, $data)
     {
         try {
@@ -1371,10 +1411,46 @@ class Utils extends Model
         };
         return $data;
     }
-    
 
 
-    static function fetch_pages(){
-        die("not yet implemented");
+
+    static function fetch_pages()
+    {
+        $next_company = JobWebSite::where(['status' => 'Active'])
+            ->orderBy('last_fetched_at', 'asc')
+            ->first();
+        if ($next_company == null) {
+            throw new Exception("No active job website found");
+        }
+        try {
+            $next_company->get_next_page_content();
+        } catch (\Throwable $th) {
+            $next_company->fetch_status = 'failed';
+            $next_company->failed_message = $th->getMessage();
+            $next_company->last_fetched_at = Carbon::now();
+            $next_company->save();
+        }
+    }
+
+    static function fetch_pages_content()
+    {
+
+        $pages = JobWebSitePage::where([
+            'status' => 'pending'
+        ])
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get();
+
+        foreach ($pages as $key => $page) {
+            try {
+                $page->fetch_page_content();
+            } catch (\Throwable $th) {
+                $page->status = 'failed';
+                $page->failed_message = $th->getMessage();
+                $page->last_fetched_at = Carbon::now();
+                $page->save();
+            }
+        }
     }
 }
