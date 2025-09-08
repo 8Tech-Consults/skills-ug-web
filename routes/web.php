@@ -44,7 +44,7 @@ Route::get('crawler', function () {
 
     die("done");
 });
-Route::get('/', function () {
+/* Route::get('/', function () {
     return response()->json([
         'message' => '8Jobspot API is running',
         'version' => '1.0.0',
@@ -56,7 +56,7 @@ Route::get('/', function () {
         'status' => 'active',
         'timestamp' => now()->toISOString()
     ]);
-});
+}); */
 
 Route::get("do-register", function (Request $r) {
     $data = [
