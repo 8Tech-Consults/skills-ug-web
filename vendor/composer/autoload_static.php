@@ -744,6 +744,7 @@ class ComposerStaticInitda89eef54c810448a827ed04bb3da82f
         'App\\Admin\\Controllers\\GenController' => __DIR__ . '/../..' . '/app/Admin/Controllers/GenController.php',
         'App\\Admin\\Controllers\\HomeController' => __DIR__ . '/../..' . '/app/Admin/Controllers/HomeController.php',
         'App\\Admin\\Controllers\\JobCategoryController' => __DIR__ . '/../..' . '/app/Admin/Controllers/JobCategoryController.php',
+        'App\\Admin\\Controllers\\JobController' => __DIR__ . '/../..' . '/app/Admin/Controllers/JobController.php',
         'App\\Admin\\Controllers\\JobWebSiteController' => __DIR__ . '/../..' . '/app/Admin/Controllers/JobWebSiteController.php',
         'App\\Admin\\Controllers\\JobWebSitePageController' => __DIR__ . '/../..' . '/app/Admin/Controllers/JobWebSitePageController.php',
         'App\\Admin\\Controllers\\LaundryOrderItemTypeController' => __DIR__ . '/../..' . '/app/Admin/Controllers/LaundryOrderItemTypeController.php',

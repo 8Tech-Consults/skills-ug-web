@@ -2,7 +2,7 @@ php artisan migrate
 
 php artisan make:migration job_web_site_pages
 
-php artisan make:migration add_max_page_to_job_web_site_pages --table=job_web_site_pages
+php artisan make:migration add_make_details_in_jobs_long_text --table=jobs
 change these to snake case, make all of them text and nullable, first chech if field eixst in table before add, they are nullable
 
 php artisan admin:make JobWebSiteController --model=App\Models\JobWebSite

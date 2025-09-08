@@ -1436,15 +1436,14 @@ class Utils extends Model
     {
 
         $pages = JobWebSitePage::where([
-            'status' => 'pending'
+            'status' => 'pending', 
         ])
             ->orderBy('id', 'desc')
             ->limit(10)
             ->get();
-
         foreach ($pages as $key => $page) {
             try {
-                $page->fetch_page_content();
+                $page->fetch_page_content(); 
             } catch (\Throwable $th) {
                 $page->status = 'failed';
                 $page->failed_message = $th->getMessage();

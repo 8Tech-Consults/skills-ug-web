@@ -25,9 +25,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // this is meant to handle web crawling requests by fetching the latest job postings
-Route::get('crawler', function () {
-    $last_job = Job::latest()->first();
-    dd($last_job);
+Route::get('crawler', function () { 
+
+    // $last_job = Job::latest()->first();
+    // dd($last_job);
 
 
     //set unlimited time

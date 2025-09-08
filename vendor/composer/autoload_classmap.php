@@ -40,6 +40,7 @@ return array(
     'App\\Admin\\Controllers\\GenController' => $baseDir . '/app/Admin/Controllers/GenController.php',
     'App\\Admin\\Controllers\\HomeController' => $baseDir . '/app/Admin/Controllers/HomeController.php',
     'App\\Admin\\Controllers\\JobCategoryController' => $baseDir . '/app/Admin/Controllers/JobCategoryController.php',
+    'App\\Admin\\Controllers\\JobController' => $baseDir . '/app/Admin/Controllers/JobController.php',
     'App\\Admin\\Controllers\\JobWebSiteController' => $baseDir . '/app/Admin/Controllers/JobWebSiteController.php',
     'App\\Admin\\Controllers\\JobWebSitePageController' => $baseDir . '/app/Admin/Controllers/JobWebSitePageController.php',
     'App\\Admin\\Controllers\\LaundryOrderItemTypeController' => $baseDir . '/app/Admin/Controllers/LaundryOrderItemTypeController.php',
