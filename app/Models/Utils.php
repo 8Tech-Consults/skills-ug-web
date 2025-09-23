@@ -1445,11 +1445,15 @@ class Utils extends Model
             try {
                 $page->fetch_page_content(); 
             } catch (\Throwable $th) {
-                // throw $th;
+                throw $th;
                 $page->status = 'failed';
                 $page->error_message = $th->getMessage();
                 $page->last_fetched_at = Carbon::now();
-                $page->save();
+                try {
+                    $page->save();
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
             }
         }
     }
