@@ -1426,7 +1426,7 @@ class Utils extends Model
             $next_company->get_next_page_content();
         } catch (\Throwable $th) {
             $next_company->fetch_status = 'failed';
-            $next_company->failed_message = $th->getMessage();
+            $next_company->error_message = $th->getMessage();
             $next_company->last_fetched_at = Carbon::now();
             $next_company->save();
         }
@@ -1446,7 +1446,7 @@ class Utils extends Model
                 $page->fetch_page_content(); 
             } catch (\Throwable $th) {
                 $page->status = 'failed';
-                $page->failed_message = $th->getMessage();
+                $page->error_message = $th->getMessage();
                 $page->last_fetched_at = Carbon::now();
                 $page->save();
             }

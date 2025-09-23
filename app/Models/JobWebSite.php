@@ -119,7 +119,7 @@ class JobWebSite extends Model
         $this->total_posts_found = count($jobLinks);
         $this->new_posts_found = count($jobLinksNew);
         $this->fetch_status = "success";
-        $this->failed_message = null;
+        $this->error_message = null;
         try {
             $this->save();
         } catch (\Throwable $th) {
@@ -130,7 +130,7 @@ class JobWebSite extends Model
     {
 
         $this->fetch_status = 'in_progress';
-        $this->failed_message = null;
+        $this->error_message = null;
         $this->fetch_status = 'in_progress';
         $this->last_fetched_at = Carbon::now();
         $this->get_next_page_link();
@@ -140,7 +140,7 @@ class JobWebSite extends Model
             $my_html = Utils::get_url($this->last_page_url);
         } catch (\Throwable $th) {
             $this->status = 'failed';
-            $this->failed_message = $th->getMessage();
+            $this->error_message = $th->getMessage();
             throw $th;
         }
         $this->fetch_status = 'success';
