@@ -1416,7 +1416,7 @@ class Utils extends Model
 
     static function fetch_pages()
     {
-        $next_company = JobWebSite::where(['status' => 'Active'])
+        $next_company = JobWebSite::where([])
             ->orderBy('last_fetched_at', 'asc')
             ->first();
         if ($next_company == null) {

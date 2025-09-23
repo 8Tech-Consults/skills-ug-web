@@ -56,7 +56,7 @@ class JobWebSite extends Model
                     $page = new JobWebSitePage();
                     $page->url = $a->href;
                     $page->job_web_site_id = $this->id;
-                    $page->title = trim($a->plaintext);
+                    $page->title = html_entity_decode(trim($a->plaintext), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     $page->status = 'pending';
                     $page->save();
                     $jobLinksNew[] = $a->href;
@@ -104,7 +104,7 @@ class JobWebSite extends Model
                         $page = new JobWebSitePage();
                         $page->url = $fullUrl;
                         $page->job_web_site_id = $this->id;
-                        $page->title = trim($a->plaintext);
+                        $page->title = html_entity_decode(trim($a->plaintext), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                         $page->status = 'pending';
                         $page->save();
                         $jobLinksNew[] = $fullUrl;

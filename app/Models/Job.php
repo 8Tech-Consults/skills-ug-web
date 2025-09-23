@@ -25,6 +25,8 @@ class Job extends Model
         parent::boot();
 
         static::creating(function ($job) {
+            //decode the html specilar chars for title
+            $job->title = html_entity_decode($job->title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $job->slug = self::generateUniqueSlug($job->title);
         });
 
@@ -130,6 +132,12 @@ class Job extends Model
     {
         if ($this->category == null) return '';
         return $this->category->name;
+    }
+
+    //make getter for title to decode html special chars
+    public function getTitleAttribute($value)
+    {
+        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     protected $appends = ['district_text', 'category_text'];
