@@ -78,4 +78,14 @@ Route::group([
     $router->resource('job-web-site-pages', JobWebSitePageController::class);
 
     $router->resource('jobs', JobController::class);
+
+    // AJAX API Routes for Course Material Form
+    $router->group(['prefix' => 'api'], function (Router $router) {
+        // Course units AJAX endpoints
+        $router->get('course-units', 'Api\CourseUnitsApiController@getCourseUnits');
+        $router->get('courses', 'Api\CourseUnitsApiController@getCourses');
+        $router->get('courses/{courseId}/units', 'Api\CourseUnitsApiController@getUnitsByCourse');
+        $router->get('units/{unitId}/next-sort-order', 'Api\CourseUnitsApiController@getNextSortOrder');
+        $router->get('units/{unitId}/course', 'Api\CourseUnitsApiController@getUnitCourse');
+    });
 });
