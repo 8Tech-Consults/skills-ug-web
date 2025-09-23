@@ -1096,6 +1096,7 @@ class JobWebSitePage extends Model
         } catch (\Exception $e) {
             $this->status = 'error';
             $this->error_message = 'Failed to process job data: ' . $e->getMessage();
+            throw $e;
             $this->save();
             return;
         }
